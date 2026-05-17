@@ -1,13 +1,13 @@
 @extends('frontend.layout')
 
-@section('title', 'Canli Sohbet | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
+@section('title', 'Canlı Sohbet | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
 
 @section(
     'meta_description',
-    'ilanhaber.net canli sohbet alani ile uyeler gundem, ilanlar ve haberler hakkinda anlik etkilesim kurabilir.'
+    'ilanhaber.net canlı sohbet alanı ile üyeler gündem, ilanlar ve haberler hakkında anlık etkileşim kurabilir.'
 )
 
-@section('meta_keywords', 'canli sohbet, topluluk sohbeti, ilan sohbet, haber sohbet')
+@section('meta_keywords', 'canlı sohbet, topluluk sohbeti, ilan sohbet, haber sohbet')
 
 @section('canonical', route('live-chat.index'))
 
@@ -16,8 +16,8 @@
         {!! json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'WebPage',
-            'name' => 'Canli Sohbet',
-            'description' => 'ilanhaber.net canli sohbet alani ile uyeler anlik etkilesim kurabilir.',
+            'name' => 'Canlı Sohbet',
+            'description' => 'ilanhaber.net canlı sohbet alanı ile üyeler anlık etkileşim kurabilir.',
             'url' => route('live-chat.index'),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
@@ -25,47 +25,106 @@
 
 @section('content')
 
-<section class="mx-auto grid max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[1fr_340px]">
+<section
+    x-data="liveChat({
+        messagesUrl: '{{ route('live-chat.messages') }}',
+        onlineUrl: '{{ route('live-chat.online') }}',
+        storeUrl: '{{ route('live-chat.messages.store') }}',
+        csrf: '{{ csrf_token() }}',
+        initialMessages: @js($messages->map(fn ($message) => [
+            'id' => $message->id,
+            'user' => $message->user?->name ?? 'Sistem',
+            'message' => e($message->message),
+            'time' => $message->created_at?->format('H:i'),
+            'is_online' => $message->user?->isOnline() ?? false,
+            'reputation' => $message->user?->forum_reputation ?? 0,
+        ])),
+        initialOnline: @js($onlineUsers->map(fn ($user) => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'reputation' => $user->forum_reputation ?? 0,
+        ])),
+        canSend: @js(auth()->check() && ($siteSetting?->live_chat_enabled ?? false))
+    })"
+    x-init="init()"
+    class="mx-auto grid max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[1fr_340px]"
+>
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-950 px-6 py-5 text-white">
             <div>
-                <h1 class="text-2xl font-black">Canli Sohbet</h1>
-                <p class="mt-1 text-sm text-slate-300">Topluluk icin anlik sohbet iskeleti</p>
+                <h1 class="text-2xl font-black">Canlı Sohbet</h1>
+                <p class="mt-1 text-sm text-slate-300">Polling tabanlı topluluk sohbeti</p>
             </div>
 
             <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-black">
-                {{ $siteSetting?->live_chat_enabled ? 'Aktif' : 'Kapali' }}
+                {{ $siteSetting?->live_chat_enabled ? 'Aktif' : 'Kapalı' }}
             </span>
         </div>
 
-        <div class="space-y-4 bg-slate-50 p-6">
-            @foreach([
-                ['name' => 'Moderator', 'text' => 'Canli sohbet alani hazir. Mesaj altyapisi sonraki adimda baglanabilir.'],
-                ['name' => 'Sistem', 'text' => 'Forum ve canli aktivite sayfalari ile entegre calisacak sekilde tasarlandi.'],
-                ['name' => 'Topluluk', 'text' => 'Uyeler burada ilan, haber ve gundem basliklarini anlik konusabilir.'],
-            ] as $message)
-                <div class="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="font-black text-slate-950">{{ $message['name'] }}</div>
-                        <div class="text-xs font-bold text-slate-400">Simdi</div>
+        <div class="h-[520px] overflow-y-auto bg-slate-50 p-6">
+            <template x-if="messages.length === 0">
+                <div class="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white text-center">
+                    <div>
+                        <div class="text-xl font-black text-slate-950">Henüz mesaj yok</div>
+                        <p class="mt-2 text-sm text-slate-500">İlk mesaj geldiğinde burada görünecek.</p>
                     </div>
-
-                    <p class="mt-2 text-sm leading-6 text-slate-600">{{ $message['text'] }}</p>
                 </div>
-            @endforeach
+            </template>
+
+            <div class="space-y-4">
+                <template x-for="message in messages" :key="message.id">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <span class="font-black text-slate-950" x-text="message.user"></span>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-[11px] font-black"
+                                    :class="message.is_online ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'"
+                                    x-text="message.is_online ? 'Online' : 'Offline'"
+                                ></span>
+                                <span class="text-xs font-bold text-slate-400" x-text="message.reputation + ' itibar'"></span>
+                            </div>
+
+                            <div class="text-xs font-bold text-slate-400" x-text="message.time"></div>
+                        </div>
+
+                        <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700" x-html="message.message"></p>
+                    </div>
+                </template>
+            </div>
         </div>
 
         <div class="border-t border-slate-200 bg-white p-4">
             @if($siteSetting?->live_chat_enabled)
-                <div class="flex gap-3">
-                    <input type="text" disabled placeholder="Mesaj yazma alani sonraki adimda aktif edilecek" class="min-w-0 flex-1 rounded-lg border-slate-300 text-sm text-slate-500">
-                    <button type="button" disabled class="rounded-lg bg-red-600 px-5 py-2 text-sm font-black text-white opacity-60">
-                        Gonder
-                    </button>
-                </div>
+                @auth
+                    <form @submit.prevent="send()" class="space-y-3">
+                        <div class="flex gap-3">
+                            <input
+                                type="text"
+                                x-model="draft"
+                                maxlength="500"
+                                placeholder="Mesajınızı yazın..."
+                                class="min-w-0 flex-1 rounded-lg border-slate-300 text-sm"
+                            >
+                            <button
+                                type="submit"
+                                class="rounded-lg bg-red-600 px-5 py-2 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-60"
+                                :disabled="sending || draft.trim().length < 2"
+                            >
+                                Gönder
+                            </button>
+                        </div>
+
+                        <p x-show="notice" x-text="notice" class="text-xs font-bold text-slate-500"></p>
+                    </form>
+                @else
+                    <div class="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm font-bold text-blue-800">
+                        Mesaj yazmak için giriş yapın. Sohbeti okumak herkese açık.
+                    </div>
+                @endauth
             @else
                 <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-bold text-yellow-800">
-                    Canli sohbet panelden kapali. Sayfa iskeleti hazir, aktif edilince mesaj alani baglanabilir.
+                    Canlı sohbet panelden kapalı.
                 </div>
             @endif
         </div>
@@ -73,21 +132,114 @@
 
     <aside class="space-y-5">
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-lg font-black text-slate-950">Sohbet Kurallari</h2>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="text-lg font-black text-slate-950">Online Kullanıcılar</h2>
+                <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-black text-green-700" x-text="onlineUsers.length"></span>
+            </div>
+
+            <div class="mt-4 space-y-3">
+                <template x-for="user in onlineUsers" :key="user.id">
+                    <div class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
+                        <div>
+                            <div class="text-sm font-black text-slate-900" x-text="user.name"></div>
+                            <div class="text-xs font-bold text-slate-500" x-text="user.reputation + ' itibar'"></div>
+                        </div>
+                        <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+                    </div>
+                </template>
+
+                <div x-show="onlineUsers.length === 0" class="text-sm text-slate-500">
+                    Şu an online kullanıcı görünmüyor.
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="text-lg font-black text-slate-950">Sohbet Kuralları</h2>
             <div class="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                <p>Saygili dil kullanimi, spam yapmama ve konu disina cikmama temel kuraldir.</p>
-                <p>Moderasyon sistemi ilerleyen adimda mevcut yorum ve yetki yapisiyla uyumlu baglanabilir.</p>
+                <p>Saygılı dil kullanımı, spam yapmama ve konu dışına çıkmama temel kuraldır.</p>
+                <p>Mesajlar moderasyon uyumlu kaydedilir; gerekirse panelden yönetim katmanı eklenebilir.</p>
             </div>
         </div>
 
         <div class="rounded-2xl border border-red-100 bg-red-50 p-6 shadow-sm">
-            <h2 class="text-lg font-black text-red-800">Canli Aktivite</h2>
-            <p class="mt-3 text-sm leading-6 text-red-700/80">Yayin, duyuru ve forum akislarini tek merkezden takip edin.</p>
+            <h2 class="text-lg font-black text-red-800">Canlı Aktivite</h2>
+            <p class="mt-3 text-sm leading-6 text-red-700/80">Yayın, duyuru ve forum akışlarını tek merkezden takip edin.</p>
             <a href="{{ route('live-activity.index') }}" class="mt-5 inline-flex rounded-lg bg-red-600 px-4 py-2 text-sm font-black text-white transition hover:bg-red-700">
-                Merkeze Don
+                Merkeze Dön
             </a>
         </div>
     </aside>
 </section>
+
+<script>
+function liveChat(config) {
+    return {
+        messages: config.initialMessages || [],
+        onlineUsers: config.initialOnline || [],
+        draft: '',
+        notice: '',
+        sending: false,
+        init() {
+            this.fetchMessages();
+            this.fetchOnlineUsers();
+            setInterval(() => this.fetchMessages(), 5000);
+            setInterval(() => this.fetchOnlineUsers(), 10000);
+        },
+        fetchMessages() {
+            fetch(config.messagesUrl)
+                .then(response => response.json())
+                .then(data => {
+                    this.messages = data.messages || [];
+                });
+        },
+        fetchOnlineUsers() {
+            fetch(config.onlineUrl)
+                .then(response => response.json())
+                .then(data => {
+                    this.onlineUsers = data.users || [];
+                });
+        },
+        send() {
+            const message = this.draft.trim();
+
+            if (!message || this.sending || !config.canSend) {
+                return;
+            }
+
+            this.sending = true;
+            this.notice = '';
+
+            fetch(config.storeUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': config.csrf,
+                },
+                body: JSON.stringify({ message }),
+            })
+                .then(async response => {
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Mesaj gönderilemedi.');
+                    }
+
+                    this.draft = '';
+                    this.notice = data.message || 'Mesaj gönderildi.';
+                    this.fetchMessages();
+                    this.fetchOnlineUsers();
+                })
+                .catch(error => {
+                    this.notice = error.message;
+                })
+                .finally(() => {
+                    this.sending = false;
+                });
+        },
+    }
+}
+</script>
 
 @endsection

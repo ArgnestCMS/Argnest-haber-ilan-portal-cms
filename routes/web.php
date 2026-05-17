@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\ForumController;
+use App\Http\Controllers\LiveChatController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\CommentController;
@@ -51,6 +52,12 @@ Route::get('/canli-aktivite', [FrontendController::class, 'liveActivity'])
 
 Route::get('/canli-sohbet', [FrontendController::class, 'liveChat'])
     ->name('live-chat.index');
+
+Route::get('/canli-sohbet/mesajlar', [LiveChatController::class, 'messages'])
+    ->name('live-chat.messages');
+
+Route::get('/canli-sohbet/online', [LiveChatController::class, 'onlineUsers'])
+    ->name('live-chat.online');
 
 Route::post('/yorum/video/{video}', [CommentController::class, 'storeVideo'])
     ->name('comments.video.store');
@@ -149,6 +156,9 @@ Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
 
     Route::post('/forum/konu/{topic}/favori', [ForumController::class, 'toggleBookmark'])
         ->name('forum.topics.bookmark');
+
+    Route::post('/canli-sohbet/mesaj', [LiveChatController::class, 'store'])
+        ->name('live-chat.messages.store');
 
 });
 

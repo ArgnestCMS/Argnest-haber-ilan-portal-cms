@@ -9,6 +9,7 @@ use App\Models\ForumCategory;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
 use App\Models\Gallery;
+use App\Models\LiveChatMessage;
 use App\Models\News;
 use App\Models\SiteSetting;
 use App\Models\User;
@@ -299,8 +300,21 @@ $mostReadNews = News::orderByDesc('views')
     public function liveChat()
     {
         $siteSetting = SiteSetting::first();
+        $messages = LiveChatMessage::approved()
+            ->with('user:id,name,last_seen_at,forum_reputation')
+            ->latest()
+            ->take(50)
+            ->get()
+            ->reverse()
+            ->values();
 
-        return view('frontend.live-chat', compact('siteSetting'));
+        $onlineUsers = User::query()
+            ->where('last_seen_at', '>=', now()->subMinutes(5))
+            ->orderBy('name')
+            ->take(20)
+            ->get(['id', 'name', 'forum_reputation', 'last_seen_at']);
+
+        return view('frontend.live-chat', compact('siteSetting', 'messages', 'onlineUsers'));
     }
 
     public function galleryDetail($slug)
