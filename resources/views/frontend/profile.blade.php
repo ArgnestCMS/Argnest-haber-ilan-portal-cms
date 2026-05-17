@@ -34,6 +34,22 @@
                     <p class="text-slate-500 mt-2">
                         {{ $user->email }}
                     </p>
+
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <span class="rounded-full {{ $user->isOnline() ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500' }} px-3 py-1 text-xs font-black">
+                            {{ $user->isOnline() ? 'Online' : 'Offline' }}
+                        </span>
+
+                        <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+                            {{ $user->forum_reputation ?? 0 }} itibar
+                        </span>
+
+                        @foreach($user->forumBadges as $badge)
+                            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">
+                                {{ $badge->name }}
+                            </span>
+                        @endforeach
+                    </div>
                 </div>
 
             </div>
@@ -53,25 +69,44 @@
             <div class="grid md:grid-cols-4 gap-6 mt-8">
 
                 <div class="bg-slate-50 rounded-2xl p-6 border">
-                    <div class="text-sm text-slate-500">Toplam Haber</div>
-                    <div class="text-4xl font-black mt-2">0</div>
+                    <div class="text-sm text-slate-500">Forum Konusu</div>
+                    <div class="text-4xl font-black mt-2">{{ $forumStats['topics'] ?? 0 }}</div>
                 </div>
 
                 <div class="bg-slate-50 rounded-2xl p-6 border">
-                    <div class="text-sm text-slate-500">Toplam İlan</div>
-                    <div class="text-4xl font-black mt-2">0</div>
+                    <div class="text-sm text-slate-500">Forum Cevabı</div>
+                    <div class="text-4xl font-black mt-2">{{ $forumStats['posts'] ?? 0 }}</div>
                 </div>
 
                 <div class="bg-slate-50 rounded-2xl p-6 border">
-                    <div class="text-sm text-slate-500">Görüntülenme</div>
-                    <div class="text-4xl font-black mt-2">0</div>
+                    <div class="text-sm text-slate-500">Beğeni</div>
+                    <div class="text-4xl font-black mt-2">{{ $forumStats['likes'] ?? 0 }}</div>
                 </div>
 
                 <div class="bg-slate-50 rounded-2xl p-6 border">
-                    <div class="text-sm text-slate-500">Üyelik</div>
-                    <div class="text-2xl font-black mt-2 text-green-600">Aktif</div>
+                    <div class="text-sm text-slate-500">Favori</div>
+                    <div class="text-4xl font-black mt-2">{{ $forumStats['bookmarks'] ?? 0 }}</div>
                 </div>
 
+            </div>
+
+            <div class="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                <h2 class="text-xl font-black text-slate-950">Forum Konuları</h2>
+
+                <div class="mt-4 divide-y divide-slate-200">
+                    @forelse($latestForumTopics as $topic)
+                        <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block py-3">
+                            <div class="font-black text-slate-800">{{ $topic->title }}</div>
+                            <div class="mt-1 text-xs font-bold text-slate-500">
+                                {{ $topic->created_at?->diffForHumans() }} · {{ number_format($topic->views) }} görüntülenme
+                            </div>
+                        </a>
+                    @empty
+                        <div class="py-4 text-sm text-slate-500">
+                            Bu kullanıcının yayınlanmış forum konusu yok.
+                        </div>
+                    @endforelse
+                </div>
             </div>
 
         </div>

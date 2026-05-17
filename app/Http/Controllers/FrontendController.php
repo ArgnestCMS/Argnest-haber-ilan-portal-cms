@@ -5,8 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Advertisement;
 use App\Models\Announcement;
 use App\Models\Category;
+use App\Models\ForumCategory;
+use App\Models\ForumPost;
+use App\Models\ForumTopic;
 use App\Models\Gallery;
 use App\Models\News;
+use App\Models\SiteSetting;
+use App\Models\User;
 use App\Models\Video;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -184,6 +189,118 @@ $mostReadNews = News::orderByDesc('views')
             ->paginate(12);
 
         return view('frontend.galleries', compact('galleries'));
+    }
+
+    public function forum()
+    {
+        $siteSetting = SiteSetting::first();
+        $forumCategories = ForumCategory::active()
+            ->withCount([
+                'topics' => fn ($query) => $query->published(),
+                'topics as solved_topics_count' => fn ($query) => $query->published()->where('is_solved', true),
+            ])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        $latestForumTopics = ForumTopic::published()
+            ->with(['category', 'user.forumBadges', 'lastPostUser'])
+            ->withCount([
+                'likes',
+                'bookmarks',
+                'posts' => fn ($query) => $query->where('status', 'approved'),
+            ])
+            ->activeOrder()
+            ->take(8)
+            ->get();
+
+        $trendingForumTopics = ForumTopic::published()
+            ->with(['category', 'user.forumBadges', 'lastPostUser'])
+            ->withCount([
+                'likes',
+                'bookmarks',
+                'posts' => fn ($query) => $query->where('status', 'approved'),
+            ])
+            ->trending()
+            ->take(5)
+            ->get();
+
+        $myForumTopics = collect();
+        $myForumPosts = collect();
+        $myBookmarkedTopics = collect();
+
+        if (auth()->check()) {
+            $myForumTopics = ForumTopic::query()
+                ->with('category')
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->take(5)
+                ->get();
+
+            $myForumPosts = ForumPost::query()
+                ->with('topic')
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->take(5)
+                ->get();
+
+            $myBookmarkedTopics = ForumTopic::published()
+                ->whereHas('bookmarks', fn ($query) => $query->where('user_id', auth()->id()))
+                ->latest()
+                ->take(5)
+                ->get();
+        }
+
+        $onlineForumUsersCount = User::query()
+            ->where('last_seen_at', '>=', now()->subMinutes(5))
+            ->count();
+
+        return view('frontend.forum', compact(
+            'siteSetting',
+            'forumCategories',
+            'latestForumTopics',
+            'trendingForumTopics',
+            'myForumTopics',
+            'myForumPosts',
+            'myBookmarkedTopics',
+            'onlineForumUsersCount'
+        ));
+    }
+
+    public function forumTopic($slug)
+    {
+        $siteSetting = SiteSetting::first();
+
+        $topic = ForumTopic::published()
+            ->with([
+                'category',
+                'user.forumBadges',
+                'lastPostUser',
+                'likes',
+                'bookmarks',
+            ])
+            ->with(['approvedPosts' => fn ($query) => $query->with('user')])
+            ->withCount(['likes', 'bookmarks'])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $topic->increment('views');
+
+        return view('frontend.forum-topic', compact('siteSetting', 'topic'));
+    }
+
+    public function liveActivity()
+    {
+        $siteSetting = SiteSetting::first();
+
+        return view('frontend.live-activity', compact('siteSetting'));
+    }
+
+    public function liveChat()
+    {
+        $siteSetting = SiteSetting::first();
+
+        return view('frontend.live-chat', compact('siteSetting'));
     }
 
     public function galleryDetail($slug)

@@ -161,7 +161,7 @@
     <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">GALERİLER</a>
 
  @if($siteSetting?->forum_enabled)
-    <a href="/forum"
+    <a href="{{ route('forum.index') }}"
        class="ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
         FORUM
     </a>
@@ -442,6 +442,23 @@
                     <a href="/" class="py-3 border-b border-white/10">Anasayfa</a>
                     <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
                     <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
+                    <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
+                    <a href="{{ route('galleries.index') }}" class="py-3 border-b border-white/10">Galeriler</a>
+
+                    @if($siteSetting?->forum_enabled)
+                        <a href="{{ route('forum.index') }}" class="py-3 border-b border-white/10">Forum</a>
+                    @endif
+
+                    @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
+                        <button
+                            type="button"
+                            @click="liveActivityModal = true; mobileMenu = false"
+                            class="py-3 border-b border-white/10 text-left"
+                        >
+                            Canlı Aktivite
+                        </button>
+                    @endif
+
                     <a href="/arama" class="py-3 border-b border-white/10">Arama</a>
 
                     @auth
@@ -654,7 +671,7 @@
         <div class="space-y-3 p-6">
 
             @if($siteSetting?->live_chat_enabled)
-                <a href="/canli-sohbet"
+                <a href="{{ route('live-chat.index') }}"
                    class="block rounded-2xl border border-red-100 bg-red-50 p-4 font-black text-red-700 transition hover:bg-red-100">
 
                     💬 Canlı Sohbet
@@ -666,7 +683,7 @@
             @endif
 
             @if($siteSetting?->live_stream_enabled)
-                <a href="/canli-sohbet"
+                <a href="{{ route('live-activity.index') }}"
                    class="block rounded-2xl border border-slate-200 bg-slate-50 p-4 font-black text-slate-800 transition hover:bg-slate-100">
 
                     📺 Canlı Yayın
@@ -690,7 +707,7 @@
                 </a>
             @endif
 
-            <a href="/forum"
+            <a href="{{ route('forum.index') }}"
                class="block rounded-2xl border border-blue-100 bg-blue-50 p-4 font-black text-blue-700 transition hover:bg-blue-100">
 
                 👥 Forum

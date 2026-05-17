@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -34,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
         'avatar',
         'bio',
+        'forum_reputation',
 
         'facebook',
         'twitter',
@@ -62,6 +64,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_seen_at' => 'datetime',
 
             'is_active' => 'boolean',
+            'forum_reputation' => 'integer',
 
             'password' => 'hashed',
 
@@ -147,5 +150,65 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Notification::class)
             ->where('is_read', false)
             ->latest();
+    }
+
+    public function forumTopics(): HasMany
+    {
+        return $this->hasMany(ForumTopic::class);
+    }
+
+    public function forumPosts(): HasMany
+    {
+        return $this->hasMany(ForumPost::class);
+    }
+
+    public function forumTopicLikes(): HasMany
+    {
+        return $this->hasMany(ForumTopicLike::class);
+    }
+
+    public function forumTopicBookmarks(): HasMany
+    {
+        return $this->hasMany(ForumTopicBookmark::class);
+    }
+
+    public function forumBadges(): BelongsToMany
+    {
+        return $this->belongsToMany(ForumBadge::class)
+            ->withTimestamps();
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at?->gt(now()->subMinutes(5)) ?? false;
+    }
+
+    public function addForumReputation(int $points): void
+    {
+        $this->increment('forum_reputation', $points);
+        $this->refresh();
+        $this->syncForumBadges();
+    }
+
+    public function syncForumBadges(): void
+    {
+        $badges = [
+            10 => ['name' => 'Yeni Katılımcı', 'slug' => 'yeni-katilimci', 'description' => 'Forumda ilk itibarı kazandı.', 'color' => 'blue'],
+            50 => ['name' => 'Aktif Üye', 'slug' => 'aktif-uye', 'description' => 'Toplulukta düzenli katkı sağlıyor.', 'color' => 'green'],
+            100 => ['name' => 'Güvenilir Üye', 'slug' => 'guvenilir-uye', 'description' => 'Forumda güçlü bir itibar oluşturdu.', 'color' => 'red'],
+        ];
+
+        foreach ($badges as $threshold => $badgeData) {
+            if ($this->forum_reputation < $threshold) {
+                continue;
+            }
+
+            $badge = ForumBadge::firstOrCreate(
+                ['slug' => $badgeData['slug']],
+                $badgeData
+            );
+
+            $this->forumBadges()->syncWithoutDetaching([$badge->id]);
+        }
     }
 }

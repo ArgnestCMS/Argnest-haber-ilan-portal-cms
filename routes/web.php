@@ -5,6 +5,7 @@ use App\Http\Controllers\UserCommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FrontendController;
+use App\Http\Controllers\ForumController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\CommentController;
@@ -38,7 +39,20 @@ Route::get('/galeriler', [FrontendController::class, 'galleries'])
 
 Route::get('/galeri/{slug}', [FrontendController::class, 'galleryDetail'])
     ->name('galleries.show');
-    Route::post('/yorum/video/{video}', [CommentController::class, 'storeVideo'])
+
+Route::get('/forum', [FrontendController::class, 'forum'])
+    ->name('forum.index');
+
+Route::get('/forum/konu/{slug}', [FrontendController::class, 'forumTopic'])
+    ->name('forum.topics.show');
+
+Route::get('/canli-aktivite', [FrontendController::class, 'liveActivity'])
+    ->name('live-activity.index');
+
+Route::get('/canli-sohbet', [FrontendController::class, 'liveChat'])
+    ->name('live-chat.index');
+
+Route::post('/yorum/video/{video}', [CommentController::class, 'storeVideo'])
     ->name('comments.video.store');
 
 Route::post('/yorum/galeri/{gallery}', [CommentController::class, 'storeGallery'])
@@ -123,6 +137,18 @@ Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
 
     Route::post('/yorum/ilan/{announcement}', [CommentController::class, 'storeAnnouncement'])
         ->name('comments.announcement.store');
+
+    Route::post('/forum/konu', [ForumController::class, 'storeTopic'])
+        ->name('forum.topics.store');
+
+    Route::post('/forum/konu/{topic}/cevap', [ForumController::class, 'storePost'])
+        ->name('forum.posts.store');
+
+    Route::post('/forum/konu/{topic}/begeni', [ForumController::class, 'toggleLike'])
+        ->name('forum.topics.like');
+
+    Route::post('/forum/konu/{topic}/favori', [ForumController::class, 'toggleBookmark'])
+        ->name('forum.topics.bookmark');
 
 });
 

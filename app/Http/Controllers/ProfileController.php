@@ -94,6 +94,21 @@ class ProfileController extends Controller
      */
     public function show(User $user)
     {
-        return view('frontend.profile', compact('user'));
+        $user->load('forumBadges');
+
+        $forumStats = [
+            'topics' => $user->forumTopics()->where('status', 'published')->count(),
+            'posts' => $user->forumPosts()->where('status', 'approved')->count(),
+            'likes' => $user->forumTopicLikes()->count(),
+            'bookmarks' => $user->forumTopicBookmarks()->count(),
+        ];
+
+        $latestForumTopics = $user->forumTopics()
+            ->where('status', 'published')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('frontend.profile', compact('user', 'forumStats', 'latestForumTopics'));
     }
 }
