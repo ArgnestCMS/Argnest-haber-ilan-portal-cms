@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+@php
+    $siteSetting = \App\Models\SiteSetting::first();
+    $seoSetting = \App\Models\SeoSetting::current();
+
+    $metaTitle = trim($__env->yieldContent(
+        'title',
+        $seoSetting?->site_title
+            ?? $siteSetting?->seo_title
+            ?? $siteSetting?->site_name
+            ?? 'İlan Haber Sitesi'
+    ));
+
+    $metaDescription = trim($__env->yieldContent(
+        'meta_description',
+        $seoSetting?->site_description
+            ?? $siteSetting?->seo_description
+            ?? 'Güncel haberler, kamu ilanları, personel alımları ve son dakika gelişmeleri.'
+    ));
+
+    $metaKeywords = trim($__env->yieldContent(
+        'meta_keywords',
+        $seoSetting?->site_keywords
+            ?? $siteSetting?->seo_keywords
+            ?? 'haberler, ilanlar, memur alımı, kamu ilanları'
+    ));
+
+    $metaImage = trim($__env->yieldContent(
+        'meta_image',
+        $seoSetting?->og_image
+            ? asset('storage/' . $seoSetting->og_image)
+            : asset('default-og.jpg')
+    ));
+
+    $canonical = trim($__env->yieldContent(
+        'canonical',
+        $seoSetting?->canonical_url ?: url()->current()
+    ));
+
+    $robots = trim($__env->yieldContent(
+        'robots',
+        (($seoSetting?->robots_index ?? true) ? 'index' : 'noindex')
+        . ', ' .
+        (($seoSetting?->robots_follow ?? true) ? 'follow' : 'nofollow')
+    ));
+@endphp
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ $metaTitle }}</title>
+
+    <meta name="description" content="{{ $metaDescription }}">
+    <meta name="keywords" content="{{ $metaKeywords }}">
+    <meta name="author" content="{{ $siteSetting?->site_name ?? 'ilanhaber.net' }}">
+    <meta name="robots" content="{{ $robots }}">
+
+    <link rel="canonical" href="{{ $canonical }}">
+
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:title" content="{{ $metaTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
+    <meta property="og:url" content="{{ $canonical }}">
+    <meta property="og:site_name" content="{{ $siteSetting?->site_name ?? 'ilanhaber.net' }}">
+    <meta property="og:image" content="{{ $metaImage }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $metaTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+    <meta name="twitter:image" content="{{ $metaImage }}">
+
+    <link rel="icon" type="image/png"
+          href="{{ $siteSetting?->favicon ? asset('storage/' . $siteSetting->favicon) : asset('favicon.png') }}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script defer
+            src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+    @if($siteSetting?->header_scripts)
+        {!! $siteSetting->header_scripts !!}
+    @endif
+
+    @if($siteSetting?->google_analytics)
+        {!! $siteSetting->google_analytics !!}
+    @endif
+
+    @if($seoSetting?->google_analytics)
+        {!! $seoSetting->google_analytics !!}
+    @endif
+
+    @if($seoSetting?->google_tag_manager)
+        {!! $seoSetting->google_tag_manager !!}
+    @endif
+
+    @if($seoSetting?->json_ld)
+        <script type="application/ld+json">
+            {!! $seoSetting->json_ld !!}
+        </script>
+    @endif
+
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+            'url' => url('/'),
+            'logo' => $siteSetting?->logo
+                ? asset('storage/' . $siteSetting->logo)
+                : asset('favicon.png'),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+            'url' => url('/'),
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => url('/arama') . '?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+
+@yield('schema')
+</head>
+
+<body class="bg-[#f3f3f3] text-slate-900">
+
+<header x-data="{ mobileMenu: false, mobileSearch: false, authModal: null, liveActivityModal: false }">
+
+    {{-- ÜST MAVİ MENÜ --}}
+    <div class="bg-[#0878c9] text-white">
+       <div class="max-w-7xl mx-auto px-4">
+
+            <div class="h-14 flex items-center justify-between">
+
+                <a href="/" class="text-lg md:text-xl font-black tracking-tight leading-none whitespace-nowrap">
+                    {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                </a>
+
+                <nav class="hidden md:flex items-center gap-2 text-xs font-bold whitespace-nowrap">
+
+    <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">HABER</a>
+
+    <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">İLAN</a>
+
+    <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">HABERLER</a>
+
+    <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">VİDEOLAR</a>
+
+    <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">GALERİLER</a>
+
+ @if($siteSetting?->forum_enabled)
+    <a href="/forum"
+       class="ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
+        FORUM
+    </a>
+ @endif
+
+ @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
+    <button type="button"
+        @click="liveActivityModal = true"
+        class="rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
+    🔴 CANLI AKTİVİTE
+ </button>
+ @endif
+
+ </nav>
+
+                <div class="hidden md:flex items-center gap-4 text-sm font-semibold">
+
+                    <form action="/arama" method="GET" class="hidden lg:flex items-center">
+                        <input
+                            type="text"
+                            name="q"
+                            value="{{ request('q') }}"
+                            placeholder="Ara..."
+                            class="w-24 focus:w-36 transition-all duration-300 px-2 py-1.5 rounded-l bg-white text-slate-900 text-sm outline-none"
+                        >
+
+                        <button type="submit" class="bg-slate-900 px-3 py-1.5 rounded-r hover:bg-slate-800 transition">
+                            🔍
+                        </button>
+                    </form>
+
+                    @auth
+
+                        @php
+                            $activeWorkSession = \App\Models\WorkSession::where('user_id', auth()->id())
+                                ->where('status', 'active')
+                                ->latest()
+                                ->first();
+
+                            $workLabel = $activeWorkSession
+                                ? match($activeWorkSession->type) {
+                                    'work' => 'Mesaide',
+                                    'break' => 'Molada',
+                                    'lunch' => 'Yemekte',
+                                    default => 'Aktif',
+                                }
+                                : 'Mesai';
+
+                            $todayWorkMinutes = \App\Models\WorkSession::where('user_id', auth()->id())
+                                ->whereDate('created_at', today())
+                                ->where('type', 'work')
+                                ->sum('duration_minutes');
+
+                            $todayBreakMinutes = \App\Models\WorkSession::where('user_id', auth()->id())
+                                ->whereDate('created_at', today())
+                                ->where('type', 'break')
+                                ->sum('duration_minutes');
+
+                            $todayLunchMinutes = \App\Models\WorkSession::where('user_id', auth()->id())
+                                ->whereDate('created_at', today())
+                                ->where('type', 'lunch')
+                                ->sum('duration_minutes');
+
+                            $weekWorkMinutes = \App\Models\WorkSession::where('user_id', auth()->id())
+                                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+                                ->where('type', 'work')
+                                ->sum('duration_minutes');
+
+                            $monthWorkMinutes = \App\Models\WorkSession::where('user_id', auth()->id())
+                                ->whereMonth('created_at', now()->month)
+                                ->whereYear('created_at', now()->year)
+                                ->where('type', 'work')
+                                ->sum('duration_minutes');
+                        @endphp
+
+                        @if(auth()->user()->isAdmin() || auth()->user()->hasPermission('panel_giris'))
+
+                            <div x-data="{ openWorkPanel: false }" class="relative">
+                                <button
+                                    @click="openWorkPanel = true"
+                                    class="bg-slate-900 px-3 py-2 rounded font-black hover:bg-slate-800 transition"
+                                >
+                                    ⏱️ {{ $workLabel }}
+                                </button>
+
+                                <div
+                                    x-show="openWorkPanel"
+                                    x-transition
+                                    class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                                    style="display:none;"
+                                >
+                                    <div
+                                        @click.away="openWorkPanel = false"
+                                        class="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+                                    >
+
+                                        <div class="bg-slate-950 text-white px-6 py-4 flex items-center justify-between">
+                                            <div>
+                                                <h3 class="text-xl font-black">Mesai Durumu</h3>
+                                                <p class="text-xs text-slate-300">Mola, yemek ve mesai takibi</p>
+                                            </div>
+
+                                            <button @click="openWorkPanel = false" class="text-2xl">
+                                                ×
+                                            </button>
+                                        </div>
+
+                                        <div class="p-6 space-y-4">
+
+                                            <div class="grid grid-cols-3 gap-3">
+                                                <div class="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+                                                    <div class="text-xs text-green-700 font-bold">Bugün Mesai</div>
+                                                    <div class="text-xl font-black text-green-700">{{ $todayWorkMinutes }} dk</div>
+                                                </div>
+
+                                                <div class="bg-yellow-50 border border-yellow-100 rounded-xl p-3 text-center">
+                                                    <div class="text-xs text-yellow-700 font-bold">Bugün Mola</div>
+                                                    <div class="text-xl font-black text-yellow-700">{{ $todayBreakMinutes }} dk</div>
+                                                </div>
+
+                                                <div class="bg-red-50 border border-red-100 rounded-xl p-3 text-center">
+                                                    <div class="text-xs text-red-700 font-bold">Bugün Yemek</div>
+                                                    <div class="text-xl font-black text-red-700">{{ $todayLunchMinutes }} dk</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <div class="bg-slate-100 rounded-xl p-3 text-center">
+                                                    <div class="text-xs text-slate-500 font-bold">Haftalık Mesai</div>
+                                                    <div class="text-lg font-black text-slate-900">{{ $weekWorkMinutes }} dk</div>
+                                                </div>
+
+                                                <div class="bg-slate-100 rounded-xl p-3 text-center">
+                                                    <div class="text-xs text-slate-500 font-bold">Aylık Mesai</div>
+                                                    <div class="text-lg font-black text-slate-900">{{ $monthWorkMinutes }} dk</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="bg-slate-100 rounded-xl p-4 text-center">
+                                                <div class="text-xs text-slate-500">Mevcut Durum</div>
+
+                                                <div class="text-2xl font-black mt-1">
+                                                    {{ $workLabel }}
+                                                </div>
+
+                                                @if($activeWorkSession)
+                                                    <div class="text-xs text-slate-500 mt-1">
+                                                        Başlangıç: {{ $activeWorkSession->started_at->format('H:i:s') }}
+                                                    </div>
+                                                @else
+                                                    <div class="text-xs text-slate-500 mt-1">
+                                                        Henüz aktif işlem yok
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <form action="{{ route('work.start') }}" method="POST">
+                                                @csrf
+                                                <button class="w-full bg-green-600 text-white py-3 rounded-xl font-black hover:bg-green-700">
+                                                    🟢 Mesai Başlat
+                                                </button>
+                                            </form>
+
+                                            <form action="{{ route('work.break') }}" method="POST">
+                                                @csrf
+                                                <button class="w-full bg-yellow-500 text-white py-3 rounded-xl font-black hover:bg-yellow-600">
+                                                    ☕ Molaya Çık
+                                                </button>
+                                            </form>
+
+                                            <form action="{{ route('work.lunch') }}" method="POST">
+                                                @csrf
+                                                <button class="w-full bg-red-500 text-white py-3 rounded-xl font-black hover:bg-red-600">
+                                                    🍔 Yemeğe Çık
+                                                </button>
+                                            </form>
+
+                                            <form action="{{ route('work.active') }}" method="POST">
+                                                @csrf
+                                                <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700">
+                                                    ⚡ Aktife Dön
+                                                </button>
+                                            </form>
+
+                                            <form action="{{ route('work.end') }}" method="POST">
+                                                @csrf
+                                                <button class="w-full bg-slate-900 text-white py-3 rounded-xl font-black hover:bg-slate-800">
+                                                    🔴 Mesai Bitir
+                                                </button>
+                                            </form>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        @endif
+
+                        <div
+    x-data="notificationSystem({{ auth()->user()->unreadNotifications()->count() }})"
+    x-init="init()"
+    class="relative">
+
+    <a href="{{ route('user.notifications') }}"
+       class="relative hover:text-slate-200 transition">
+
+        <span class="text-xl">🔔</span>
+
+        <span
+            x-show="count > 0"
+            x-text="count"
+            class="absolute -top-2 -right-3 bg-red-600 text-white text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+        </span>
+
+    </a>
+
+</div>
+
+                        <a href="/dashboard" class="hover:text-slate-200">Panelim</a>
+
+                        <a href="/profil/{{ auth()->id() }}" class="hover:text-slate-200">Profilim</a>
+
+                        <form method="POST" action="{{ route('logout') }}">
+    @csrf
+    <button type="submit">
+        Çıkış
+    </button>
+ </form>
+
+                    @else
+
+                        <button @click="authModal = 'login'" class="hover:text-slate-200">
+                            Üye Girişi
+                        </button>
+
+                        <button @click="authModal = 'register'" class="bg-slate-800 px-3 py-2 rounded hover:bg-slate-700">
+                            Kayıt Ol
+                        </button>
+
+                    @endauth
+
+                </div>
+
+                <div class="flex md:hidden items-center gap-3">
+                    <button @click="mobileSearch = !mobileSearch" class="text-xl">
+                        🔍
+                    </button>
+
+                    <button @click="mobileMenu = !mobileMenu" class="text-2xl">
+                        ☰
+                    </button>
+                </div>
+
+            </div>
+
+            {{-- MOBİL ARAMA --}}
+            <div x-show="mobileSearch" x-transition class="md:hidden pb-4" style="display:none;">
+                <form action="/arama" method="GET" class="flex">
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ request('q') }}"
+                        placeholder="Ara..."
+                        class="flex-1 px-4 py-2 rounded-l text-slate-900 outline-none"
+                    >
+
+                    <button type="submit" class="bg-slate-900 px-4 rounded-r">
+                        🔍
+                    </button>
+                </form>
+            </div>
+
+            {{-- MOBİL MENÜ --}}
+            <div x-show="mobileMenu" x-transition class="md:hidden bg-[#0667ad] border-t border-white/10" style="display:none;">
+                <div class="flex flex-col text-sm font-bold">
+
+                    <a href="/" class="py-3 border-b border-white/10">Anasayfa</a>
+                    <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
+                    <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
+                    <a href="/arama" class="py-3 border-b border-white/10">Arama</a>
+
+                    @auth
+                        <a href="/dashboard" class="py-3 border-b border-white/10">Panelim</a>
+                        <a href="/bildirimler" class="py-3 border-b border-white/10">Bildirimler</a>
+                        <a href="/profil/{{ auth()->id() }}" class="py-3 border-b border-white/10">Profilim</a>
+
+                        <form method="POST" action="{{ route('logout') }}" class="py-3">
+                            @csrf
+                            <button type="submit" class="font-bold">
+                                Çıkış
+                            </button>
+                        </form>
+                    @else
+                        <button @click="authModal = 'login'; mobileMenu = false" class="py-3 border-b border-white/10 text-left">
+                            Giriş Yap
+                        </button>
+
+                        <button @click="authModal = 'register'; mobileMenu = false" class="py-3 text-left">
+                            Kayıt Ol
+                        </button>
+                    @endauth
+
+                </div>
+            </div>
+
+            {{-- GİRİŞ / KAYIT POPUP --}}
+            <div
+                x-show="authModal"
+                x-transition
+                class="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4"
+                style="display:none;"
+            >
+                <div
+                    @click.away="authModal = null"
+                    class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-slate-900"
+                >
+                    <div class="bg-slate-950 text-white px-6 py-5 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-black" x-text="authModal === 'login' ? 'Üye Girişi' : 'Üye Ol'"></h2>
+                            <p class="text-sm text-slate-300 mt-1">
+                                Güvenli kullanıcı paneli
+                            </p>
+                        </div>
+
+                        <button @click="authModal = null" class="text-3xl leading-none">
+                            ×
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+
+                        <template x-if="authModal === 'login'">
+                            <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                                @csrf
+
+                                <div>
+                                    <label class="text-sm font-bold">E-posta</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        required
+                                        class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
+                                        placeholder="ornek@mail.com"
+                                    >
+                                </div>
+
+                                <div>
+                                    <label class="text-sm font-bold">Şifre</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        required
+                                        class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
+                                        placeholder="••••••••"
+                                    >
+                                </div>
+
+                                <div class="flex items-center justify-between text-sm">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" name="remember" class="rounded">
+                                        Beni hatırla
+                                    </label>
+
+                                    <a href="{{ route('password.request') }}" class="text-blue-700 font-bold hover:underline">
+                                        Şifremi unuttum
+                                    </a>
+                                </div>
+
+                                <button class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
+                                    Giriş Yap
+                                </button>
+
+                                <p class="text-center text-sm text-slate-600">
+                                    Hesabınız yok mu?
+                                    <button type="button" @click="authModal = 'register'" class="text-blue-700 font-black">
+                                        Üye ol
+                                    </button>
+                                </p>
+                            </form>
+                        </template>
+
+                        <div x-show="authModal === 'register'" style="display:none;">
+                            <form method="POST" action="{{ route('register') }}" class="space-y-4">
+                                @csrf
+
+                                <div>
+                                    <label class="text-sm font-bold">Ad Soyad</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        required
+                                        class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
+                                        placeholder="Ad Soyad"
+                                    >
+                                </div>
+
+                                <div>
+                                    <label class="text-sm font-bold">E-posta</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        required
+                                        class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
+                                        placeholder="ornek@mail.com"
+                                    >
+                                </div>
+
+                                <div>
+                                    <label class="text-sm font-bold">Şifre</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        required
+                                        class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
+                                        placeholder="••••••••"
+                                    >
+                                </div>
+
+                                <div>
+                                    <label class="text-sm font-bold">Şifre Tekrar</label>
+                                    <input
+                                        type="password"
+                                        name="password_confirmation"
+                                        required
+                                        class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
+                                        placeholder="••••••••"
+                                    >
+                                </div>
+
+                                <div class="bg-slate-50 border rounded-xl p-3 text-xs text-slate-600">
+                                    Kayıt olarak kullanım şartlarını ve topluluk kurallarını kabul etmiş olursunuz.
+                                </div>
+<div>
+    <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
+
+    @error('g-recaptcha-response')
+        <p class="text-sm text-red-600 mt-2">
+            {{ $message }}
+        </p>
+    @enderror
+</div>
+                                <button class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
+                                    Hesap Oluştur
+                                </button>
+
+                                <p class="text-center text-sm text-slate-600">
+                                    Zaten hesabınız var mı?
+                                    <button type="button" @click="authModal = 'login'" class="text-blue-700 font-black">
+                                        Giriş yap
+                                    </button>
+                                </p>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+   {{-- CANLI AKTİVİTE POPUP --}}
+<div
+    x-show="liveActivityModal"
+    x-transition
+    class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4"
+    style="display:none;"
+>
+    <div
+        @click.away="liveActivityModal = false"
+        class="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl text-slate-900"
+    >
+        <div class="flex items-center justify-between bg-red-700 px-6 py-5 text-white">
+            <div>
+                <h2 class="text-2xl font-black">Canlı Aktivite</h2>
+
+                <p class="mt-1 text-sm text-red-100">
+                    Canlı yayın, sohbet ve duyurular
+                </p>
+            </div>
+
+            <button
+                @click="liveActivityModal = false"
+                class="text-3xl leading-none"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="space-y-3 p-6">
+
+            @if($siteSetting?->live_chat_enabled)
+                <a href="/canli-sohbet"
+                   class="block rounded-2xl border border-red-100 bg-red-50 p-4 font-black text-red-700 transition hover:bg-red-100">
+
+                    💬 Canlı Sohbet
+
+                    <div class="mt-1 text-xs font-semibold text-red-500">
+                        Üyelerle anlık sohbet alanı
+                    </div>
+                </a>
+            @endif
+
+            @if($siteSetting?->live_stream_enabled)
+                <a href="/canli-sohbet"
+                   class="block rounded-2xl border border-slate-200 bg-slate-50 p-4 font-black text-slate-800 transition hover:bg-slate-100">
+
+                    📺 Canlı Yayın
+
+                    <div class="mt-1 text-xs font-semibold text-slate-500">
+                        Aktif yayın varsa buradan izleyebilirsiniz
+                    </div>
+                </a>
+            @endif
+
+            @if($siteSetting?->live_announcement_enabled)
+                <a href="#son-dakika"
+                   @click="liveActivityModal = false"
+                   class="block rounded-2xl border border-yellow-100 bg-yellow-50 p-4 font-black text-yellow-700 transition hover:bg-yellow-100">
+
+                    📢 Canlı Duyuru
+
+                    <div class="mt-1 text-xs font-semibold text-yellow-600">
+                        {{ $siteSetting?->live_announcement_text ?? 'Güncel duyuruları görüntüle' }}
+                    </div>
+                </a>
+            @endif
+
+            <a href="/forum"
+               class="block rounded-2xl border border-blue-100 bg-blue-50 p-4 font-black text-blue-700 transition hover:bg-blue-100">
+
+                👥 Forum
+
+                <div class="mt-1 text-xs font-semibold text-blue-500">
+                    Topluluk konuları ve tartışmalar
+                </div>
+            </a>
+
+        </div>
+    </div>
+</div>
+    {{-- ALT MENÜ --}}
+    <div class="bg-slate-800 text-white">
+        <div class="max-w-7xl mx-auto px-4 h-10 flex items-center gap-5 text-sm font-semibold overflow-x-auto">
+            <a href="#">Kamu Personeli</a>
+            <a href="#">KPSS</a>
+            <a href="/haberler">Haberler</a>
+            <a href="#">Mevzuat</a>
+            <a href="#">Öğretmen</a>
+            <a href="#">Özel Konular</a>
+            <a href="#">Haber Arşivi</a>
+            <a href="#">Çok Okunan Haberler</a>
+            <a href="#">Haber Gönder</a>
+        </div>
+    </div>
+
+    {{-- SON DAKİKA --}}
+    <div id="son-dakika" class="bg-red-600 text-white overflow-hidden border-b border-red-700">
+        <div class="max-w-7xl mx-auto flex items-center h-10">
+            <div class="bg-red-800 px-4 h-full flex items-center font-bold text-sm whitespace-nowrap">
+                SON DAKİKA
+            </div>
+
+            <marquee behavior="scroll" direction="left" scrollamount="5" class="text-sm font-semibold px-4">
+                🔥 Memur alımı ilanları güncellendi —
+                🔥 KPSS tercih süreci başladı —
+                🔥 Yeni personel alım ilanları yayımlandı —
+                🔥 Akademik ilanlarda yeni kadrolar açıldı —
+                🔥 Son dakika haberlerini takip edin
+            </marquee>
+        </div>
+    </div>
+
+    {{-- FİNANS + HAVA DURUMU --}}
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 h-9 flex items-center justify-between text-sm">
+
+            <div class="flex items-center gap-6 overflow-x-auto text-sm font-semibold whitespace-nowrap">
+                <span><b>Dolar:</b> {{ $market['dolar'] ?? '45.35' }} <span class="text-green-600">%0.24 ↑</span></span>
+                <span><b>Euro:</b> {{ $market['euro'] ?? '53.52' }} <span class="text-green-600">%0.56 ↑</span></span>
+                <span><b>Altın:</b> {{ $market['altin'] ?? '6875.62' }} <span class="text-green-600">%0.87 ↑</span></span>
+                <span><b>BIST:</b> {{ $market['bist'] ?? '15062.65' }} <span class="text-green-600">%0.15 ↑</span></span>
+                <span><b>BTC:</b> {{ $market['btc'] ?? '81256' }} <span class="text-green-600">%0.48 ↑</span></span>
+            </div>
+
+            <div class="hidden md:block whitespace-nowrap">
+                {{ $weather['city'] ?? 'İstanbul' }},
+                {{ $weather['status'] ?? 'Açık' }}
+                •
+                <b>{{ $weather['temp'] ?? 19 }}°</b>
+            </div>
+
+        </div>
+    </div>
+
+</header>
+
+<main>
+    @yield('content')
+</main>
+
+<footer class="bg-slate-900 text-white mt-12">
+    <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
+
+        <div>
+            <h3 class="font-bold text-lg mb-3">
+                {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+            </h3>
+
+            <p class="text-slate-300">
+                {{ $siteSetting?->footer_about ?? 'Güncel haberler, kamu ilanları ve duyurular.' }}
+            </p>
+        </div>
+
+        <div>
+            <h3 class="font-bold mb-3">Hızlı Linkler</h3>
+            <div class="space-y-2 text-slate-300">
+                <div><a href="/">Anasayfa</a></div>
+                <div><a href="/haberler">Haberler</a></div>
+                <div><a href="/ilanlar">İlanlar</a></div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="font-bold mb-3">Kategoriler</h3>
+            <div class="space-y-2 text-slate-300">
+                <div>Memur Alımı</div>
+                <div>KPSS</div>
+                <div>Akademik İlanlar</div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="font-bold mb-3">İletişim</h3>
+            <p class="text-slate-300">
+                {{ $siteSetting?->email ?? 'info@ilanhaber.net' }}
+            </p>
+        </div>
+
+    </div>
+
+    <div class="border-t border-slate-700 py-4 text-center text-sm text-slate-400">
+        {{ $siteSetting?->footer_copyright ?? '© ' . date('Y') . ' ' . ($siteSetting?->site_name ?? 'ilanhaber.net') }}
+    </div>
+</footer>
+
+@if($siteSetting?->footer_scripts)
+    {!! $siteSetting->footer_scripts !!}
+@endif
+<script>
+function notificationSystem(initialCount = 0) {
+    return {
+        count: initialCount,
+
+        init() {
+            this.fetchCount();
+
+            setInterval(() => {
+                this.fetchCount();
+            }, 5000);
+        },
+
+        fetchCount() {
+            fetch('/bildirimler/count')
+                .then(res => res.json())
+                .then(data => {
+                    this.count = data.count;
+                });
+        }
+    }
+}
+</script>
+</body>
+</html>

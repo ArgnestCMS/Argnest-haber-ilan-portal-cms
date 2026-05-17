@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+
+class Announcement extends Model
+{
+    protected $fillable = [
+        'category_id',
+        'title',
+        'slug',
+        'summary',
+        'content',
+        'institution',
+        'city',
+        'category',
+        'publish_date',
+        'deadline',
+        'source',
+        'image',
+        'document',
+        'is_headline',
+        'comments_enabled',
+        'is_active',
+        'views',
+    ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function approvedComments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable')
+            ->where('status', 'approved')
+            ->latest();
+    }
+}
