@@ -152,6 +152,9 @@ Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
     Route::post('/forum/konu', [ForumController::class, 'storeTopic'])
         ->name('forum.topics.store');
 
+    Route::post('/forum/gorsel', [ForumController::class, 'uploadImage'])
+        ->name('forum.images.store');
+
     Route::post('/forum/konu/{topic}/cevap', [ForumController::class, 'storePost'])
         ->name('forum.posts.store');
 

@@ -273,13 +273,14 @@
 
                     <div>
                         <label class="text-sm font-black text-slate-700">İçerik</label>
-                        <textarea
-                            name="content"
-                            rows="5"
-                            required
-                            class="mt-2 w-full rounded-lg border-slate-300 text-sm"
-                            placeholder="Konunuzu yazın..."
-                        >{{ old('content') }}</textarea>
+                        <div class="mt-2">
+                            @include('frontend.partials.forum-rich-editor', [
+                                'id' => 'forum-topic-editor',
+                                'name' => 'content',
+                                'value' => old('content'),
+                                'placeholder' => 'Konunuzu yazin...',
+                            ])
+                        </div>
                         @error('content')
                             <p class="mt-2 text-xs font-bold text-red-600">{{ $message }}</p>
                         @enderror

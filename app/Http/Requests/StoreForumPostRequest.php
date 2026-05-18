@@ -14,7 +14,7 @@ class StoreForumPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'content' => ['required', 'string', 'min:5', 'max:3000'],
+            'content' => ['required', 'string', 'min:5', 'max:8000'],
         ];
     }
 }

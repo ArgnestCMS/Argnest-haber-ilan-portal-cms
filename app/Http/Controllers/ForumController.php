@@ -14,7 +14,11 @@ use App\Models\LiveActivity;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPunishment;
+use App\Support\ForumContent;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ForumController extends Controller
@@ -33,10 +37,14 @@ class ForumController extends Controller
             return back()->with('error', 'Çok kısa sürede fazla konu açtınız. Lütfen biraz bekleyin.');
         }
 
-        $content = trim((string) $request->string('content'));
+        $content = ForumContent::sanitize((string) $request->input('content'));
         $title = trim((string) $request->string('title'));
 
-        if ($this->hasSpamRisk($title . ' ' . $content)) {
+        if (ForumContent::isEmpty($content)) {
+            return back()->withInput()->withErrors(['content' => 'Konu icerigi bos olamaz.']);
+        }
+
+        if ($this->hasSpamRisk($title . ' ' . ForumContent::plainText($content))) {
             return back()->with('error', 'Konu içeriği spam filtresine takıldı.');
         }
 
@@ -97,9 +105,13 @@ class ForumController extends Controller
             return back()->with('error', 'Çok kısa sürede fazla cevap yazdınız. Lütfen biraz bekleyin.');
         }
 
-        $content = trim((string) $request->string('content'));
+        $content = ForumContent::sanitize((string) $request->input('content'));
 
-        if ($this->hasSpamRisk($content)) {
+        if (ForumContent::isEmpty($content)) {
+            return back()->withInput()->withErrors(['content' => 'Cevap icerigi bos olamaz.']);
+        }
+
+        if ($this->hasSpamRisk(ForumContent::plainText($content))) {
             return back()->with('error', 'Cevabınız spam filtresine takıldı.');
         }
 
@@ -129,6 +141,23 @@ class ForumController extends Controller
         ]);
 
         return back()->with('success', 'Cevabınız moderatör onayına gönderildi.');
+    }
+
+    public function uploadImage(Request $request): JsonResponse
+    {
+        if (! $this->forumIsEnabled() || $this->userIsMuted()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+        ]);
+
+        $path = $data['image']->store('forum', 'public');
+
+        return response()->json([
+            'url' => Storage::disk('public')->url($path),
+        ]);
     }
 
     public function toggleLike(ForumTopic $topic): RedirectResponse

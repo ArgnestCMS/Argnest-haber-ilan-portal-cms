@@ -27,6 +27,23 @@
 
 @section('content')
 
+<style>
+    .forum-rich-content iframe {
+        aspect-ratio: 16 / 9;
+        border: 0;
+        border-radius: 0.75rem;
+        display: block;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .forum-rich-content img {
+        border-radius: 0.75rem;
+        height: auto;
+        max-width: 100%;
+    }
+</style>
+
 <section class="bg-slate-950 text-white">
     <div class="mx-auto max-w-7xl px-4 py-10">
         <a href="{{ route('forum.index') }}" class="text-sm font-bold text-red-200 hover:text-white">
@@ -138,8 +155,8 @@
         </aside>
 
         <div>
-            <div class="prose max-w-none text-slate-700">
-                {!! nl2br(e($topic->content)) !!}
+            <div class="forum-rich-content prose max-w-none text-slate-700">
+                {!! \App\Support\ForumContent::sanitize($topic->content) !!}
             </div>
         </div>
     </article>
@@ -179,8 +196,8 @@
                             <div class="text-xs font-bold text-slate-400">{{ $post->created_at?->format('d.m.Y H:i') }}</div>
                         </div>
 
-                        <div class="text-sm leading-7 text-slate-700">
-                            {!! nl2br(e($post->content)) !!}
+                        <div class="forum-rich-content prose max-w-none text-sm leading-7 text-slate-700">
+                            {!! \App\Support\ForumContent::sanitize($post->content) !!}
                         </div>
                     </div>
                 </article>
@@ -206,13 +223,14 @@
 
                     <div>
                         <label class="text-sm font-black text-slate-700">Cevap</label>
-                        <textarea
-                            name="content"
-                            rows="5"
-                            required
-                            class="mt-2 w-full rounded-lg border-slate-300 text-sm"
-                            placeholder="Cevabınızı yazın..."
-                        >{{ old('content') }}</textarea>
+                        <div class="mt-2">
+                            @include('frontend.partials.forum-rich-editor', [
+                                'id' => 'forum-post-editor',
+                                'name' => 'content',
+                                'value' => old('content'),
+                                'placeholder' => 'Cevabinizi yazin...',
+                            ])
+                        </div>
                         @error('content')
                             <p class="mt-2 text-xs font-bold text-red-600">{{ $message }}</p>
                         @enderror
