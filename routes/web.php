@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\ForumController;
+use App\Http\Controllers\LiveActivityController;
 use App\Http\Controllers\LiveChatController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
@@ -49,6 +50,9 @@ Route::get('/forum/konu/{slug}', [FrontendController::class, 'forumTopic'])
 
 Route::get('/canli-aktivite', [FrontendController::class, 'liveActivity'])
     ->name('live-activity.index');
+
+Route::get('/canli-aktivite/latest', [LiveActivityController::class, 'latest'])
+    ->name('live-activity.latest');
 
 Route::get('/canli-sohbet', [FrontendController::class, 'liveChat'])
     ->name('live-chat.index');

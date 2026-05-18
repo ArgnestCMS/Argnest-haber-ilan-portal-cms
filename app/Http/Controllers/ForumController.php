@@ -10,6 +10,7 @@ use App\Models\ForumPost;
 use App\Models\ForumTopic;
 use App\Models\ForumTopicBookmark;
 use App\Models\ForumTopicLike;
+use App\Models\LiveActivity;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPunishment;
@@ -55,6 +56,19 @@ class ForumController extends Controller
         ]);
 
         $this->notifyMentions($title . ' ' . $content, $topic);
+        LiveActivity::record([
+            'type' => 'forum_topic_created',
+            'source' => 'forum',
+            'severity' => 'info',
+            'title' => 'Yeni forum konusu gönderildi',
+            'message' => auth()->user()->name . ' "' . Str::limit($topic->title, 80) . '" başlıklı bir konu açtı.',
+            'subject' => $topic,
+            'url' => null,
+            'metadata' => [
+                'topic_id' => $topic->id,
+                'status' => $topic->status,
+            ],
+        ]);
 
         return redirect()
             ->route('forum.index')
@@ -99,6 +113,20 @@ class ForumController extends Controller
 
         $this->notifyTopicOwner($topic);
         $this->notifyMentions($content, $topic, $post);
+        LiveActivity::record([
+            'type' => 'forum_post_created',
+            'source' => 'forum',
+            'severity' => 'success',
+            'title' => 'Yeni forum cevabı gönderildi',
+            'message' => auth()->user()->name . ' "' . Str::limit($topic->title, 80) . '" konusuna cevap yazdı.',
+            'subject' => $post,
+            'url' => route('forum.topics.show', $topic->slug),
+            'metadata' => [
+                'topic_id' => $topic->id,
+                'post_id' => $post->id,
+                'status' => $post->status,
+            ],
+        ]);
 
         return back()->with('success', 'Cevabınız moderatör onayına gönderildi.');
     }

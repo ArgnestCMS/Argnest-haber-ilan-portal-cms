@@ -9,6 +9,7 @@ use App\Models\ForumCategory;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
 use App\Models\Gallery;
+use App\Models\LiveActivity;
 use App\Models\LiveChatMessage;
 use App\Models\News;
 use App\Models\SiteSetting;
@@ -293,8 +294,14 @@ $mostReadNews = News::orderByDesc('views')
     public function liveActivity()
     {
         $siteSetting = SiteSetting::first();
+        $activities = LiveActivity::public()
+            ->with('user:id,name')
+            ->recent()
+            ->take(30)
+            ->get()
+            ->map(fn (LiveActivity $activity) => $activity->toFeedItem());
 
-        return view('frontend.live-activity', compact('siteSetting'));
+        return view('frontend.live-activity', compact('siteSetting', 'activities'));
     }
 
     public function liveChat()

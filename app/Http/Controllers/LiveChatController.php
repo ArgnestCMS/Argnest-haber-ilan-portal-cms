@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLiveChatMessageRequest;
+use App\Models\LiveActivity;
 use App\Models\LiveChatMessage;
 use App\Models\SiteSetting;
 use App\Models\User;
@@ -73,6 +74,19 @@ class LiveChatController extends Controller
         auth()->user()?->forceFill([
             'last_seen_at' => now(),
         ])->save();
+
+        LiveActivity::record([
+            'type' => 'live_chat_message',
+            'source' => 'chat',
+            'severity' => 'success',
+            'title' => 'Canlı sohbette yeni mesaj',
+            'message' => auth()->user()->name . ': ' . Str::limit($content, 100),
+            'subject' => $message,
+            'url' => route('live-chat.index'),
+            'metadata' => [
+                'message_id' => $message->id,
+            ],
+        ]);
 
         return response()->json([
             'message' => 'Mesaj gönderildi.',

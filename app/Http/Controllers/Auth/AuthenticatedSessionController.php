@@ -6,6 +6,7 @@ use App\Helpers\ActivityLogger;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\ActivityLog;
+use App\Models\LiveActivity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,6 +79,16 @@ class AuthenticatedSessionController extends Controller
             ]
         );
 
+        LiveActivity::record([
+            'user' => $user,
+            'type' => 'user_login',
+            'source' => 'auth',
+            'severity' => 'info',
+            'title' => 'Kullanıcı giriş yaptı',
+            'message' => $user->name . ' topluluğa katıldı.',
+            'is_public' => true,
+        ]);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -94,6 +105,18 @@ class AuthenticatedSessionController extends Controller
                 'role' => $user?->role ?? null,
             ]
         );
+
+        if ($user) {
+            LiveActivity::record([
+                'user' => $user,
+                'type' => 'user_logout',
+                'source' => 'auth',
+                'severity' => 'warning',
+                'title' => 'Kullanıcı çıkış yaptı',
+                'message' => $user->name . ' oturumunu kapattı.',
+                'is_public' => true,
+            ]);
+        }
 
         Auth::guard('web')->logout();
 
