@@ -50,6 +50,16 @@
                             </span>
                         @endforeach
                     </div>
+
+                    @auth
+                        @if(auth()->id() === $user->id)
+                            <div class="mt-5">
+                                <a href="{{ route('forum.dashboard') }}" class="inline-flex rounded-lg bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                                    Forum Panelim
+                                </a>
+                            </div>
+                        @endif
+                    @endauth
                 </div>
 
             </div>

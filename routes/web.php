@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\ForumController;
+use App\Http\Controllers\ForumDashboardController;
 use App\Http\Controllers\LiveActivityController;
 use App\Http\Controllers\LiveChatController;
 use App\Http\Controllers\ProfileController;
@@ -163,6 +164,9 @@ Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
 
     Route::post('/forum/konu/{topic}/favori', [ForumController::class, 'toggleBookmark'])
         ->name('forum.topics.bookmark');
+
+    Route::get('/forum/panelim', [ForumDashboardController::class, 'index'])
+        ->name('forum.dashboard');
 
     Route::post('/canli-sohbet/mesaj', [LiveChatController::class, 'store'])
         ->name('live-chat.messages.store');

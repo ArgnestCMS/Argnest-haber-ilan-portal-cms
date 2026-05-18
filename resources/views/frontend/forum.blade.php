@@ -45,6 +45,16 @@
                     Kategorileri Gor
                 </a>
 
+                @auth
+                    <a href="{{ route('forum.dashboard') }}" class="rounded-lg bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100">
+                        Forum Panelim
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-lg bg-white px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-slate-100">
+                        Forum Panelim
+                    </a>
+                @endauth
+
                 <a href="{{ route('live-activity.index') }}" class="rounded-lg border border-white/20 px-5 py-3 text-sm font-black text-white transition hover:bg-white/10">
                     Canli Aktivite
                 </a>
@@ -285,6 +295,10 @@
                         <div class="text-xs font-bold text-slate-500">Son Cevap</div>
                     </div>
                 </div>
+
+                <a href="{{ route('forum.dashboard') }}" class="mt-5 inline-flex w-full justify-center rounded-lg bg-slate-950 px-4 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                    Forum Panelim
+                </a>
             </div>
 
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
