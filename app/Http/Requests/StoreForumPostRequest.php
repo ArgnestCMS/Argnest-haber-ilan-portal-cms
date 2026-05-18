@@ -15,6 +15,8 @@ class StoreForumPostRequest extends FormRequest
     {
         return [
             'content' => ['required', 'string', 'min:5', 'max:8000'],
+            'parent_id' => ['nullable', 'integer', 'exists:forum_posts,id'],
+            'quoted_post_id' => ['nullable', 'integer', 'exists:forum_posts,id'],
         ];
     }
 }

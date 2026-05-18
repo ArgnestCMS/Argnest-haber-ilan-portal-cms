@@ -196,9 +196,48 @@
                             <div class="text-xs font-bold text-slate-400">{{ $post->created_at?->format('d.m.Y H:i') }}</div>
                         </div>
 
+                        @if($post->parent)
+                            <div class="mb-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs font-bold text-blue-800">
+                                {{ $post->parent->user?->name ?? 'Sistem' }} mesajina cevap
+                            </div>
+                        @endif
+
+                        @if($post->quotedPost)
+                            <blockquote class="mb-4 rounded-xl border-l-4 border-red-500 bg-red-50 p-4">
+                                <div class="text-xs font-black uppercase text-red-700">
+                                    {{ $post->quotedPost->user?->name ?? 'Sistem' }} alintisi
+                                </div>
+                                <p class="mt-2 text-sm leading-6 text-slate-700">
+                                    {{ \Illuminate\Support\Str::limit(\App\Support\ForumContent::plainText($post->quotedPost->content), 300) }}
+                                </p>
+                            </blockquote>
+                        @endif
+
                         <div class="forum-rich-content prose max-w-none text-sm leading-7 text-slate-700">
                             {!! \App\Support\ForumContent::sanitize($post->content) !!}
                         </div>
+
+                        @auth
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    data-reply-post="{{ $post->id }}"
+                                    data-reply-user="{{ e($post->user?->name ?? 'Sistem') }}"
+                                    class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                >
+                                    Cevapla
+                                </button>
+                                <button
+                                    type="button"
+                                    data-quote-post="{{ $post->id }}"
+                                    data-quote-user="{{ e($post->user?->name ?? 'Sistem') }}"
+                                    data-quote-content="{{ e(\Illuminate\Support\Str::limit(\App\Support\ForumContent::plainText($post->content), 240)) }}"
+                                    class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                >
+                                    Alintila
+                                </button>
+                            </div>
+                        @endauth
                     </div>
                 </article>
             @empty
@@ -218,8 +257,24 @@
                     <p class="mt-1 text-sm text-slate-600">Cevabınız moderatör onayından sonra yayınlanır.</p>
                 </div>
 
-                <form method="POST" action="{{ route('forum.posts.store', $topic) }}" class="space-y-4">
+                <form id="forum-reply-form" method="POST" action="{{ route('forum.posts.store', $topic) }}" class="space-y-4">
                     @csrf
+
+                    <input type="hidden" name="parent_id" id="forum-reply-parent-id" value="{{ old('parent_id') }}">
+                    <input type="hidden" name="quoted_post_id" id="forum-reply-quoted-post-id" value="{{ old('quoted_post_id') }}">
+
+                    <div id="forum-reply-context" class="hidden rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-900">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <div class="text-xs font-black uppercase text-red-700" id="forum-reply-context-label">Cevap</div>
+                                <div class="mt-1 font-bold" id="forum-reply-context-user"></div>
+                            </div>
+                            <button type="button" id="forum-reply-context-clear" class="rounded-lg bg-white px-3 py-2 text-xs font-black text-red-700 transition hover:bg-red-100">
+                                Temizle
+                            </button>
+                        </div>
+                        <p class="mt-2 hidden text-sm leading-6 text-red-800" id="forum-reply-context-text"></p>
+                    </div>
 
                     <div>
                         <label class="text-sm font-black text-slate-700">Cevap</label>
@@ -255,5 +310,85 @@
         @endif
     </div>
 </section>
+
+@auth
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('forum-reply-form');
+
+            if (! form) {
+                return;
+            }
+
+            const parentInput = document.getElementById('forum-reply-parent-id');
+            const quotedInput = document.getElementById('forum-reply-quoted-post-id');
+            const context = document.getElementById('forum-reply-context');
+            const contextLabel = document.getElementById('forum-reply-context-label');
+            const contextUser = document.getElementById('forum-reply-context-user');
+            const contextText = document.getElementById('forum-reply-context-text');
+            const contextClear = document.getElementById('forum-reply-context-clear');
+            const editorWrapper = form.querySelector('.forum-rich-editor');
+
+            const escapeHtml = (value) => String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            const scrollToForm = () => {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+
+            const showContext = (label, user, text = '') => {
+                contextLabel.textContent = label;
+                contextUser.textContent = user;
+
+                if (text) {
+                    contextText.textContent = text;
+                    contextText.classList.remove('hidden');
+                } else {
+                    contextText.textContent = '';
+                    contextText.classList.add('hidden');
+                }
+
+                context.classList.remove('hidden');
+            };
+
+            document.querySelectorAll('[data-reply-post]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    parentInput.value = button.dataset.replyPost;
+                    quotedInput.value = '';
+                    showContext('Cevap yaziliyor', `${button.dataset.replyUser} mesajina cevap`);
+                    scrollToForm();
+                });
+            });
+
+            document.querySelectorAll('[data-quote-post]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    parentInput.value = button.dataset.quotePost;
+                    quotedInput.value = button.dataset.quotePost;
+                    showContext('Alinti yapiliyor', `${button.dataset.quoteUser} alintisi`, button.dataset.quoteContent);
+
+                    editorWrapper?.dispatchEvent(new CustomEvent('forum-editor:append-html', {
+                        detail: {
+                            html: `<blockquote><p>${escapeHtml(button.dataset.quoteContent || '')}</p></blockquote><p></p>`,
+                        },
+                    }));
+
+                    scrollToForm();
+                });
+            });
+
+            contextClear?.addEventListener('click', () => {
+                parentInput.value = '';
+                quotedInput.value = '';
+                context.classList.add('hidden');
+                contextText.textContent = '';
+                contextText.classList.add('hidden');
+            });
+        });
+    </script>
+@endauth
 
 @endsection

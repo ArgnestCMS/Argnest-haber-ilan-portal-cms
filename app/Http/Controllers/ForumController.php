@@ -115,15 +115,21 @@ class ForumController extends Controller
             return back()->with('error', 'Cevabınız spam filtresine takıldı.');
         }
 
+        $parentPost = $this->approvedPostInTopic($request->integer('parent_id'), $topic);
+        $quotedPost = $this->approvedPostInTopic($request->integer('quoted_post_id'), $topic);
+
         $post = ForumPost::create([
             'forum_topic_id' => $topic->id,
             'user_id' => auth()->id(),
+            'parent_id' => $parentPost?->id,
+            'quoted_post_id' => $quotedPost?->id,
             'content' => $content,
             'status' => 'pending',
             'ip_address' => request()->ip(),
         ]);
 
         $this->notifyTopicOwner($topic);
+        $this->notifyQuotedUser($topic, $post, $quotedPost);
         $this->notifyMentions($content, $topic, $post);
         LiveActivity::record([
             'type' => 'forum_post_created',
@@ -301,6 +307,39 @@ class ForumController extends Controller
             message: auth()->user()->name . ' forum konunuza cevap yazdı.',
             url: route('forum.topics.show', $topic->slug),
             data: ['topic_id' => $topic->id]
+        );
+    }
+
+    private function approvedPostInTopic(int $postId, ForumTopic $topic): ?ForumPost
+    {
+        if ($postId <= 0) {
+            return null;
+        }
+
+        return ForumPost::query()
+            ->whereKey($postId)
+            ->where('forum_topic_id', $topic->id)
+            ->where('status', 'approved')
+            ->first();
+    }
+
+    private function notifyQuotedUser(ForumTopic $topic, ForumPost $post, ?ForumPost $quotedPost): void
+    {
+        if (! $quotedPost?->user_id || $quotedPost->user_id === auth()->id()) {
+            return;
+        }
+
+        NotificationHelper::sendToUser(
+            userId: $quotedPost->user_id,
+            type: 'forum_post_quoted',
+            title: 'Forum cevabiniz alintilandi',
+            message: auth()->user()->name . ' forum cevabinizi alintiladi.',
+            url: route('forum.topics.show', $topic->slug),
+            data: [
+                'topic_id' => $topic->id,
+                'post_id' => $post->id,
+                'quoted_post_id' => $quotedPost->id,
+            ]
         );
     }
 

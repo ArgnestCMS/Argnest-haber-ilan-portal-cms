@@ -158,6 +158,14 @@
                 });
 
                 editor.addEventListener('input', sync);
+                wrapper.addEventListener('forum-editor:set-html', (event) => {
+                    editor.innerHTML = event.detail?.html || '';
+                    sync();
+                    editor.focus();
+                });
+                wrapper.addEventListener('forum-editor:append-html', (event) => {
+                    insertHtml(event.detail?.html || '');
+                });
                 editor.closest('form')?.addEventListener('submit', sync);
                 sync();
             });

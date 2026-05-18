@@ -13,6 +13,8 @@ class ForumPost extends Model
     protected $fillable = [
         'forum_topic_id',
         'user_id',
+        'parent_id',
+        'quoted_post_id',
         'content',
         'status',
         'moderated_by',
@@ -40,6 +42,16 @@ class ForumPost extends Model
     public function moderator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'moderated_by');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(ForumPost::class, 'parent_id');
+    }
+
+    public function quotedPost(): BelongsTo
+    {
+        return $this->belongsTo(ForumPost::class, 'quoted_post_id');
     }
 
     public function isPending(): bool

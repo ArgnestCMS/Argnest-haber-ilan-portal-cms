@@ -66,6 +66,7 @@ class ForumTopic extends Model
     public function approvedPosts(): HasMany
     {
         return $this->hasMany(ForumPost::class)
+            ->with(['parent.user', 'quotedPost.user'])
             ->where('status', 'approved')
             ->oldest();
     }
