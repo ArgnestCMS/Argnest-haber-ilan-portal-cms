@@ -1,5 +1,10 @@
+
 @extends('frontend.layout')
-@section(
+
+ @php
+    $siteSetting = \App\Models\SiteSetting::first();
+ @endphp
+ @section(
     'title',
     isset($category)
         ? $category->name . ' İlanları | ' . ($siteSetting?->site_name ?? config('app.name'))

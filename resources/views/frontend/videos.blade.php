@@ -1,5 +1,9 @@
 @extends('frontend.layout')
 
+@php
+    $siteSetting = \App\Models\SiteSetting::first();
+@endphp
+
 @section('title', 'Videolar')
 
 @section(
