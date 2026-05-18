@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Comments\Tables;
 use App\Helpers\ActivityLogger;
 use App\Models\Notification;
 use App\Models\UserPunishment;
+use App\Support\ForumGamification;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -181,6 +182,12 @@ if (! $existingNotification) {
                             'moderated_at' => now(),
                         ]);
 
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'content_rejected', $record, [
+                                'moderator_id' => auth()->id(),
+                            ]);
+                        }
+
                         ActivityLogger::log(
                             'Yorum reddedildi',
                             auth()->user()->name . ' bir yorumu reddetti.',
@@ -241,6 +248,13 @@ if (! $existingNotification) {
                             'moderated_at' => now(),
                             'moderation_note' => 'Kullanıcıya ceza verildi: ' . $data['reason'],
                         ]);
+
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'punishment', $record, [
+                                'moderator_id' => auth()->id(),
+                                'type' => $data['type'],
+                            ]);
+                        }
 
                         ActivityLogger::log(
                             'Kullanıcıya ceza verildi',

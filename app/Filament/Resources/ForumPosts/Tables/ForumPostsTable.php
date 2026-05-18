@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ForumPosts\Tables;
 
 use App\Helpers\NotificationHelper;
+use App\Support\ForumGamification;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -115,7 +116,12 @@ class ForumPostsTable
                             'last_post_user_id' => $record->user_id,
                         ]);
 
-                        $record->user?->addForumReputation(2);
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'post_approved', $record, [
+                                'moderator_id' => auth()->id(),
+                                'topic_id' => $record->forum_topic_id,
+                            ]);
+                        }
 
                         if ($record->user_id) {
                             NotificationHelper::sendToUser(
@@ -143,6 +149,13 @@ class ForumPostsTable
                             'moderated_by' => auth()->id(),
                             'moderated_at' => now(),
                         ]);
+
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'content_rejected', $record, [
+                                'moderator_id' => auth()->id(),
+                                'topic_id' => $record->forum_topic_id,
+                            ]);
+                        }
 
                         if ($record->user_id) {
                             NotificationHelper::sendToUser(

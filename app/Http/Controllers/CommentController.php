@@ -11,6 +11,7 @@ use App\Models\News;
 use App\Models\SiteSetting;
 use App\Models\UserPunishment;
 use App\Support\CommunitySafety;
+use App\Support\ForumGamification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -114,6 +115,17 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
         ]);
 
         if ($status === 'rejected') {
+            ForumGamification::award(auth()->user(), 'content_rejected', $comment, [
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
+            ]);
+
+            if ($safety->score >= 70) {
+                ForumGamification::award(auth()->user(), 'high_ai_risk', $comment, [
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                ]);
+            }
 
             ActivityLogger::log(
                 action: 'spam_comment_rejected',
@@ -168,6 +180,11 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
                     'reason' => 'Otomatik spam/flood koruma sistemi',
                     'is_active' => true,
                     'expires_at' => now()->addHours(12),
+                ]);
+
+                ForumGamification::award(auth()->user(), 'punishment', $comment, [
+                    'type' => 'mute',
+                    'source' => 'auto_comment_moderation',
                 ]);
 
                 ActivityLogger::log(

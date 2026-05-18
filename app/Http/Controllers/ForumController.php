@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\UserPunishment;
 use App\Support\CommunitySafety;
 use App\Support\ForumContent;
+use App\Support\ForumGamification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,6 +66,19 @@ class ForumController extends Controller
         ]);
 
         $topic->tags()->sync($this->tagIdsFromInput((string) $request->input('tag_names')));
+
+        ForumGamification::award(auth()->user(), 'topic_created', $topic, [
+            'status' => $topic->status,
+            'ai_risk_score' => $safety->score,
+            'ai_risk_label' => $safety->label,
+        ]);
+
+        if ($safety->score >= 70) {
+            ForumGamification::award(auth()->user(), 'high_ai_risk', $topic, [
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
+            ]);
+        }
 
         $this->notifyMentions($title . ' ' . $content, $topic);
         LiveActivity::record([
@@ -151,6 +165,21 @@ class ForumController extends Controller
             'ip_address' => request()->ip(),
         ]);
 
+        ForumGamification::award(auth()->user(), 'post_created', $post, [
+            'topic_id' => $topic->id,
+            'status' => $post->status,
+            'ai_risk_score' => $safety->score,
+            'ai_risk_label' => $safety->label,
+        ]);
+
+        if ($safety->score >= 70) {
+            ForumGamification::award(auth()->user(), 'high_ai_risk', $post, [
+                'topic_id' => $topic->id,
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
+            ]);
+        }
+
         $this->notifyTopicOwner($topic);
         $this->notifyQuotedUser($topic, $post, $quotedPost);
         $this->notifyMentions($content, $topic, $post);
@@ -222,7 +251,12 @@ class ForumController extends Controller
 
         if ($like) {
             $like->delete();
-            $topic->user?->addForumReputation(-1);
+
+            if ($topic->user) {
+                ForumGamification::award($topic->user, 'topic_like_removed', $topic, [
+                    'removed_by' => auth()->id(),
+                ]);
+            }
 
             return back()->with('success', 'Beğeni kaldırıldı.');
         }
@@ -233,7 +267,11 @@ class ForumController extends Controller
         ]);
 
         if ($topic->user_id && $topic->user_id !== auth()->id()) {
-            $topic->user?->addForumReputation(1);
+            if ($topic->user) {
+                ForumGamification::award($topic->user, 'topic_liked', $topic, [
+                    'liked_by' => auth()->id(),
+                ]);
+            }
 
             NotificationHelper::sendToUser(
                 userId: $topic->user_id,

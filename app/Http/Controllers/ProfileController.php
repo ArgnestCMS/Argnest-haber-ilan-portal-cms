@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ForumGamification;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -109,6 +110,8 @@ class ProfileController extends Controller
             ->take(5)
             ->get();
 
-        return view('frontend.profile', compact('user', 'forumStats', 'latestForumTopics'));
+        $levelProgress = ForumGamification::progressToNextLevel($user);
+
+        return view('frontend.profile', compact('user', 'forumStats', 'latestForumTopics', 'levelProgress'));
     }
 }

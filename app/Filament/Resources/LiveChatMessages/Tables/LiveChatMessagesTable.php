@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\LiveChatMessages\Tables;
 
 use App\Models\UserPunishment;
+use App\Support\ForumGamification;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -117,12 +118,21 @@ class LiveChatMessagesTable
                     ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn ($record) => $record->status !== 'approved')
-                    ->action(fn ($record) => $record->update([
-                        'status' => 'approved',
-                        'moderated_by' => auth()->id(),
-                        'moderated_at' => now(),
-                        'moderation_note' => null,
-                    ])),
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => 'approved',
+                            'moderated_by' => auth()->id(),
+                            'moderated_at' => now(),
+                            'moderation_note' => null,
+                        ]);
+
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'post_approved', $record, [
+                                'moderator_id' => auth()->id(),
+                                'source' => 'live_chat',
+                            ]);
+                        }
+                    }),
 
                 Action::make('reject')
                     ->label('Reddet')
@@ -134,12 +144,21 @@ class LiveChatMessagesTable
                             ->label('Red Sebebi')
                             ->rows(3),
                     ])
-                    ->action(fn ($record, array $data) => $record->update([
-                        'status' => 'rejected',
-                        'moderated_by' => auth()->id(),
-                        'moderated_at' => now(),
-                        'moderation_note' => $data['moderation_note'] ?? null,
-                    ])),
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'status' => 'rejected',
+                            'moderated_by' => auth()->id(),
+                            'moderated_at' => now(),
+                            'moderation_note' => $data['moderation_note'] ?? null,
+                        ]);
+
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'content_rejected', $record, [
+                                'moderator_id' => auth()->id(),
+                                'source' => 'live_chat',
+                            ]);
+                        }
+                    }),
 
                 Action::make('hide')
                     ->label('Gizle')
@@ -191,6 +210,14 @@ class LiveChatMessagesTable
                             'moderated_at' => now(),
                             'moderation_note' => 'Kullanıcıya ceza verildi: ' . $data['reason'],
                         ]);
+
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'punishment', $record, [
+                                'moderator_id' => auth()->id(),
+                                'type' => $data['type'],
+                                'source' => 'live_chat',
+                            ]);
+                        }
                     }),
 
                 DeleteAction::make()->label('Sil'),

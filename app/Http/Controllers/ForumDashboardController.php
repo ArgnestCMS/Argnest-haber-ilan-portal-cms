@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\ForumPost;
+use App\Models\ForumQuest;
 use App\Models\ForumTopic;
 use App\Models\SiteSetting;
+use App\Models\User;
+use App\Support\ForumGamification;
 use Illuminate\View\View;
 
 class ForumDashboardController extends Controller
@@ -13,6 +16,7 @@ class ForumDashboardController extends Controller
     {
         $user = auth()->user();
         $user->load('forumBadges');
+        ForumGamification::ensureDefaultQuests();
 
         $topicRelations = ['category', 'tags'];
         $topicCounts = [
@@ -92,6 +96,43 @@ class ForumDashboardController extends Controller
             'views' => ForumTopic::query()->where('user_id', $user->id)->sum('views'),
         ];
 
+        $levelProgress = ForumGamification::progressToNextLevel($user);
+        $today = now()->toDateString();
+
+        $todayQuests = ForumQuest::query()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get()
+            ->map(function (ForumQuest $quest) use ($user, $today) {
+                $pivot = $user->forumQuests()
+                    ->where('forum_quest_id', $quest->id)
+                    ->wherePivot('tracked_on', $today)
+                    ->first()?->pivot;
+
+                $progress = min($quest->target, (int) ($pivot?->progress ?? 0));
+
+                return [
+                    'name' => $quest->name,
+                    'target' => $quest->target,
+                    'progress' => $progress,
+                    'percent' => $quest->target > 0 ? min(100, (int) round(($progress / $quest->target) * 100)) : 0,
+                    'is_completed' => (bool) ($pivot?->is_completed ?? false),
+                    'xp_reward' => $quest->xp_reward,
+                    'reputation_reward' => $quest->reputation_reward,
+                ];
+            });
+
+        $recentReputationEvents = $user->forumReputationEvents()
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $leaderboard = User::query()
+            ->orderByDesc('forum_xp')
+            ->orderByDesc('forum_reputation')
+            ->take(10)
+            ->get(['id', 'name', 'forum_reputation', 'forum_xp', 'forum_level']);
+
         return view('frontend.forum-dashboard', [
             'siteSetting' => SiteSetting::query()->first(),
             'user' => $user,
@@ -104,6 +145,10 @@ class ForumDashboardController extends Controller
             'pendingPosts' => $pendingPosts,
             'approvedTopics' => $approvedTopics,
             'approvedPosts' => $approvedPosts,
+            'levelProgress' => $levelProgress,
+            'todayQuests' => $todayQuests,
+            'recentReputationEvents' => $recentReputationEvents,
+            'leaderboard' => $leaderboard,
         ]);
     }
 }

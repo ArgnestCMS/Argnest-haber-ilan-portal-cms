@@ -4,6 +4,7 @@ namespace App\Filament\Resources\UserPunishments\Pages;
 
 use App\Filament\Resources\UserPunishments\UserPunishmentResource;
 use App\Helpers\ActivityLogger;
+use App\Support\ForumGamification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUserPunishment extends CreateRecord
@@ -24,5 +25,13 @@ class CreateUserPunishment extends CreateRecord
                 'is_active' => $this->record->is_active ?? null,
             ]
         );
+
+        if ($this->record->user) {
+            ForumGamification::award($this->record->user, 'punishment', $this->record, [
+                'moderator_id' => auth()->id(),
+                'type' => $this->record->type,
+                'source' => 'user_punishments',
+            ]);
+        }
     }
 }

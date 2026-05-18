@@ -44,6 +44,14 @@
                             {{ $user->forum_reputation ?? 0 }} itibar
                         </span>
 
+                        <span class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700">
+                            Seviye {{ $user->forum_level ?? 1 }}
+                        </span>
+
+                        <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
+                            {{ number_format($user->forum_xp ?? 0) }} XP
+                        </span>
+
                         @foreach($user->forumBadges as $badge)
                             <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700">
                                 {{ $badge->name }}
@@ -79,6 +87,19 @@
             <div class="grid md:grid-cols-4 gap-6 mt-8">
 
                 <div class="bg-slate-50 rounded-2xl p-6 border">
+                    <div class="text-sm text-slate-500">Seviye</div>
+                    <div class="text-4xl font-black mt-2">{{ $user->forum_level ?? 1 }}</div>
+                    <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                        <div class="h-full rounded-full bg-red-600" style="width: {{ $levelProgress['percent'] ?? 0 }}%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 border">
+                    <div class="text-sm text-slate-500">XP</div>
+                    <div class="text-4xl font-black mt-2">{{ number_format($user->forum_xp ?? 0) }}</div>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 border">
                     <div class="text-sm text-slate-500">Forum Konusu</div>
                     <div class="text-4xl font-black mt-2">{{ $forumStats['topics'] ?? 0 }}</div>
                 </div>
@@ -86,16 +107,6 @@
                 <div class="bg-slate-50 rounded-2xl p-6 border">
                     <div class="text-sm text-slate-500">Forum Cevabı</div>
                     <div class="text-4xl font-black mt-2">{{ $forumStats['posts'] ?? 0 }}</div>
-                </div>
-
-                <div class="bg-slate-50 rounded-2xl p-6 border">
-                    <div class="text-sm text-slate-500">Beğeni</div>
-                    <div class="text-4xl font-black mt-2">{{ $forumStats['likes'] ?? 0 }}</div>
-                </div>
-
-                <div class="bg-slate-50 rounded-2xl p-6 border">
-                    <div class="text-sm text-slate-500">Favori</div>
-                    <div class="text-4xl font-black mt-2">{{ $forumStats['bookmarks'] ?? 0 }}</div>
                 </div>
 
             </div>

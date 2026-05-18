@@ -11,6 +11,7 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPunishment;
 use App\Support\CommunitySafety;
+use App\Support\ForumGamification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
@@ -63,7 +64,7 @@ class LiveChatController extends Controller
         $safety = CommunitySafety::assess($content, auth()->user(), 'live_chat');
 
         if ($safety->shouldReject()) {
-            LiveChatMessage::create([
+            $rejectedMessage = LiveChatMessage::create([
                 'user_id' => auth()->id(),
                 'message' => $content,
                 'status' => 'rejected',
@@ -71,6 +72,18 @@ class LiveChatController extends Controller
                 'ip_address' => $request->ip(),
                 'moderation_note' => 'Otomatik AI guvenlik reddi: ' . implode(', ', $safety->reasons),
             ]);
+
+            ForumGamification::award(auth()->user(), 'content_rejected', $rejectedMessage, [
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
+            ]);
+
+            if ($safety->score >= 70) {
+                ForumGamification::award(auth()->user(), 'high_ai_risk', $rejectedMessage, [
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                ]);
+            }
 
             return response()->json([
                 'message' => 'Mesaj guvenlik filtresine takildi.',

@@ -36,6 +36,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'bio',
         'forum_reputation',
+        'forum_xp',
+        'forum_level',
+        'forum_streak_days',
+        'forum_last_activity_date',
 
         'facebook',
         'twitter',
@@ -65,6 +69,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
             'is_active' => 'boolean',
             'forum_reputation' => 'integer',
+            'forum_xp' => 'integer',
+            'forum_level' => 'integer',
+            'forum_streak_days' => 'integer',
+            'forum_last_activity_date' => 'date',
 
             'password' => 'hashed',
 
@@ -178,6 +186,19 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    public function forumReputationEvents(): HasMany
+    {
+        return $this->hasMany(ForumReputationEvent::class)
+            ->latest();
+    }
+
+    public function forumQuests(): BelongsToMany
+    {
+        return $this->belongsToMany(ForumQuest::class, 'forum_quest_user')
+            ->withPivot(['tracked_on', 'progress', 'is_completed', 'completed_at'])
+            ->withTimestamps();
+    }
+
     public function isOnline(): bool
     {
         return $this->last_seen_at?->gt(now()->subMinutes(5)) ?? false;
@@ -193,17 +214,27 @@ class User extends Authenticatable implements MustVerifyEmail
     public function syncForumBadges(): void
     {
         $badges = [
-            10 => ['name' => 'Yeni Katılımcı', 'slug' => 'yeni-katilimci', 'description' => 'Forumda ilk itibarı kazandı.', 'color' => 'blue'],
-            50 => ['name' => 'Aktif Üye', 'slug' => 'aktif-uye', 'description' => 'Toplulukta düzenli katkı sağlıyor.', 'color' => 'green'],
-            100 => ['name' => 'Güvenilir Üye', 'slug' => 'guvenilir-uye', 'description' => 'Forumda güçlü bir itibar oluşturdu.', 'color' => 'red'],
+            ['name' => 'Yeni Katilimci', 'slug' => 'yeni-katilimci', 'description' => 'Forumda ilk itibarini kazandi.', 'color' => 'blue', 'type' => 'reputation', 'threshold' => 10],
+            ['name' => 'Aktif Uye', 'slug' => 'aktif-uye', 'description' => 'Toplulukta duzenli katki sagliyor.', 'color' => 'green', 'type' => 'reputation', 'threshold' => 50],
+            ['name' => 'Guvenilir Uye', 'slug' => 'guvenilir-uye', 'description' => 'Forumda guclu bir itibar olusturdu.', 'color' => 'red', 'type' => 'reputation', 'threshold' => 100],
+            ['name' => 'XP Toplayici', 'slug' => 'xp-toplayici', 'description' => '100 XP barajini asti.', 'color' => 'indigo', 'type' => 'xp', 'threshold' => 100],
+            ['name' => 'Seviye Avcisi', 'slug' => 'seviye-avcisi', 'description' => 'Seviye 3 oldu.', 'color' => 'purple', 'type' => 'level', 'threshold' => 3],
+            ['name' => 'Seri Katilimci', 'slug' => 'seri-katilimci', 'description' => '3 gunluk aktiflik serisi yakaladi.', 'color' => 'amber', 'type' => 'streak', 'threshold' => 3],
         ];
 
-        foreach ($badges as $threshold => $badgeData) {
-            if ($this->forum_reputation < $threshold) {
+        foreach ($badges as $badgeData) {
+            $currentValue = match ($badgeData['type']) {
+                'xp' => (int) $this->forum_xp,
+                'level' => (int) $this->forum_level,
+                'streak' => (int) $this->forum_streak_days,
+                default => (int) $this->forum_reputation,
+            };
+
+            if ($currentValue < $badgeData['threshold']) {
                 continue;
             }
 
-            $badge = ForumBadge::firstOrCreate(
+            $badge = ForumBadge::updateOrCreate(
                 ['slug' => $badgeData['slug']],
                 $badgeData
             );

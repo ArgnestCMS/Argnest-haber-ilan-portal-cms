@@ -12,6 +12,14 @@ class ForumBadge extends Model
         'slug',
         'description',
         'color',
+        'type',
+        'threshold',
+        'xp_reward',
+    ];
+
+    protected $casts = [
+        'threshold' => 'integer',
+        'xp_reward' => 'integer',
     ];
 
     public function users(): BelongsToMany

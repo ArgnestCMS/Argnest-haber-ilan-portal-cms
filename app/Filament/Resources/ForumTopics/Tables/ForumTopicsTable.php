@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ForumTopics\Tables;
 
 use App\Helpers\NotificationHelper;
 use App\Models\ForumCategory;
+use App\Support\ForumGamification;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -142,7 +143,11 @@ class ForumTopicsTable
                             'last_post_user_id' => $record->last_post_user_id ?: $record->user_id,
                         ]);
 
-                        $record->user?->addForumReputation(5);
+                        if ($record->user) {
+                            ForumGamification::award($record->user, 'topic_approved', $record, [
+                                'moderator_id' => auth()->id(),
+                            ]);
+                        }
 
                         if ($record->user_id) {
                             NotificationHelper::sendToUser(
@@ -188,7 +193,17 @@ class ForumTopicsTable
                     ->label(fn ($record) => $record->is_solved ? 'Cozumu Kaldir' : 'Cozuldu')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
-                    ->action(fn ($record) => $record->update(['is_solved' => ! $record->is_solved])),
+                    ->action(function ($record) {
+                        $wasSolved = (bool) $record->is_solved;
+
+                        $record->update(['is_solved' => ! $wasSolved]);
+
+                        if (! $wasSolved && $record->user) {
+                            ForumGamification::award($record->user, 'topic_solved', $record, [
+                                'moderator_id' => auth()->id(),
+                            ]);
+                        }
+                    }),
                 Action::make('toggle_replies')
                     ->label(fn ($record) => $record->replies_closed ? 'Cevaplari Ac' : 'Cevaplari Kapat')
                     ->icon(fn ($record) => $record->replies_closed ? 'heroicon-o-chat-bubble-left-right' : 'heroicon-o-no-symbol')

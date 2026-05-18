@@ -39,6 +39,16 @@
             </div>
 
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="text-xs font-bold uppercase text-slate-300">Seviye</div>
+                <div class="mt-2 text-3xl font-black">{{ $user->forum_level ?? 1 }}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="text-xs font-bold uppercase text-slate-300">XP</div>
+                <div class="mt-2 text-3xl font-black">{{ number_format($user->forum_xp ?? 0) }}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div class="text-xs font-bold uppercase text-slate-300">Konularim</div>
                 <div class="mt-2 text-3xl font-black">{{ $stats['topics'] }}</div>
             </div>
@@ -49,13 +59,23 @@
             </div>
 
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div class="text-xs font-bold uppercase text-slate-300">Favorilerim</div>
-                <div class="mt-2 text-3xl font-black">{{ $stats['favorites'] }}</div>
+                <div class="text-xs font-bold uppercase text-slate-300">Streak</div>
+                <div class="mt-2 text-3xl font-black">{{ $user->forum_streak_days ?? 0 }}</div>
             </div>
 
             <div class="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div class="text-xs font-bold uppercase text-slate-300">Begendiklerim</div>
                 <div class="mt-2 text-3xl font-black">{{ $stats['likes'] }}</div>
+            </div>
+        </div>
+
+        <div class="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
+            <div class="flex items-center justify-between gap-4 text-xs font-black uppercase text-slate-300">
+                <span>Seviye {{ $user->forum_level ?? 1 }}</span>
+                <span>{{ $levelProgress['earned'] }} / {{ $levelProgress['needed'] }} XP</span>
+            </div>
+            <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+                <div class="h-full rounded-full bg-red-500" style="width: {{ $levelProgress['percent'] }}%"></div>
             </div>
         </div>
     </div>
@@ -219,6 +239,69 @@
                             <span class="text-sm font-bold text-slate-500">Henuz rozet kazanilmadi.</span>
                         @endforelse
                     </div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-black text-slate-950">Gunluk Gorevler</h2>
+
+                <div class="mt-5 space-y-4">
+                    @forelse($todayQuests as $quest)
+                        <div>
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-sm font-black text-slate-900">{{ $quest['name'] }}</div>
+                                <div class="text-xs font-black {{ $quest['is_completed'] ? 'text-green-600' : 'text-slate-500' }}">
+                                    {{ $quest['progress'] }}/{{ $quest['target'] }}
+                                </div>
+                            </div>
+                            <div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div class="h-full rounded-full {{ $quest['is_completed'] ? 'bg-green-500' : 'bg-red-500' }}" style="width: {{ $quest['percent'] }}%"></div>
+                            </div>
+                            <div class="mt-1 text-[11px] font-bold text-slate-500">
+                                +{{ $quest['xp_reward'] }} XP, +{{ $quest['reputation_reward'] }} reputation
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-sm font-bold text-slate-500">Aktif gorev yok.</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-black text-slate-950">Reputation Gecmisi</h2>
+
+                <div class="mt-4 divide-y divide-slate-100">
+                    @forelse($recentReputationEvents as $event)
+                        <div class="py-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-sm font-black text-slate-900">{{ $event->description ?? $event->type }}</div>
+                                <div class="text-xs font-black {{ $event->points >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $event->points >= 0 ? '+' : '' }}{{ $event->points }} rep
+                                </div>
+                            </div>
+                            <div class="mt-1 text-xs font-bold text-slate-500">
+                                {{ $event->xp >= 0 ? '+' : '' }}{{ $event->xp }} XP · {{ $event->created_at?->diffForHumans() }}
+                            </div>
+                        </div>
+                    @empty
+                        <div class="py-4 text-sm font-bold text-slate-500">Henuz kayit yok.</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-black text-slate-950">Liderlik Tablosu</h2>
+
+                <div class="mt-4 divide-y divide-slate-100">
+                    @foreach($leaderboard as $rank => $leader)
+                        <a href="{{ url('/profil/' . $leader->id) }}" class="flex items-center justify-between gap-3 py-3">
+                            <div class="min-w-0">
+                                <div class="truncate text-sm font-black text-slate-900">#{{ $rank + 1 }} {{ $leader->name }}</div>
+                                <div class="mt-1 text-xs font-bold text-slate-500">Seviye {{ $leader->forum_level ?? 1 }} · {{ $leader->forum_reputation ?? 0 }} rep</div>
+                            </div>
+                            <div class="shrink-0 text-sm font-black text-red-700">{{ number_format($leader->forum_xp ?? 0) }} XP</div>
+                        </a>
+                    @endforeach
                 </div>
             </div>
 
