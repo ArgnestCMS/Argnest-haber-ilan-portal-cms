@@ -21,6 +21,9 @@ class ForumTopic extends Model
         'is_pinned',
         'is_locked',
         'is_solved',
+        'replies_closed',
+        'slow_mode_seconds',
+        'moderator_note',
         'views',
         'last_post_at',
         'last_post_user_id',
@@ -30,6 +33,8 @@ class ForumTopic extends Model
         'is_pinned' => 'boolean',
         'is_locked' => 'boolean',
         'is_solved' => 'boolean',
+        'replies_closed' => 'boolean',
+        'slow_mode_seconds' => 'integer',
         'last_post_at' => 'datetime',
     ];
 
@@ -109,5 +114,10 @@ class ForumTopic extends Model
         }
 
         return $this->bookmarks->contains('user_id', $user->id);
+    }
+
+    public function acceptsReplies(): bool
+    {
+        return ! $this->is_locked && ! $this->replies_closed;
     }
 }

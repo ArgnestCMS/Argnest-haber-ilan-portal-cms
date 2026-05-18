@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ForumTopics\Tables;
 
+use App\Models\ForumCategory;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -10,6 +11,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -59,6 +63,15 @@ class ForumTopicsTable
                     ->label('Çözüldü')
                     ->boolean(),
 
+                IconColumn::make('replies_closed')
+                    ->label('Cevap Kapali')
+                    ->boolean(),
+
+                TextColumn::make('slow_mode_seconds')
+                    ->label('Yavas Mod')
+                    ->suffix(' sn')
+                    ->sortable(),
+
                 TextColumn::make('lastPostUser.name')
                     ->label('Son Cevaplayan')
                     ->default('-'),
@@ -107,12 +120,74 @@ class ForumTopicsTable
                     ->color('warning')
                     ->visible(fn ($record) => $record->status !== 'hidden')
                     ->action(fn ($record) => $record->update(['status' => 'hidden'])),
-                Action::make('mark_solved')
-                    ->label('Çözüldü')
+                Action::make('toggle_lock')
+                    ->label(fn ($record) => $record->is_locked ? 'Kilidi Ac' : 'Kilitle')
+                    ->icon(fn ($record) => $record->is_locked ? 'heroicon-o-lock-open' : 'heroicon-o-lock-closed')
+                    ->color(fn ($record) => $record->is_locked ? 'success' : 'warning')
+                    ->action(fn ($record) => $record->update(['is_locked' => ! $record->is_locked])),
+                Action::make('toggle_pin')
+                    ->label(fn ($record) => $record->is_pinned ? 'Sabiti Kaldir' : 'Sabitle')
+                    ->icon('heroicon-o-bookmark')
+                    ->color('info')
+                    ->action(fn ($record) => $record->update(['is_pinned' => ! $record->is_pinned])),
+                Action::make('toggle_solved')
+                    ->label(fn ($record) => $record->is_solved ? 'Cozumu Kaldir' : 'Cozuldu')
                     ->icon('heroicon-o-check-badge')
                     ->color('success')
-                    ->visible(fn ($record) => ! $record->is_solved)
-                    ->action(fn ($record) => $record->update(['is_solved' => true])),
+                    ->action(fn ($record) => $record->update(['is_solved' => ! $record->is_solved])),
+                Action::make('toggle_replies')
+                    ->label(fn ($record) => $record->replies_closed ? 'Cevaplari Ac' : 'Cevaplari Kapat')
+                    ->icon(fn ($record) => $record->replies_closed ? 'heroicon-o-chat-bubble-left-right' : 'heroicon-o-no-symbol')
+                    ->color(fn ($record) => $record->replies_closed ? 'success' : 'warning')
+                    ->action(fn ($record) => $record->update(['replies_closed' => ! $record->replies_closed])),
+                Action::make('move')
+                    ->label('Tasi')
+                    ->icon('heroicon-o-arrow-right-circle')
+                    ->color('gray')
+                    ->form([
+                        Select::make('forum_category_id')
+                            ->label('Yeni Kategori')
+                            ->options(fn () => ForumCategory::query()
+                                ->where('is_active', true)
+                                ->orderBy('sort_order')
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->required(),
+                    ])
+                    ->action(fn ($record, array $data) => $record->update([
+                        'forum_category_id' => $data['forum_category_id'],
+                    ])),
+                Action::make('slow_mode')
+                    ->label('Yavas Mod')
+                    ->icon('heroicon-o-clock')
+                    ->color('gray')
+                    ->form([
+                        TextInput::make('slow_mode_seconds')
+                            ->label('Saniye')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(3600)
+                            ->default(fn ($record) => $record->slow_mode_seconds ?? 0)
+                            ->required(),
+                    ])
+                    ->action(fn ($record, array $data) => $record->update([
+                        'slow_mode_seconds' => (int) $data['slow_mode_seconds'],
+                    ])),
+                Action::make('moderator_note')
+                    ->label('Moderator Notu')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('gray')
+                    ->form([
+                        Textarea::make('moderator_note')
+                            ->label('Not')
+                            ->default(fn ($record) => $record->moderator_note)
+                            ->rows(5)
+                            ->maxLength(5000),
+                    ])
+                    ->action(fn ($record, array $data) => $record->update([
+                        'moderator_note' => $data['moderator_note'] ?? null,
+                    ])),
                 DeleteAction::make()->label('Sil'),
                 RestoreAction::make()->label('Geri Al'),
                 ForceDeleteAction::make()->label('Kalıcı Sil'),

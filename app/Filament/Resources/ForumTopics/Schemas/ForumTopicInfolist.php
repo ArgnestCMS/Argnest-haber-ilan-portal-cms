@@ -12,17 +12,20 @@ class ForumTopicInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('title')->label('Başlık'),
+                TextEntry::make('title')->label('Baslik'),
                 TextEntry::make('category.name')->label('Kategori'),
-                TextEntry::make('user.name')->label('Kullanıcı')->placeholder('Sistem'),
+                TextEntry::make('user.name')->label('Kullanici')->placeholder('Sistem'),
                 TextEntry::make('status')->label('Durum')->badge(),
                 IconEntry::make('is_pinned')->label('Sabit')->boolean(),
                 IconEntry::make('is_locked')->label('Kilitli')->boolean(),
-                IconEntry::make('is_solved')->label('Çözüldü')->boolean(),
+                IconEntry::make('is_solved')->label('Cozuldu')->boolean(),
+                IconEntry::make('replies_closed')->label('Cevaplar Kapali')->boolean(),
+                TextEntry::make('slow_mode_seconds')->label('Yavas Mod')->suffix(' sn')->numeric(),
                 TextEntry::make('lastPostUser.name')->label('Son Cevaplayan')->placeholder('-'),
-                TextEntry::make('views')->label('Görüntülenme')->numeric(),
-                TextEntry::make('content')->label('İçerik')->html()->columnSpanFull(),
-                TextEntry::make('created_at')->label('Oluşturma')->dateTime()->placeholder('-'),
+                TextEntry::make('views')->label('Goruntulenme')->numeric(),
+                TextEntry::make('moderator_note')->label('Moderator Notu')->placeholder('-')->columnSpanFull(),
+                TextEntry::make('content')->label('Icerik')->html()->columnSpanFull(),
+                TextEntry::make('created_at')->label('Olusturma')->dateTime()->placeholder('-'),
             ]);
     }
 }

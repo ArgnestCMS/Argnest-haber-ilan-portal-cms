@@ -93,7 +93,7 @@ class ForumController extends Controller
             abort(404);
         }
 
-        if ($topic->is_locked) {
+        if (! $topic->acceptsReplies()) {
             return back()->with('error', 'Bu konu cevaplara kapalı.');
         }
 
@@ -103,6 +103,10 @@ class ForumController extends Controller
 
         if ($this->hasPostFloodRisk()) {
             return back()->with('error', 'Çok kısa sürede fazla cevap yazdınız. Lütfen biraz bekleyin.');
+        }
+
+        if ($this->hasTopicSlowModeRisk($topic)) {
+            return back()->with('error', 'Bu konuda yavas mod aktif. Lutfen biraz bekleyin.');
         }
 
         $content = ForumContent::sanitize((string) $request->input('content'));
@@ -262,6 +266,21 @@ class ForumController extends Controller
             ->where('user_id', auth()->id())
             ->where('created_at', '>=', now()->subMinute())
             ->count() >= 3;
+    }
+
+    private function hasTopicSlowModeRisk(ForumTopic $topic): bool
+    {
+        $seconds = (int) $topic->slow_mode_seconds;
+
+        if ($seconds <= 0) {
+            return false;
+        }
+
+        return ForumPost::query()
+            ->where('forum_topic_id', $topic->id)
+            ->where('user_id', auth()->id())
+            ->where('created_at', '>=', now()->subSeconds($seconds))
+            ->exists();
     }
 
     private function hasSpamRisk(string $content): bool

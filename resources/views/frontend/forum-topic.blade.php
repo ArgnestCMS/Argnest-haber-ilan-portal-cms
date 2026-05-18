@@ -72,6 +72,18 @@
                     Kilitli
                 </span>
             @endif
+
+            @if($topic->replies_closed)
+                <span class="rounded-full bg-orange-500/20 px-3 py-1 text-xs font-black text-orange-100">
+                    Cevap Kapali
+                </span>
+            @endif
+
+            @if($topic->slow_mode_seconds > 0)
+                <span class="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-black text-blue-100">
+                    Yavas Mod
+                </span>
+            @endif
         </div>
 
         <h1 class="mt-4 max-w-4xl text-3xl font-black leading-tight md:text-5xl">
@@ -250,10 +262,15 @@
     </div>
 
     <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        @if($siteSetting?->forum_enabled && ! $topic->is_locked)
+        @if($siteSetting?->forum_enabled && $topic->acceptsReplies())
             @auth
                 <div class="mb-5">
                     <h2 class="text-2xl font-black text-slate-950">Cevap Yaz</h2>
+                    @if($topic->slow_mode_seconds > 0)
+                        <p class="mt-2 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs font-bold text-blue-800">
+                            Bu konuda yavas mod aktif: {{ $topic->slow_mode_seconds }} saniyede bir cevap yazilabilir.
+                        </p>
+                    @endif
                     <p class="mt-1 text-sm text-slate-600">Cevabınız moderatör onayından sonra yayınlanır.</p>
                 </div>
 
@@ -302,6 +319,10 @@
         @elseif($topic->is_locked)
             <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-bold text-yellow-800">
                 Bu konu cevaplara kapalı.
+            </div>
+        @elseif($topic->replies_closed)
+            <div class="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-orange-800">
+                Bu konuda yeni cevaplar moderasyon tarafindan kapatildi.
             </div>
         @else
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-bold text-slate-700">

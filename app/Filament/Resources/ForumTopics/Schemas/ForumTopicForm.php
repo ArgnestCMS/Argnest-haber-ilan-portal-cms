@@ -6,6 +6,7 @@ use App\Models\ForumTopic;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -82,6 +83,22 @@ class ForumTopicForm
                 Toggle::make('is_solved')
                     ->label('Çözüldü')
                     ->default(false),
+
+                Toggle::make('replies_closed')
+                    ->label('Cevaplar Kapali')
+                    ->default(false),
+
+                TextInput::make('slow_mode_seconds')
+                    ->label('Yavas Mod (saniye)')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(3600)
+                    ->default(0),
+
+                Textarea::make('moderator_note')
+                    ->label('Moderator Notu')
+                    ->maxLength(5000)
+                    ->columnSpanFull(),
             ])
             ->columns(2);
     }
