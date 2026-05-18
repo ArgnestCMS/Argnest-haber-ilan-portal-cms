@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class LiveActivity extends Model
 {
+    use SoftDeletes;
+
     public const SEVERITIES = ['info', 'success', 'warning', 'danger'];
 
     public const SOURCES = ['auth', 'forum', 'chat', 'system'];
@@ -25,12 +28,14 @@ class LiveActivity extends Model
         'url',
         'metadata',
         'is_public',
+        'is_important',
         'occurred_at',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'is_public' => 'boolean',
+        'is_important' => 'boolean',
         'occurred_at' => 'datetime',
     ];
 
@@ -73,6 +78,7 @@ class LiveActivity extends Model
             'url' => $data['url'] ?? null,
             'metadata' => $data['metadata'] ?? null,
             'is_public' => $data['is_public'] ?? true,
+            'is_important' => $data['is_important'] ?? false,
             'occurred_at' => $data['occurred_at'] ?? now(),
         ]);
     }
@@ -84,6 +90,7 @@ class LiveActivity extends Model
             'type' => $this->type,
             'source' => $this->source,
             'severity' => $this->severity,
+            'is_important' => $this->is_important,
             'title' => e($this->title),
             'message' => $this->message ? e($this->message) : null,
             'url' => $this->url,
