@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\LiveActivityRecorded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -66,7 +67,7 @@ class LiveActivity extends Model
         $severity = $data['severity'] ?? 'info';
         $source = $data['source'] ?? 'system';
 
-        return self::create([
+        $activity = self::create([
             'user_id' => $data['user_id'] ?? $user?->id,
             'subject_type' => $subject ? $subject::class : ($data['subject_type'] ?? null),
             'subject_id' => $subject?->getKey() ?? ($data['subject_id'] ?? null),
@@ -81,6 +82,12 @@ class LiveActivity extends Model
             'is_important' => $data['is_important'] ?? false,
             'occurred_at' => $data['occurred_at'] ?? now(),
         ]);
+
+        if ($data['broadcast'] ?? true) {
+            LiveActivityRecorded::dispatch($activity);
+        }
+
+        return $activity;
     }
 
     public function toFeedItem(): array

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\LiveChatMessageCreated;
 use App\Http\Requests\StoreLiveChatMessageRequest;
 use App\Models\LiveActivity;
 use App\Models\LiveChatMessage;
@@ -75,7 +76,7 @@ class LiveChatController extends Controller
             'last_seen_at' => now(),
         ])->save();
 
-        LiveActivity::record([
+        $activity = LiveActivity::record([
             'type' => 'live_chat_message',
             'source' => 'chat',
             'severity' => 'success',
@@ -87,6 +88,8 @@ class LiveChatController extends Controller
                 'message_id' => $message->id,
             ],
         ]);
+
+        LiveChatMessageCreated::dispatch($message, $activity);
 
         return response()->json([
             'message' => 'Mesaj gönderildi.',

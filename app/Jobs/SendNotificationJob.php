@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\UserNotificationCreated;
 use App\Models\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -48,7 +49,7 @@ class SendNotificationJob implements ShouldQueue
     {
         foreach ($this->users as $userId) {
 
-            Notification::create([
+            $notification = Notification::create([
                 'user_id' => $userId,
                 'type' => $this->type,
                 'title' => $this->title,
@@ -57,6 +58,8 @@ class SendNotificationJob implements ShouldQueue
                 'data' => $this->data,
                 'is_read' => false,
             ]);
+
+            UserNotificationCreated::dispatch($notification);
         }
     }
 }
