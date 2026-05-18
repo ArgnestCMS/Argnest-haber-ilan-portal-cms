@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ForumTopics\Tables;
 
+use App\Helpers\NotificationHelper;
 use App\Models\ForumCategory;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Action;
@@ -113,13 +114,37 @@ class ForumTopicsTable
                         ]);
 
                         $record->user?->addForumReputation(5);
+
+                        if ($record->user_id) {
+                            NotificationHelper::sendToUser(
+                                userId: $record->user_id,
+                                type: 'forum_topic_approved',
+                                title: 'Forum konunuz onaylandi',
+                                message: '"' . $record->title . '" baslikli forum konunuz yayina alindi.',
+                                url: route('forum.topics.show', $record->slug),
+                                data: ['topic_id' => $record->id]
+                            );
+                        }
                     }),
                 Action::make('hide')
                     ->label('Gizle')
                     ->icon('heroicon-o-eye-slash')
                     ->color('warning')
                     ->visible(fn ($record) => $record->status !== 'hidden')
-                    ->action(fn ($record) => $record->update(['status' => 'hidden'])),
+                    ->action(function ($record) {
+                        $record->update(['status' => 'hidden']);
+
+                        if ($record->user_id) {
+                            NotificationHelper::sendToUser(
+                                userId: $record->user_id,
+                                type: 'forum_topic_hidden',
+                                title: 'Forum konunuz gizlendi',
+                                message: '"' . $record->title . '" baslikli forum konunuz moderasyon tarafindan gizlendi.',
+                                url: route('forum.dashboard'),
+                                data: ['topic_id' => $record->id]
+                            );
+                        }
+                    }),
                 Action::make('toggle_lock')
                     ->label(fn ($record) => $record->is_locked ? 'Kilidi Ac' : 'Kilitle')
                     ->icon(fn ($record) => $record->is_locked ? 'heroicon-o-lock-open' : 'heroicon-o-lock-closed')

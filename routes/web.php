@@ -109,13 +109,16 @@ Route::post('/mesai/aktif', [WorkSessionController::class, 'backToWork'])
 Route::post('/mesai/bitir', [WorkSessionController::class, 'endWork'])
     ->name('work.end');
 Route::get('/bildirimler', [UserNotificationController::class, 'index'])
+    ->middleware(['auth', 'verified'])
     ->name('user.notifications');
 
 Route::post('/bildirimler/okundu-yap', [UserNotificationController::class, 'markAllAsRead'])
+    ->middleware(['auth', 'verified'])
     ->name('user.notifications.readAll');
 Route::get('/yorumlarim', [UserCommentController::class, 'index'])
     ->name('user.comments');
 Route::get('/bildirim/{notification}', [NotificationController::class, 'read'])
+    ->middleware(['auth', 'verified'])
     ->name('notifications.read');
 Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCount'])

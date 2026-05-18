@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\LiveChatMessageCreated;
+use App\Helpers\NotificationHelper;
 use App\Http\Requests\StoreLiveChatMessageRequest;
 use App\Models\LiveActivity;
 use App\Models\LiveChatMessage;
@@ -90,6 +91,7 @@ class LiveChatController extends Controller
         ]);
 
         LiveChatMessageCreated::dispatch($message, $activity);
+        $this->notifyMentions($content, $message->id, $activity?->id);
 
         return response()->json([
             'message' => 'Mesaj gönderildi.',
@@ -157,5 +159,36 @@ class LiveChatController extends Controller
         preg_match_all('/https?:\/\/|www\.|\.com|\.net|\.org|\.xyz/i', $content, $matches);
 
         return count($matches[0]) >= 2;
+    }
+
+    private function notifyMentions(string $content, int $messageId, ?int $activityId): void
+    {
+        preg_match_all('/@([A-Za-z0-9_.-]{3,30})/u', $content, $matches);
+
+        $mentions = collect($matches[1] ?? [])
+            ->unique()
+            ->take(10);
+
+        if ($mentions->isEmpty()) {
+            return;
+        }
+
+        User::query()
+            ->whereIn('name', $mentions)
+            ->where('id', '!=', auth()->id())
+            ->get()
+            ->each(function (User $user) use ($messageId, $activityId) {
+                NotificationHelper::sendToUser(
+                    userId: $user->id,
+                    type: 'live_chat_mention',
+                    title: 'Canli sohbette sizden bahsedildi',
+                    message: auth()->user()->name . ' canli sohbet mesajinda sizden bahsetti.',
+                    url: route('live-chat.index'),
+                    data: [
+                        'message_id' => $messageId,
+                        'activity_id' => $activityId,
+                    ]
+                );
+            });
     }
 }

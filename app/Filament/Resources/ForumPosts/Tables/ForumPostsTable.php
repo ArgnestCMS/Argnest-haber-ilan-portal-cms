@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ForumPosts\Tables;
 
+use App\Helpers\NotificationHelper;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -86,6 +87,20 @@ class ForumPostsTable
                         ]);
 
                         $record->user?->addForumReputation(2);
+
+                        if ($record->user_id) {
+                            NotificationHelper::sendToUser(
+                                userId: $record->user_id,
+                                type: 'forum_post_approved',
+                                title: 'Forum cevabiniz onaylandi',
+                                message: '"' . ($record->topic?->title ?? 'Forum konusu') . '" konusundaki cevabiniz yayina alindi.',
+                                url: $record->topic?->status === 'published' ? route('forum.topics.show', $record->topic->slug) : route('forum.dashboard'),
+                                data: [
+                                    'topic_id' => $record->forum_topic_id,
+                                    'post_id' => $record->id,
+                                ]
+                            );
+                        }
                     }),
 
                 Action::make('reject')
@@ -93,11 +108,27 @@ class ForumPostsTable
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(fn ($record) => $record->status !== 'rejected')
-                    ->action(fn ($record) => $record->update([
-                        'status' => 'rejected',
-                        'moderated_by' => auth()->id(),
-                        'moderated_at' => now(),
-                    ])),
+                    ->action(function ($record) {
+                        $record->update([
+                            'status' => 'rejected',
+                            'moderated_by' => auth()->id(),
+                            'moderated_at' => now(),
+                        ]);
+
+                        if ($record->user_id) {
+                            NotificationHelper::sendToUser(
+                                userId: $record->user_id,
+                                type: 'forum_post_rejected',
+                                title: 'Forum cevabiniz reddedildi',
+                                message: '"' . ($record->topic?->title ?? 'Forum konusu') . '" konusundaki cevabiniz moderasyon tarafindan reddedildi.',
+                                url: route('forum.dashboard'),
+                                data: [
+                                    'topic_id' => $record->forum_topic_id,
+                                    'post_id' => $record->id,
+                                ]
+                            );
+                        }
+                    }),
 
                 DeleteAction::make()->label('Sil'),
                 RestoreAction::make()->label('Geri Al'),
