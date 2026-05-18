@@ -86,6 +86,120 @@
     </div>
 </section>
 
+<section class="mx-auto max-w-7xl px-4 pt-10">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h2 class="text-2xl font-black text-slate-950">Forum Kesfi</h2>
+                <p class="mt-1 text-sm text-slate-600">Konu, cevap, kategori ve etiketlere gore forumda hizli arama yapin.</p>
+            </div>
+
+            <form method="GET" action="{{ route('forum.index') }}" class="grid w-full gap-3 lg:max-w-4xl lg:grid-cols-[1.4fr_1fr_1fr_auto]">
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ request('q') }}"
+                    class="rounded-lg border-slate-300 text-sm"
+                    placeholder="Forumda ara..."
+                >
+
+                <select name="category" class="rounded-lg border-slate-300 text-sm">
+                    <option value="">Tum kategoriler</option>
+                    @foreach($forumCategories as $category)
+                        <option value="{{ $category->id }}" @selected((string) request('category') === (string) $category->id)>
+                            {{ $category->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="filter" class="rounded-lg border-slate-300 text-sm">
+                    <option value="">Yeni ve sabit</option>
+                    <option value="trend" @selected(request('filter') === 'trend')>Trend</option>
+                    <option value="solved" @selected(request('filter') === 'solved')>Cozulmus</option>
+                    <option value="pinned" @selected(request('filter') === 'pinned')>Sabit</option>
+                    <option value="open" @selected(request('filter') === 'open')>Cevaba acik</option>
+                    <option value="locked" @selected(request('filter') === 'locked')>Kilitli</option>
+                </select>
+
+                @if(request('tag'))
+                    <input type="hidden" name="tag" value="{{ request('tag') }}">
+                @endif
+
+                <button type="submit" class="rounded-lg bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                    Ara
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+            @foreach($forumTags as $tag)
+                <a
+                    href="{{ route('forum.index', array_filter([...request()->except('page'), 'tag' => $tag->slug])) }}"
+                    class="rounded-full border px-3 py-1.5 text-xs font-black transition {{ $selectedTag?->id === $tag->id ? 'border-red-600 bg-red-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700' }}"
+                >
+                    #{{ $tag->name }} {{ $tag->topics_count }}
+                </a>
+            @endforeach
+
+            @if($selectedTag || request()->hasAny(['q', 'category', 'filter']))
+                <a href="{{ route('forum.index') }}" class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-black text-slate-500 transition hover:bg-slate-50">
+                    Filtreleri temizle
+                </a>
+            @endif
+        </div>
+
+        <div class="mt-6 overflow-hidden rounded-xl border border-slate-200">
+            @forelse($discoveryTopics as $topic)
+                <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block border-b border-slate-100 p-5 transition last:border-b-0 hover:bg-slate-50">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                @if($topic->is_pinned)
+                                    <span class="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black uppercase text-red-700">Sabit</span>
+                                @endif
+
+                                @if($topic->is_solved)
+                                    <span class="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-black uppercase text-green-700">Cozuldu</span>
+                                @endif
+
+                                <span class="text-xs font-bold text-slate-500">{{ $topic->category?->name }}</span>
+                            </div>
+
+                            <h3 class="mt-2 text-lg font-black text-slate-950">{{ $topic->title }}</h3>
+                            <p class="mt-1 text-sm text-slate-500">
+                                {{ $topic->user?->name ?? 'Sistem' }} tarafindan acildi · {{ $topic->created_at?->diffForHumans() }}
+                            </p>
+
+                            @if($topic->tags->isNotEmpty())
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    @foreach($topic->tags as $tag)
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">#{{ $tag->name }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="flex flex-wrap gap-4 text-sm font-bold text-slate-500 lg:justify-end">
+                            <span>{{ $topic->posts_count }} cevap</span>
+                            <span>{{ $topic->likes_count }} begeni</span>
+                            <span>{{ number_format($topic->views) }} goruntulenme</span>
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <div class="p-8 text-center">
+                    <div class="text-lg font-black text-slate-950">Sonuc bulunamadi</div>
+                    <p class="mt-2 text-sm text-slate-600">Arama veya filtreleri genisleterek tekrar deneyin.</p>
+                </div>
+            @endforelse
+        </div>
+
+        <div class="mt-5">
+            {{ $discoveryTopics->links() }}
+        </div>
+    </div>
+</section>
+
 <section class="mx-auto grid max-w-7xl gap-6 px-4 pt-10 lg:grid-cols-[1fr_380px]">
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="mb-5 flex items-center justify-between gap-4">
@@ -111,6 +225,14 @@
                     </div>
 
                     <h3 class="mt-2 text-lg font-black text-slate-950">{{ $topic->title }}</h3>
+
+                    @if($topic->tags->isNotEmpty())
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($topic->tags as $tag)
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">#{{ $tag->name }}</span>
+                            @endforeach
+                        </div>
+                    @endif
 
                     <div class="mt-3 flex flex-wrap gap-4 text-xs font-bold text-slate-500">
                         <span>{{ number_format($topic->views) }} görüntülenme</span>
@@ -272,6 +394,21 @@
                     </div>
 
                     <div>
+                        <label class="text-sm font-black text-slate-700">Etiketler</label>
+                        <input
+                            type="text"
+                            name="tag_names"
+                            value="{{ old('tag_names') }}"
+                            class="mt-2 w-full rounded-lg border-slate-300 text-sm"
+                            placeholder="ornek: KPSS, personel alimi, gundem"
+                        >
+                        <p class="mt-2 text-xs font-bold text-slate-500">Virgulle ayirin. En fazla 5 etiket baglanir.</p>
+                        @error('tag_names')
+                            <p class="mt-2 text-xs font-bold text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label class="text-sm font-black text-slate-700">İçerik</label>
                         <div class="mt-2">
                             @include('frontend.partials.forum-rich-editor', [
@@ -347,6 +484,13 @@
                     </div>
 
                         <h3 class="mt-2 text-lg font-black text-slate-950">{{ $topic->title }}</h3>
+                    @if($topic->tags->isNotEmpty())
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach($topic->tags as $tag)
+                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-700">#{{ $tag->name }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                     <p class="mt-1 text-sm text-slate-500">
                         {{ $topic->user?->name ?? 'Sistem' }} tarafindan acildi
                         · {{ $topic->user?->forum_reputation ?? 0 }} itibar

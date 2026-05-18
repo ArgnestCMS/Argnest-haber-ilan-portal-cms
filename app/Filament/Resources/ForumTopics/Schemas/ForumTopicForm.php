@@ -72,6 +72,14 @@ class ForumTopicForm
                     ->default('published')
                     ->required(),
 
+                Select::make('tags')
+                    ->label('Etiketler')
+                    ->relationship('tags', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull(),
+
                 Toggle::make('is_pinned')
                     ->label('Sabit')
                     ->default(false),

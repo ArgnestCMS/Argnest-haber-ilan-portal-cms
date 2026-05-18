@@ -7,6 +7,7 @@ use App\Models\Announcement;
 use App\Models\Category;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
+use App\Models\ForumTag;
 use App\Models\ForumTopic;
 use App\Models\Gallery;
 use App\Models\LiveActivity;
@@ -205,8 +206,15 @@ $mostReadNews = News::orderByDesc('views')
             ->orderBy('name')
             ->get();
 
+        $topicRelations = ['category', 'user.forumBadges', 'lastPostUser', 'tags'];
+        $topicCounts = [
+            'likes',
+            'bookmarks',
+            'posts' => fn ($query) => $query->where('status', 'approved'),
+        ];
+
         $latestForumTopics = ForumTopic::published()
-            ->with(['category', 'user.forumBadges', 'lastPostUser'])
+            ->with($topicRelations)
             ->withCount([
                 'likes',
                 'bookmarks',
@@ -217,15 +225,48 @@ $mostReadNews = News::orderByDesc('views')
             ->get();
 
         $trendingForumTopics = ForumTopic::published()
-            ->with(['category', 'user.forumBadges', 'lastPostUser'])
-            ->withCount([
-                'likes',
-                'bookmarks',
-                'posts' => fn ($query) => $query->where('status', 'approved'),
-            ])
+            ->with($topicRelations)
+            ->withCount($topicCounts)
             ->trending()
             ->take(5)
             ->get();
+
+        $forumTags = ForumTag::active()
+            ->withCount(['topics' => fn ($query) => $query->published()])
+            ->orderByDesc('topics_count')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->take(24)
+            ->get();
+
+        $selectedTag = request('tag')
+            ? ForumTag::active()->where('slug', request('tag'))->first()
+            : null;
+
+        $discoveryTopics = ForumTopic::published()
+            ->with($topicRelations)
+            ->withCount($topicCounts)
+            ->when(request('q'), function ($query, $search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhereHas('approvedPosts', fn ($postQuery) => $postQuery->where('content', 'like', "%{$search}%"));
+                });
+            })
+            ->when(request('category'), fn ($query, $categoryId) => $query->where('forum_category_id', $categoryId))
+            ->when($selectedTag, fn ($query) => $query->whereHas('tags', fn ($tagQuery) => $tagQuery->whereKey($selectedTag->id)))
+            ->when(request('filter'), function ($query, $filter) {
+                match ($filter) {
+                    'trend' => $query->trending(),
+                    'solved' => $query->where('is_solved', true)->latest(),
+                    'pinned' => $query->where('is_pinned', true)->latest(),
+                    'locked' => $query->where('is_locked', true)->latest(),
+                    'open' => $query->where('is_locked', false)->where('replies_closed', false)->latest(),
+                    default => $query->activeOrder(),
+                };
+            }, fn ($query) => $query->activeOrder())
+            ->paginate(10)
+            ->withQueryString();
 
         $myForumTopics = collect();
         $myForumPosts = collect();
@@ -262,6 +303,9 @@ $mostReadNews = News::orderByDesc('views')
             'forumCategories',
             'latestForumTopics',
             'trendingForumTopics',
+            'forumTags',
+            'selectedTag',
+            'discoveryTopics',
             'myForumTopics',
             'myForumPosts',
             'myBookmarkedTopics',
@@ -280,6 +324,7 @@ $mostReadNews = News::orderByDesc('views')
                 'lastPostUser',
                 'likes',
                 'bookmarks',
+                'tags',
             ])
             ->with(['approvedPosts' => fn ($query) => $query->with('user')])
             ->withCount(['likes', 'bookmarks'])

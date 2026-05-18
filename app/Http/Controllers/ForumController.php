@@ -7,6 +7,7 @@ use App\Http\Requests\StoreForumPostRequest;
 use App\Http\Requests\StoreForumTopicRequest;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
+use App\Models\ForumTag;
 use App\Models\ForumTopic;
 use App\Models\ForumTopicBookmark;
 use App\Models\ForumTopicLike;
@@ -62,6 +63,8 @@ class ForumController extends Controller
             'last_post_at' => now(),
             'last_post_user_id' => auth()->id(),
         ]);
+
+        $topic->tags()->sync($this->tagIdsFromInput((string) $request->input('tag_names')));
 
         $this->notifyMentions($title . ' ' . $content, $topic);
         LiveActivity::record([
@@ -311,6 +314,35 @@ class ForumController extends Controller
         }
 
         return $slug;
+    }
+
+    private function tagIdsFromInput(string $input): array
+    {
+        return collect(preg_split('/[,;\n]+/', $input) ?: [])
+            ->map(fn ($tag) => trim(strip_tags($tag)))
+            ->filter()
+            ->map(fn ($tag) => Str::of($tag)->replaceMatches('/\s+/', ' ')->trim()->limit(32, '')->toString())
+            ->unique(fn ($tag) => Str::lower($tag))
+            ->take(5)
+            ->map(function (string $name) {
+                $slug = Str::slug($name);
+
+                if ($slug === '') {
+                    return null;
+                }
+
+                return ForumTag::query()->firstOrCreate(
+                    ['slug' => $slug],
+                    [
+                        'name' => $name,
+                        'color' => '#ef4444',
+                        'is_active' => true,
+                    ]
+                )->id;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function notifyTopicOwner(ForumTopic $topic): void

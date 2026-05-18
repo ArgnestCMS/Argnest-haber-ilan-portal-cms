@@ -94,6 +94,16 @@
             {{ $topic->user?->name ?? 'Sistem' }} tarafindan {{ $topic->created_at?->diffForHumans() }} acildi
         </p>
 
+        @if($topic->tags->isNotEmpty())
+            <div class="mt-4 flex flex-wrap gap-2">
+                @foreach($topic->tags as $tag)
+                    <a href="{{ route('forum.index', ['tag' => $tag->slug]) }}" class="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-slate-100 transition hover:bg-white/20">
+                        #{{ $tag->name }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
+
         <div class="mt-6 flex flex-wrap gap-4 text-sm font-bold text-slate-300">
             <span>{{ number_format($topic->views) }} görüntülenme</span>
             <span>{{ $topic->likes_count }} beğeni</span>
