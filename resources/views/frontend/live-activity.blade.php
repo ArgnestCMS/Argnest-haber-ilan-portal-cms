@@ -194,7 +194,28 @@ function liveActivityFeed(config) {
         lastPolledAt: '',
         init() {
             this.fetchActivities();
+            this.listenForActivities();
             setInterval(() => this.fetchActivities(), 5000);
+        },
+        listenForActivities() {
+            if (!window.Echo) {
+                return;
+            }
+
+            window.Echo.channel('live.activities')
+                .listen('.live-activity.recorded', (event) => {
+                    const activity = event.activity;
+
+                    if (!activity || this.activities.some((item) => item.id === activity.id)) {
+                        return;
+                    }
+
+                    this.activities = [activity, ...this.activities]
+                        .sort((first, second) => second.id - first.id)
+                        .slice(0, 30);
+
+                    this.latestId = Math.max(this.latestId, activity.id || 0);
+                });
         },
         fetchActivities() {
             this.isRefreshing = true;

@@ -183,8 +183,24 @@ function liveChat(config) {
         init() {
             this.fetchMessages();
             this.fetchOnlineUsers();
+            this.listenForMessages();
             setInterval(() => this.fetchMessages(), 5000);
             setInterval(() => this.fetchOnlineUsers(), 10000);
+        },
+        listenForMessages() {
+            if (!window.Echo) {
+                return;
+            }
+
+            window.Echo.channel('live.chat')
+                .listen('.live-chat.message.created', (message) => {
+                    if (this.messages.some((item) => item.id === message.id)) {
+                        return;
+                    }
+
+                    this.messages = [...this.messages, message].slice(-50);
+                    this.fetchOnlineUsers();
+                });
         },
         fetchMessages() {
             fetch(config.messagesUrl)
