@@ -21,6 +21,17 @@ class CommentInfolist
                     ->columnSpanFull(),
                 TextEntry::make('status')
                     ->badge(),
+                TextEntry::make('ai_risk_label')
+                    ->label('AI Risk')
+                    ->badge(),
+                TextEntry::make('ai_risk_score')
+                    ->label('Risk Puan')
+                    ->numeric(),
+                TextEntry::make('ai_risk_reasons')
+                    ->label('Risk Sebepleri')
+                    ->listWithLineBreaks()
+                    ->placeholder('-')
+                    ->columnSpanFull(),
                 TextEntry::make('moderated_by')
                     ->numeric()
                     ->placeholder('-'),

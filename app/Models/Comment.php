@@ -14,6 +14,10 @@ class Comment extends Model
         'commentable_type',
         'content',
         'status',
+        'ai_risk_score',
+        'ai_risk_label',
+        'ai_risk_reasons',
+        'ai_review_required',
         'moderated_by',
         'moderated_at',
         'moderation_note',
@@ -23,6 +27,9 @@ class Comment extends Model
 
     protected $casts = [
         'moderated_at' => 'datetime',
+        'ai_risk_score' => 'integer',
+        'ai_risk_reasons' => 'array',
+        'ai_review_required' => 'boolean',
         'is_edited' => 'boolean',
     ];
 

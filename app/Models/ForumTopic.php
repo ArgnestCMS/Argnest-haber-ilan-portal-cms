@@ -19,6 +19,10 @@ class ForumTopic extends Model
         'slug',
         'content',
         'status',
+        'ai_risk_score',
+        'ai_risk_label',
+        'ai_risk_reasons',
+        'ai_review_required',
         'is_pinned',
         'is_locked',
         'is_solved',
@@ -36,6 +40,9 @@ class ForumTopic extends Model
         'is_solved' => 'boolean',
         'replies_closed' => 'boolean',
         'slow_mode_seconds' => 'integer',
+        'ai_risk_score' => 'integer',
+        'ai_risk_reasons' => 'array',
+        'ai_review_required' => 'boolean',
         'last_post_at' => 'datetime',
     ];
 

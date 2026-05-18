@@ -15,6 +15,7 @@ use App\Models\LiveActivity;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPunishment;
+use App\Support\CommunitySafety;
 use App\Support\ForumContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -45,9 +46,7 @@ class ForumController extends Controller
             return back()->withInput()->withErrors(['content' => 'Konu icerigi bos olamaz.']);
         }
 
-        if ($this->hasSpamRisk($title . ' ' . ForumContent::plainText($content))) {
-            return back()->with('error', 'Konu içeriği spam filtresine takıldı.');
-        }
+        $safety = CommunitySafety::assess($title . ' ' . ForumContent::plainText($content), auth()->user(), 'forum_topic');
 
         $category = ForumCategory::active()
             ->whereKey($request->integer('forum_category_id'))
@@ -60,6 +59,7 @@ class ForumController extends Controller
             'slug' => $this->uniqueTopicSlug($title),
             'content' => $content,
             'status' => 'pending',
+            ...$safety->attributes(),
             'last_post_at' => now(),
             'last_post_user_id' => auth()->id(),
         ]);
@@ -78,8 +78,25 @@ class ForumController extends Controller
             'metadata' => [
                 'topic_id' => $topic->id,
                 'status' => $topic->status,
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
             ],
         ]);
+
+        if ($safety->requiresReview()) {
+            NotificationHelper::sendToModerators(
+                type: 'community_safety_alert',
+                title: 'Supheli forum konusu',
+                message: auth()->user()->name . ' tarafindan gonderilen konu AI risk kuyruguna alindi.',
+                url: '/admin/forum-topics',
+                data: [
+                    'topic_id' => $topic->id,
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                    'reasons' => $safety->reasons,
+                ]
+            );
+        }
 
         return redirect()
             ->route('forum.index')
@@ -118,9 +135,7 @@ class ForumController extends Controller
             return back()->withInput()->withErrors(['content' => 'Cevap icerigi bos olamaz.']);
         }
 
-        if ($this->hasSpamRisk(ForumContent::plainText($content))) {
-            return back()->with('error', 'Cevabınız spam filtresine takıldı.');
-        }
+        $safety = CommunitySafety::assess(ForumContent::plainText($content), auth()->user(), 'forum_post');
 
         $parentPost = $this->approvedPostInTopic($request->integer('parent_id'), $topic);
         $quotedPost = $this->approvedPostInTopic($request->integer('quoted_post_id'), $topic);
@@ -132,6 +147,7 @@ class ForumController extends Controller
             'quoted_post_id' => $quotedPost?->id,
             'content' => $content,
             'status' => 'pending',
+            ...$safety->attributes(),
             'ip_address' => request()->ip(),
         ]);
 
@@ -150,8 +166,26 @@ class ForumController extends Controller
                 'topic_id' => $topic->id,
                 'post_id' => $post->id,
                 'status' => $post->status,
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
             ],
         ]);
+
+        if ($safety->requiresReview()) {
+            NotificationHelper::sendToModerators(
+                type: 'community_safety_alert',
+                title: 'Supheli forum cevabi',
+                message: auth()->user()->name . ' tarafindan gonderilen cevap AI risk kuyruguna alindi.',
+                url: '/admin/forum-posts',
+                data: [
+                    'topic_id' => $topic->id,
+                    'post_id' => $post->id,
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                    'reasons' => $safety->reasons,
+                ]
+            );
+        }
 
         return back()->with('success', 'Cevabınız moderatör onayına gönderildi.');
     }
@@ -284,22 +318,6 @@ class ForumController extends Controller
             ->where('user_id', auth()->id())
             ->where('created_at', '>=', now()->subSeconds($seconds))
             ->exists();
-    }
-
-    private function hasSpamRisk(string $content): bool
-    {
-        $lowerContent = Str::lower($content);
-        $bannedWords = ['spam', 'dolandırıcılık', 'küfür1', 'küfür2', 'hakaret1', 'hakaret2'];
-
-        foreach ($bannedWords as $word) {
-            if (Str::contains($lowerContent, Str::lower($word))) {
-                return true;
-            }
-        }
-
-        preg_match_all('/https?:\/\/|www\.|\.com|\.net|\.org|\.xyz/i', $content, $matches);
-
-        return count($matches[0]) >= 2;
     }
 
     private function uniqueTopicSlug(string $title): string

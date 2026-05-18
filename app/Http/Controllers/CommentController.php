@@ -10,6 +10,7 @@ use App\Models\Comment;
 use App\Models\News;
 use App\Models\SiteSetting;
 use App\Models\UserPunishment;
+use App\Support\CommunitySafety;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -90,15 +91,16 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
             );
         }
 
-        $status = 'pending';
-        $reason = null;
+        $safety = CommunitySafety::assess($content, auth()->user(), 'comment');
+        $status = $safety->shouldReject() ? 'rejected' : 'pending';
+        $reason = $safety->reasons[0] ?? null;
 
-        if ($this->hasBannedWords($content)) {
+        if (false && $this->hasBannedWords($content)) {
             $status = 'rejected';
             $reason = 'Yasaklı kelime tespit edildi.';
         }
 
-        if ($this->hasLinkSpam($content)) {
+        if (false && $this->hasLinkSpam($content)) {
             $status = 'rejected';
             $reason = 'Link spam tespit edildi.';
         }
@@ -107,6 +109,7 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
             'user_id' => auth()->id(),
             'content' => $content,
             'status' => $status,
+            ...$safety->attributes(),
             'ip_address' => $request->ip(),
         ]);
 
@@ -119,6 +122,9 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
                     'comment_id' => $comment->id,
                     'user_id' => auth()->id(),
                     'reason' => $reason,
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                    'ai_risk_reasons' => $safety->reasons,
                     'auto_punishment' => $this->shouldApplyAutoPunishment(),
                     'content' => Str::limit($content, 300),
                     'ip' => $request->ip(),
@@ -134,6 +140,9 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
                     'comment_id' => $comment->id,
                     'user_id' => auth()->id(),
                     'reason' => $reason,
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                    'reasons' => $safety->reasons,
                 ]
             );
 
@@ -192,20 +201,26 @@ public function storeGallery(Request $request, Gallery $gallery): RedirectRespon
                 'comment_id' => $comment->id,
                 'user_id' => auth()->id(),
                 'status' => $status,
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
+                'reasons' => $safety->reasons,
                 'content' => Str::limit($content, 300),
                 'ip' => $request->ip(),
             ]
         );
 
         NotificationHelper::sendToModerators(
-            type: 'new_comment',
-            title: 'Yeni Yorum Bekliyor',
+            type: $safety->requiresReview() ? 'community_safety_alert' : 'new_comment',
+            title: $safety->requiresReview() ? 'Supheli yorum bekliyor' : 'Yeni Yorum Bekliyor',
             message: auth()->user()->name . ' yeni bir yorum gönderdi.',
             url: '/admin/comments',
             data: [
                 'comment_id' => $comment->id,
                 'user_id' => auth()->id(),
                 'status' => $status,
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
+                'reasons' => $safety->reasons,
             ]
         );
 

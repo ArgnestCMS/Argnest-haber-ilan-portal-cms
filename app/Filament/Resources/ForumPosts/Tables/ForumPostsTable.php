@@ -49,6 +49,28 @@ class ForumPostsTable
                         default => $state,
                     }),
 
+                TextColumn::make('ai_risk_label')
+                    ->label('AI Risk')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'critical' => 'Kritik',
+                        'high' => 'Yuksek',
+                        'medium' => 'Orta',
+                        'low' => 'Dusuk',
+                        default => $state,
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        'critical' => 'danger',
+                        'high' => 'warning',
+                        'medium' => 'info',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('ai_risk_score')
+                    ->label('Risk Puan')
+                    ->numeric()
+                    ->sortable(),
+
                 TextColumn::make('created_at')
                     ->label('Tarih')
                     ->dateTime('d.m.Y H:i')
@@ -61,6 +83,13 @@ class ForumPostsTable
                         'pending' => 'Bekleyen',
                         'approved' => 'Onaylanan',
                         'rejected' => 'Reddedilen',
+                    ]),
+
+                SelectFilter::make('ai_review_required')
+                    ->label('AI Kuyrugu')
+                    ->options([
+                        1 => 'Supheli Icerik',
+                        0 => 'Normal',
                     ]),
 
                 TrashedFilter::make(),

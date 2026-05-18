@@ -48,6 +48,28 @@ class LiveChatMessagesTable
                         default => $state,
                     }),
 
+                TextColumn::make('ai_risk_label')
+                    ->label('AI Risk')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'critical' => 'Kritik',
+                        'high' => 'Yuksek',
+                        'medium' => 'Orta',
+                        'low' => 'Dusuk',
+                        default => $state,
+                    })
+                    ->color(fn ($state) => match ($state) {
+                        'critical' => 'danger',
+                        'high' => 'warning',
+                        'medium' => 'info',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('ai_risk_score')
+                    ->label('Risk Puan')
+                    ->numeric()
+                    ->sortable(),
+
                 TextColumn::make('moderator.name')
                     ->label('Son Moderatör')
                     ->default('-'),
@@ -75,6 +97,13 @@ class LiveChatMessagesTable
                         'pending' => 'Bekleyen Kuyruk',
                         'approved' => 'Onaylanan',
                         'rejected' => 'Reddedilen',
+                    ]),
+
+                SelectFilter::make('ai_review_required')
+                    ->label('AI Kuyrugu')
+                    ->options([
+                        1 => 'Supheli Icerik',
+                        0 => 'Normal',
                     ]),
 
                 TrashedFilter::make(),

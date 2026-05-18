@@ -10,6 +10,7 @@ use App\Models\LiveChatMessage;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPunishment;
+use App\Support\CommunitySafety;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
@@ -59,23 +60,57 @@ class LiveChatController extends Controller
         }
 
         $content = trim((string) $request->string('message'));
+        $safety = CommunitySafety::assess($content, auth()->user(), 'live_chat');
 
-        if ($this->hasSpamRisk($content)) {
+        if ($safety->shouldReject()) {
+            LiveChatMessage::create([
+                'user_id' => auth()->id(),
+                'message' => $content,
+                'status' => 'rejected',
+                ...$safety->attributes(),
+                'ip_address' => $request->ip(),
+                'moderation_note' => 'Otomatik AI guvenlik reddi: ' . implode(', ', $safety->reasons),
+            ]);
+
             return response()->json([
-                'message' => 'Mesaj spam filtresine takıldı.',
+                'message' => 'Mesaj guvenlik filtresine takildi.',
             ], 422);
         }
 
         $message = LiveChatMessage::create([
             'user_id' => auth()->id(),
             'message' => $content,
-            'status' => 'approved',
+            'status' => $safety->requiresReview() ? 'pending' : 'approved',
+            ...$safety->attributes(),
             'ip_address' => $request->ip(),
         ]);
 
         auth()->user()?->forceFill([
             'last_seen_at' => now(),
         ])->save();
+
+        if ($message->status === 'pending') {
+            NotificationHelper::sendToModerators(
+                type: 'community_safety_alert',
+                title: 'Supheli canli sohbet mesaji',
+                message: auth()->user()->name . ' tarafindan gonderilen sohbet mesaji AI risk kuyruguna alindi.',
+                url: '/admin/live-chat-messages',
+                data: [
+                    'message_id' => $message->id,
+                    'ai_risk_score' => $safety->score,
+                    'ai_risk_label' => $safety->label,
+                    'reasons' => $safety->reasons,
+                ]
+            );
+
+            return response()->json([
+                'message' => 'Mesajiniz moderasyon onayina alindi.',
+                'data' => [
+                    'id' => $message->id,
+                    'status' => $message->status,
+                ],
+            ], 202);
+        }
 
         $activity = LiveActivity::record([
             'type' => 'live_chat_message',
@@ -87,6 +122,8 @@ class LiveChatController extends Controller
             'url' => route('live-chat.index'),
             'metadata' => [
                 'message_id' => $message->id,
+                'ai_risk_score' => $safety->score,
+                'ai_risk_label' => $safety->label,
             ],
         ]);
 
@@ -143,22 +180,6 @@ class LiveChatController extends Controller
             ->where('user_id', auth()->id())
             ->where('created_at', '>=', now()->subSeconds(20))
             ->count() >= 3;
-    }
-
-    private function hasSpamRisk(string $content): bool
-    {
-        $lowerContent = Str::lower($content);
-        $bannedWords = ['spam', 'dolandırıcılık', 'küfür1', 'küfür2', 'hakaret1', 'hakaret2'];
-
-        foreach ($bannedWords as $word) {
-            if (Str::contains($lowerContent, Str::lower($word))) {
-                return true;
-            }
-        }
-
-        preg_match_all('/https?:\/\/|www\.|\.com|\.net|\.org|\.xyz/i', $content, $matches);
-
-        return count($matches[0]) >= 2;
     }
 
     private function notifyMentions(string $content, int $messageId, ?int $activityId): void

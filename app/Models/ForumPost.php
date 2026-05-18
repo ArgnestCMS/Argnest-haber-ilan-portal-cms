@@ -17,6 +17,10 @@ class ForumPost extends Model
         'quoted_post_id',
         'content',
         'status',
+        'ai_risk_score',
+        'ai_risk_label',
+        'ai_risk_reasons',
+        'ai_review_required',
         'moderated_by',
         'moderated_at',
         'moderation_note',
@@ -26,6 +30,9 @@ class ForumPost extends Model
 
     protected $casts = [
         'moderated_at' => 'datetime',
+        'ai_risk_score' => 'integer',
+        'ai_risk_reasons' => 'array',
+        'ai_review_required' => 'boolean',
         'is_edited' => 'boolean',
     ];
 

@@ -17,6 +17,7 @@ class Notification extends Model
             'forum_topic_hidden',
             'forum_post_approved',
             'forum_post_rejected',
+            'community_safety_alert',
         ],
         'community' => [
             'live_chat_mention',
@@ -30,6 +31,7 @@ class Notification extends Model
             'forum_topic_hidden',
             'forum_post_approved',
             'forum_post_rejected',
+            'community_safety_alert',
         ],
     ];
 
@@ -42,6 +44,7 @@ class Notification extends Model
         'forum_topic_hidden' => 'Konu gizlendi',
         'forum_post_approved' => 'Cevap onaylandi',
         'forum_post_rejected' => 'Cevap reddedildi',
+        'community_safety_alert' => 'AI risk uyarisi',
         'live_chat_mention' => 'Canli sohbet',
         'live_activity' => 'Canli aktivite',
         'comment_pending' => 'Yorum bekliyor',

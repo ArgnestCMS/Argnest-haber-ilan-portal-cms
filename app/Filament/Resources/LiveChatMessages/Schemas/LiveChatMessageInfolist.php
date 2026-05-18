@@ -13,6 +13,9 @@ class LiveChatMessageInfolist
             ->components([
                 TextEntry::make('user.name')->label('Kullanıcı')->placeholder('Sistem'),
                 TextEntry::make('status')->label('Durum')->badge(),
+                TextEntry::make('ai_risk_label')->label('AI Risk')->badge(),
+                TextEntry::make('ai_risk_score')->label('Risk Puan')->numeric(),
+                TextEntry::make('ai_risk_reasons')->label('Risk Sebepleri')->listWithLineBreaks()->placeholder('-')->columnSpanFull(),
                 TextEntry::make('message')->label('Mesaj')->columnSpanFull(),
                 TextEntry::make('moderator.name')->label('Son Moderatör')->placeholder('-'),
                 TextEntry::make('moderated_at')->label('Son Moderasyon')->dateTime('d.m.Y H:i')->placeholder('-'),
