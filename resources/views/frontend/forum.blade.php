@@ -445,7 +445,12 @@
                     <p class="mt-1 text-sm text-slate-600">Konular moderatör onayından sonra forumda yayınlanır.</p>
                 </div>
 
-                <form method="POST" action="{{ route('forum.topics.store') }}" class="space-y-4">
+                <form
+                    method="POST"
+                    action="{{ route('forum.topics.store') }}"
+                    class="space-y-4"
+                    x-data="forumAssistant({ type: 'topic', url: '{{ route('forum.assistant') }}', csrf: '{{ csrf_token() }}' })"
+                >
                     @csrf
 
                     <div class="grid gap-4 md:grid-cols-2">
@@ -509,6 +514,8 @@
                             <p class="mt-2 text-xs font-bold text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    @include('frontend.partials.forum-ai-assistant-panel')
 
                     <button type="submit" class="rounded-lg bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
                         Moderasyona Gönder

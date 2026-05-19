@@ -16,6 +16,7 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\UserPunishment;
 use App\Support\CommunitySafety;
+use App\Support\ForumAssistant;
 use App\Support\ForumContent;
 use App\Support\ForumGamification;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,39 @@ use Illuminate\Support\Str;
 
 class ForumController extends Controller
 {
+    public function assistant(Request $request, ForumAssistant $assistant): JsonResponse
+    {
+        if (! $this->forumIsEnabled() || $this->userIsMuted()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'type' => ['required', 'string', 'in:topic,reply'],
+            'forum_category_id' => ['nullable', 'integer', 'exists:forum_categories,id'],
+            'topic_id' => ['nullable', 'integer', 'exists:forum_topics,id'],
+            'title' => ['nullable', 'string', 'max:180'],
+            'content' => ['nullable', 'string', 'max:12000'],
+        ]);
+
+        $content = ForumContent::sanitize((string) ($data['content'] ?? ''));
+        $title = trim((string) ($data['title'] ?? ''));
+
+        if ($data['type'] === 'reply') {
+            $topic = ForumTopic::query()
+                ->published()
+                ->whereKey($data['topic_id'] ?? 0)
+                ->firstOrFail();
+
+            return response()->json($assistant->replySuggestions($topic, $content));
+        }
+
+        return response()->json($assistant->topicSuggestions(
+            title: $title,
+            content: $content,
+            categoryId: $data['forum_category_id'] ?? null,
+        ));
+    }
+
     public function storeTopic(StoreForumTopicRequest $request): RedirectResponse
     {
         if (! $this->forumIsEnabled()) {
@@ -48,6 +82,9 @@ class ForumController extends Controller
         }
 
         $safety = CommunitySafety::assess($title . ' ' . ForumContent::plainText($content), auth()->user(), 'forum_topic');
+        $assistantReasons = app(ForumAssistant::class)->moderationReasons($title, $content);
+        $safetyAttributes = $safety->attributes();
+        $safetyAttributes['ai_risk_reasons'] = $this->mergeRiskReasons($safetyAttributes['ai_risk_reasons'], $assistantReasons);
 
         $category = ForumCategory::active()
             ->whereKey($request->integer('forum_category_id'))
@@ -60,7 +97,7 @@ class ForumController extends Controller
             'slug' => $this->uniqueTopicSlug($title),
             'content' => $content,
             'status' => 'pending',
-            ...$safety->attributes(),
+            ...$safetyAttributes,
             'last_post_at' => now(),
             'last_post_user_id' => auth()->id(),
         ]);
@@ -107,7 +144,7 @@ class ForumController extends Controller
                     'topic_id' => $topic->id,
                     'ai_risk_score' => $safety->score,
                     'ai_risk_label' => $safety->label,
-                    'reasons' => $safety->reasons,
+                    'reasons' => $safetyAttributes['ai_risk_reasons'],
                 ]
             );
         }
@@ -150,6 +187,9 @@ class ForumController extends Controller
         }
 
         $safety = CommunitySafety::assess(ForumContent::plainText($content), auth()->user(), 'forum_post');
+        $assistantReasons = app(ForumAssistant::class)->moderationReasons($topic->title, $content);
+        $safetyAttributes = $safety->attributes();
+        $safetyAttributes['ai_risk_reasons'] = $this->mergeRiskReasons($safetyAttributes['ai_risk_reasons'], $assistantReasons);
 
         $parentPost = $this->approvedPostInTopic($request->integer('parent_id'), $topic);
         $quotedPost = $this->approvedPostInTopic($request->integer('quoted_post_id'), $topic);
@@ -161,7 +201,7 @@ class ForumController extends Controller
             'quoted_post_id' => $quotedPost?->id,
             'content' => $content,
             'status' => 'pending',
-            ...$safety->attributes(),
+            ...$safetyAttributes,
             'ip_address' => request()->ip(),
         ]);
 
@@ -211,7 +251,7 @@ class ForumController extends Controller
                     'post_id' => $post->id,
                     'ai_risk_score' => $safety->score,
                     'ai_risk_label' => $safety->label,
-                    'reasons' => $safety->reasons,
+                    'reasons' => $safetyAttributes['ai_risk_reasons'],
                 ]
             );
         }
@@ -397,6 +437,16 @@ class ForumController extends Controller
                 )->id;
             })
             ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function mergeRiskReasons(array $safetyReasons, array $assistantReasons): array
+    {
+        return collect($safetyReasons)
+            ->merge($assistantReasons)
+            ->filter()
+            ->unique()
             ->values()
             ->all();
     }

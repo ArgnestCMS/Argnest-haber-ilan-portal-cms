@@ -247,6 +247,9 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
     Route::post('/forum/konu', [ForumController::class, 'storeTopic'])
         ->name('forum.topics.store');
 
+    Route::post('/forum/ai-assistant', [ForumController::class, 'assistant'])
+        ->name('forum.assistant');
+
     Route::post('/forum/gorsel', [ForumController::class, 'uploadImage'])
         ->name('forum.images.store');
 

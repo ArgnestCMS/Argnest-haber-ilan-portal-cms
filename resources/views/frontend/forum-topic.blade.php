@@ -451,7 +451,13 @@
                     <p class="mt-1 text-sm text-slate-600">Cevabınız moderatör onayından sonra yayınlanır.</p>
                 </div>
 
-                <form id="forum-reply-form" method="POST" action="{{ route('forum.posts.store', $topic) }}" class="space-y-4">
+                <form
+                    id="forum-reply-form"
+                    method="POST"
+                    action="{{ route('forum.posts.store', $topic) }}"
+                    class="space-y-4"
+                    x-data="forumAssistant({ type: 'reply', topicId: {{ $topic->id }}, url: '{{ route('forum.assistant') }}', csrf: '{{ csrf_token() }}' })"
+                >
                     @csrf
 
                     <input type="hidden" name="parent_id" id="forum-reply-parent-id" value="{{ old('parent_id') }}">
@@ -484,6 +490,8 @@
                             <p class="mt-2 text-xs font-bold text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    @include('frontend.partials.forum-ai-assistant-panel')
 
                     <button type="submit" class="rounded-lg bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
                         Moderasyona Gönder
