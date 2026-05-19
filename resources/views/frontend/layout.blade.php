@@ -142,6 +142,26 @@
     </script>
 
 @yield('schema')
+<style>
+    :root {
+        --mobile-shell-bottom: 74px;
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (max-width: 767px) {
+        body {
+            padding-bottom: calc(var(--mobile-shell-bottom) + var(--safe-bottom));
+        }
+
+        .mobile-safe-bottom {
+            padding-bottom: var(--safe-bottom);
+        }
+
+        .mobile-app-banner {
+            bottom: calc(var(--mobile-shell-bottom) + var(--safe-bottom) + 12px);
+        }
+    }
+</style>
 </head>
 
 <body class="bg-[#f3f3f3] text-slate-900">
@@ -815,16 +835,21 @@
 
 </header>
 
-<main>
+<main class="min-h-screen pb-4 md:pb-0">
     @yield('content')
 </main>
 
 <div
     id="pwa-install-banner"
-    class="fixed inset-x-4 bottom-4 z-[9998] hidden rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl md:left-auto md:w-96"
+    class="mobile-app-banner fixed inset-x-4 z-[9998] hidden rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl md:bottom-4 md:left-auto md:w-96"
 >
-    <div class="text-sm font-black">Uygulama olarak yukle</div>
-    <p class="mt-1 text-xs font-bold leading-5 text-slate-500">ilanhaber.net'i mobil cihazinizda daha hizli acabilirsiniz.</p>
+    <div class="flex items-start gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600 text-sm font-black text-white">APP</div>
+        <div class="min-w-0">
+            <div class="text-sm font-black">Uygulama olarak yukle</div>
+            <p class="mt-1 text-xs font-bold leading-5 text-slate-500">ilanhaber.net'i mobil cihazinizda daha hizli acabilirsiniz.</p>
+        </div>
+    </div>
     <div class="mt-3 flex gap-2">
         <button type="button" data-pwa-install class="rounded-lg bg-red-600 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700">
             Yukle
@@ -838,7 +863,7 @@
 @auth
     <div
         id="pwa-notification-banner"
-        class="fixed inset-x-4 bottom-4 z-[9997] hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-950 shadow-2xl md:left-auto md:w-96"
+        class="mobile-app-banner fixed inset-x-4 z-[9997] hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-950 shadow-2xl md:bottom-4 md:left-auto md:w-96"
     >
         <div class="text-sm font-black">Bildirimlere hazir olun</div>
         <p class="mt-1 text-xs font-bold leading-5 text-blue-800/80">Forum, mesaj ve moderasyon bildirimlerini tarayicinizdan alabilirsiniz.</p>
@@ -853,7 +878,70 @@
     </div>
 @endauth
 
-<footer class="bg-slate-900 text-white mt-12">
+<nav class="mobile-safe-bottom fixed inset-x-0 bottom-0 z-[9996] border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
+    <div class="grid h-[74px] grid-cols-5 text-[11px] font-black text-slate-500">
+        <a href="/" class="flex flex-col items-center justify-center gap-1 {{ request()->is('/') ? 'text-blue-700' : '' }}">
+            <span class="text-lg leading-none">⌂</span>
+            <span>Ana</span>
+        </a>
+
+        <a href="{{ route('forum.index') }}" class="flex flex-col items-center justify-center gap-1 {{ request()->is('forum*') ? 'text-blue-700' : '' }}">
+            <span class="text-lg leading-none">#</span>
+            <span>Forum</span>
+        </a>
+
+        <a href="{{ route('search') }}" class="flex flex-col items-center justify-center gap-1 {{ request()->is('arama*') ? 'text-blue-700' : '' }}">
+            <span class="text-lg leading-none">⌕</span>
+            <span>Arama</span>
+        </a>
+
+        @auth
+            <a
+                href="{{ route('messages.index') }}"
+                x-data="privateMessageCounter()"
+                x-init="init()"
+                class="relative flex flex-col items-center justify-center gap-1 {{ request()->is('mesajlar*') ? 'text-blue-700' : '' }}"
+            >
+                <span class="text-lg leading-none">✉</span>
+                <span>Mesaj</span>
+                <span
+                    x-show="count > 0"
+                    x-text="count"
+                    class="absolute right-4 top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
+                    style="display:none;"
+                ></span>
+            </a>
+
+            <a
+                href="/profil/{{ auth()->id() }}"
+                x-data="notificationSystem({{ auth()->user()->unreadNotifications()->count() }})"
+                x-init="init()"
+                class="relative flex flex-col items-center justify-center gap-1 {{ request()->is('bildirimler*') || request()->is('profil*') ? 'text-blue-700' : '' }}"
+            >
+                <span class="text-lg leading-none">●</span>
+                <span>Profil</span>
+                <span
+                    x-show="count > 0"
+                    x-text="count"
+                    class="absolute right-4 top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-700 px-1 text-[10px] font-black text-white"
+                    style="display:none;"
+                ></span>
+            </a>
+        @else
+            <a href="{{ route('login') }}" class="flex flex-col items-center justify-center gap-1">
+                <span class="text-lg leading-none">✉</span>
+                <span>Mesaj</span>
+            </a>
+
+            <a href="{{ route('login') }}" class="flex flex-col items-center justify-center gap-1">
+                <span class="text-lg leading-none">●</span>
+                <span>Profil</span>
+            </a>
+        @endauth
+    </div>
+</nav>
+
+<footer class="bg-slate-900 text-white mt-12 pb-24 md:pb-0">
     <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
 
         <div>
