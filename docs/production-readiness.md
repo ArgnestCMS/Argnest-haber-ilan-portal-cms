@@ -33,6 +33,29 @@ Production should still add upstream limits at the web server or CDN layer for `
 - Run `php artisan storage:link` after deployment and confirm `public/storage` points to `storage/app/public`.
 - Never expose `storage/app/private`.
 - Keep video upload disabled until a separate media-processing pipeline exists.
+- Public uploaded files should never execute as scripts. Apache deployments include `storage/app/public/.htaccess`; Nginx deployments should add an equivalent deny rule for executable extensions under `/storage`.
+- Media upload paths are generated from server-side UUIDs and date folders. Do not use client-provided filenames for storage paths.
+- MIME and extension must agree. Current accepted image formats are JPG, PNG, WEBP, and GIF.
+
+## Security Headers
+
+The web middleware adds non-breaking baseline headers:
+
+- `X-Frame-Options: SAMEORIGIN`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy` disables high-risk browser capabilities such as camera, microphone, geolocation, payment, and USB.
+- CSP is intentionally `Content-Security-Policy-Report-Only` for the first pass because the frontend currently uses Tailwind CDN, Alpine CDN, Vite assets, Reverb websocket connections, Google reCAPTCHA, and YouTube embeds.
+
+Recommended next step: collect CSP reports in staging, then move from report-only to enforcement after confirming no frontend, admin, Reverb, upload, or embedded media flow breaks.
+
+Nginx executable upload deny example:
+
+```nginx
+location ~* ^/storage/.*\.(php|phtml|phar|cgi|pl|asp|aspx|jsp|sh|bat|cmd|exe|dll|so)$ {
+    deny all;
+}
+```
 
 ## Logs
 
@@ -114,4 +137,3 @@ php artisan optimize:clear
 8. Restart Reverb if used.
 9. Check `/up`, public home page, login, forum page, DM page, notification count, and upload endpoint.
 10. Check logs and failed jobs.
-

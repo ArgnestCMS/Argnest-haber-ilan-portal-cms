@@ -130,7 +130,7 @@ class MediaUploadService
 
         $extension = Str::lower($file->getClientOriginalExtension());
 
-        if (! in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+        if (! in_array($extension, $this->allowedExtensionsForMime($mime), true)) {
             $this->fail('Dosya uzantisi gorsel formatlariyla uyumlu degil.');
         }
 
@@ -233,6 +233,17 @@ class MediaUploadService
     private function maxImagePixels(): int
     {
         return max(1, (int) config('media.images.max_pixels', 24_000_000));
+    }
+
+    private function allowedExtensionsForMime(string $mime): array
+    {
+        return match ($mime) {
+            'image/jpeg' => ['jpg', 'jpeg'],
+            'image/png' => ['png'],
+            'image/webp' => ['webp'],
+            'image/gif' => ['gif'],
+            default => [],
+        };
     }
 
     private function megabytesToBytes(int $megabytes): int
