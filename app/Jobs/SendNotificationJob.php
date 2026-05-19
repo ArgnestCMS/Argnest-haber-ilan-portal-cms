@@ -11,6 +11,12 @@ class SendNotificationJob implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    public int $timeout = 30;
+
+    public array $backoff = [5, 15, 30];
+
     public array $users;
 
     public string $type;
@@ -34,6 +40,8 @@ class SendNotificationJob implements ShouldQueue
         ?string $url = null,
         array $data = []
     ) {
+        $this->onQueue(config('realtime.queues.notifications', 'notifications'));
+
         $this->users = $users;
         $this->type = $type;
         $this->title = $title;

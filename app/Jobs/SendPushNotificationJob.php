@@ -11,7 +11,16 @@ class SendPushNotificationJob implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public int $notificationId) {}
+    public int $tries = 3;
+
+    public int $timeout = 45;
+
+    public array $backoff = [30, 120, 300];
+
+    public function __construct(public int $notificationId)
+    {
+        $this->onQueue(config('realtime.queues.notifications', 'notifications'));
+    }
 
     public function handle(PushNotificationSender $sender): void
     {

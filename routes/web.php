@@ -17,6 +17,7 @@ use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\SocialPresenceController;
 use App\Http\Controllers\PrivateMessageController;
 use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\SearchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +36,10 @@ Route::get('/haber/{slug}', [FrontendController::class, 'newsDetail']);
 Route::get('/ilan/{slug}', [FrontendController::class, 'announcementDetail']);
 
 Route::get('/kategori/{slug}', [FrontendController::class, 'category']);
-Route::get('/arama', [FrontendController::class, 'search']);
+Route::get('/arama/instant', [SearchController::class, 'instant'])
+    ->name('search.instant');
+Route::get('/arama', [SearchController::class, 'index'])
+    ->name('search');
 Route::get('/videolar', [FrontendController::class, 'videos'])
     ->name('videos.index');
 

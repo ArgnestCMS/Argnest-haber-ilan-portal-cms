@@ -14,6 +14,12 @@ class DispatchRealtimeTestEventsJob implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 2;
+
+    public int $timeout = 30;
+
+    public array $backoff = [5, 15];
+
     public function __construct(public ?int $userId = null)
     {
         $this->onQueue(config('realtime.queues.events', 'realtime'));
