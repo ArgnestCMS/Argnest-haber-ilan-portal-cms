@@ -199,6 +199,30 @@
             <span>Son cevaplayan: {{ $topic->lastPostUser?->name ?? $topic->user?->name ?? 'Sistem' }}</span>
         </div>
 
+        <div
+            x-data="topicPresence({
+                usersUrl: '{{ route('forum.topics.presence', $topic) }}',
+                touchUrl: '{{ route('forum.topics.presence.touch', $topic) }}',
+                channel: 'forum.topic.{{ $topic->id }}',
+                csrf: '{{ csrf_token() }}',
+                canTouch: @js(auth()->check()),
+            })"
+            x-init="init()"
+            class="mt-6 rounded-xl border border-white/10 bg-white/5 p-4"
+        >
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <div class="text-sm font-black text-white">Su an konuda aktif</div>
+                    <div class="mt-1 text-xs font-bold text-slate-300" x-text="users.length ? users.length + ' kullanici aktif' : 'Aktif kullanici bekleniyor'"></div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <template x-for="user in users" :key="user.id">
+                        <a :href="user.profile_url || '#'" class="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white transition hover:bg-white/20" x-text="user.name"></a>
+                    </template>
+                </div>
+            </div>
+        </div>
+
         @auth
             <div class="mt-6 flex flex-wrap gap-3">
                 <form method="POST" action="{{ route('forum.topics.like', $topic) }}">
@@ -564,5 +588,59 @@
         });
     </script>
 @endauth
+
+<script>
+function topicPresence(config) {
+    return {
+        users: [],
+        init() {
+            this.touch();
+            this.fetchUsers();
+            this.listen();
+            setInterval(() => this.touch(), 45000);
+            setInterval(() => this.fetchUsers(), 15000);
+        },
+        listen() {
+            if (!window.Echo || !config.canTouch) {
+                return;
+            }
+
+            window.Echo.join(config.channel)
+                .here((users) => {
+                    this.users = users;
+                })
+                .joining((user) => {
+                    if (!this.users.some((item) => item.id === user.id)) {
+                        this.users = [...this.users, user];
+                    }
+                })
+                .leaving((user) => {
+                    this.users = this.users.filter((item) => item.id !== user.id);
+                });
+        },
+        touch() {
+            if (!config.canTouch) {
+                return;
+            }
+
+            fetch(config.touchUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': config.csrf,
+                },
+            }).catch(() => {});
+        },
+        fetchUsers() {
+            fetch(config.usersUrl)
+                .then(response => response.json())
+                .then(data => {
+                    this.users = data.users || [];
+                })
+                .catch(() => {});
+        },
+    }
+}
+</script>
 
 @endsection

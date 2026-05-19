@@ -35,6 +35,8 @@
     x-data="liveChat({
         messagesUrl: '{{ route('live-chat.messages') }}',
         onlineUrl: '{{ route('live-chat.online') }}',
+        typingUrl: '{{ route('live-chat.typing') }}',
+        typingStoreUrl: '{{ route('live-chat.typing.store') }}',
         storeUrl: '{{ route('live-chat.messages.store') }}',
         csrf: '{{ csrf_token() }}',
         initialMessages: @js($messages->map(fn ($message) => [
@@ -51,6 +53,8 @@
             'id' => $user->id,
             'name' => $user->name,
             'reputation' => $user->forum_reputation ?? 0,
+            'is_online' => $user->isOnline(),
+            'last_seen' => $user->last_seen_at?->diffForHumans(),
         ])),
         canSend: @js(auth()->check() && ($siteSetting?->live_chat_enabled ?? false)),
         authUserId: @js(auth()->id()),
@@ -111,6 +115,10 @@
                     </div>
                 </template>
             </div>
+
+            <div x-show="typingUsers.length > 0" x-cloak class="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-black text-red-700">
+                <span x-text="typingText()"></span>
+            </div>
         </div>
 
         <div class="border-t border-slate-200 bg-white p-4">
@@ -121,6 +129,7 @@
                             <input
                                 type="text"
                                 x-model="draft"
+                                @input="notifyTyping()"
                                 maxlength="500"
                                 placeholder="Mesajınızı yazın..."
                                 class="min-w-0 flex-1 rounded-lg border-slate-300 text-sm"
@@ -161,7 +170,11 @@
                     <div class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-3">
                         <div>
                             <div class="text-sm font-black text-slate-900" x-text="user.name"></div>
-                            <div class="text-xs font-bold text-slate-500" x-text="user.reputation + ' itibar'"></div>
+                            <div class="text-xs font-bold text-slate-500">
+                                <span x-text="user.reputation + ' itibar'"></span>
+                                <span> · </span>
+                                <span x-text="user.last_seen || 'su an aktif'"></span>
+                            </div>
                         </div>
                         <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
                     </div>
@@ -238,12 +251,19 @@ function liveChat(config) {
         notice: '',
         sending: false,
         reportMessage: null,
+        typingUsers: [],
+        typingChannel: null,
+        typingTimer: null,
+        lastTypingPing: 0,
         init() {
             this.fetchMessages();
             this.fetchOnlineUsers();
+            this.fetchTypingUsers();
             this.listenForMessages();
+            this.listenForPresence();
             setInterval(() => this.fetchMessages(), 5000);
             setInterval(() => this.fetchOnlineUsers(), 10000);
+            setInterval(() => this.fetchTypingUsers(), 3000);
         },
         listenForMessages() {
             if (!window.Echo) {
@@ -260,6 +280,45 @@ function liveChat(config) {
                     this.fetchOnlineUsers();
                 });
         },
+        listenForPresence() {
+            if (!window.Echo || !config.authUserId) {
+                return;
+            }
+
+            this.typingChannel = window.Echo.join('live.chat.presence')
+                .here((users) => {
+                    this.onlineUsers = users.map((user) => ({
+                        id: user.id,
+                        name: user.name,
+                        reputation: user.reputation || 0,
+                        is_online: true,
+                        last_seen: 'su an aktif',
+                    }));
+                })
+                .joining((user) => {
+                    if (this.onlineUsers.some((item) => item.id === user.id)) {
+                        return;
+                    }
+
+                    this.onlineUsers = [...this.onlineUsers, {
+                        id: user.id,
+                        name: user.name,
+                        reputation: user.reputation || 0,
+                        is_online: true,
+                        last_seen: 'su an aktif',
+                    }];
+                })
+                .leaving((user) => {
+                    this.onlineUsers = this.onlineUsers.filter((item) => item.id !== user.id);
+                })
+                .listenForWhisper('typing', (event) => {
+                    if (!event?.id || event.id === config.authUserId) {
+                        return;
+                    }
+
+                    this.markTyping({ id: event.id, name: event.name });
+                });
+        },
         fetchMessages() {
             fetch(config.messagesUrl)
                 .then(response => response.json())
@@ -273,6 +332,59 @@ function liveChat(config) {
                 .then(data => {
                     this.onlineUsers = data.users || [];
                 });
+        },
+        fetchTypingUsers() {
+            fetch(config.typingUrl)
+                .then(response => response.json())
+                .then(data => {
+                    this.typingUsers = (data.users || []).filter((user) => user.id !== config.authUserId);
+                });
+        },
+        notifyTyping() {
+            if (!config.canSend || !this.draft.trim()) {
+                return;
+            }
+
+            const now = Date.now();
+
+            if (now - this.lastTypingPing < 1800) {
+                return;
+            }
+
+            this.lastTypingPing = now;
+
+            if (this.typingChannel) {
+                this.typingChannel.whisper('typing', {
+                    id: config.authUserId,
+                    name: @js(auth()->user()?->name),
+                });
+            }
+
+            fetch(config.typingStoreUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': config.csrf,
+                },
+            }).catch(() => {});
+        },
+        markTyping(user) {
+            this.typingUsers = [
+                ...this.typingUsers.filter((item) => item.id !== user.id),
+                user,
+            ];
+
+            window.clearTimeout(this.typingTimer);
+            this.typingTimer = window.setTimeout(() => {
+                this.typingUsers = [];
+            }, 4000);
+        },
+        typingText() {
+            if (this.typingUsers.length === 1) {
+                return `${this.typingUsers[0].name} yaziyor...`;
+            }
+
+            return `${this.typingUsers.length} kisi yaziyor...`;
         },
         send() {
             const message = this.draft.trim();

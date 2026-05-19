@@ -866,5 +866,18 @@ function notificationSystem(initialCount = 0) {
     }
 }
 </script>
+@auth
+<script>
+setInterval(() => {
+    fetch('{{ route('presence.heartbeat') }}', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+    }).catch(() => {});
+}, 60000);
+</script>
+@endauth
 </body>
 </html>

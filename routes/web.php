@@ -14,6 +14,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\UserFollowController;
+use App\Http\Controllers\SocialPresenceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,9 @@ Route::get('/forum/kategori/{slug}', [FrontendController::class, 'forumCategory'
 Route::get('/forum/etiket/{slug}', [FrontendController::class, 'forumTag'])
     ->name('forum.tags.show');
 
+Route::get('/forum/konu/{topic}/aktif-kullanicilar', [SocialPresenceController::class, 'topicUsers'])
+    ->name('forum.topics.presence');
+
 Route::get('/forum/konu/{slug}', [FrontendController::class, 'forumTopic'])
     ->name('forum.topics.show');
 
@@ -71,6 +75,15 @@ Route::get('/canli-sohbet/mesajlar', [LiveChatController::class, 'messages'])
 
 Route::get('/canli-sohbet/online', [LiveChatController::class, 'onlineUsers'])
     ->name('live-chat.online');
+
+Route::get('/presence/user/{user}', [SocialPresenceController::class, 'user'])
+    ->name('presence.user');
+
+Route::get('/presence/users', [SocialPresenceController::class, 'users'])
+    ->name('presence.users');
+
+Route::get('/canli-sohbet/typing', [SocialPresenceController::class, 'liveChatTypingUsers'])
+    ->name('live-chat.typing');
 
 Route::post('/yorum/video/{video}', [CommentController::class, 'storeVideo'])
     ->name('comments.video.store');
@@ -132,8 +145,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCount'])
     ->name('user.notifications.count');
 
-Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
+    Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
     ->name('user.notifications.latest');
+
+    Route::post('/presence/heartbeat', [SocialPresenceController::class, 'heartbeat'])
+        ->name('presence.heartbeat');
+
+    Route::post('/forum/konu/{topic}/aktif-kullanicilar', [SocialPresenceController::class, 'touchTopic'])
+        ->name('forum.topics.presence.touch');
+
+    Route::post('/canli-sohbet/typing', [SocialPresenceController::class, 'liveChatTyping'])
+        ->name('live-chat.typing.store');
     /*
     |--------------------------------------------------------------------------
     | Profile

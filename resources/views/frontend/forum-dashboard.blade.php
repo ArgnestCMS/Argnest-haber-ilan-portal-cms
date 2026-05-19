@@ -275,7 +275,14 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div
+                x-data="followingPresence({
+                    usersUrl: '{{ route('presence.users') }}',
+                    ids: @js($followingUsers->pluck('id')->values()),
+                })"
+                x-init="init()"
+                class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
                 <h2 class="text-xl font-black text-slate-950">Takip Ettiklerim</h2>
 
                 <div class="mt-4 space-y-3">
@@ -293,6 +300,13 @@
                                     <div class="truncate text-sm font-black text-slate-900">{{ $followed->name }}</div>
                                     <div class="text-xs font-bold text-slate-500">
                                         Seviye {{ $followed->forum_level ?? 1 }} · {{ $followed->forum_reputation ?? 0 }} rep
+                                    </div>
+                                    <div
+                                        class="mt-1 text-xs font-black"
+                                        :class="statusFor({{ $followed->id }}).is_online ? 'text-green-600' : 'text-slate-400'"
+                                        x-text="statusFor({{ $followed->id }}).is_online ? 'Online' : (statusFor({{ $followed->id }}).last_seen || 'Offline')"
+                                    >
+                                        {{ $followed->isOnline() ? 'Online' : ($followed->last_seen_at?->diffForHumans() ?? 'Offline') }}
                                     </div>
                                 </div>
                             </div>
@@ -456,5 +470,37 @@
         </aside>
     </div>
 </section>
+
+<script>
+function followingPresence(config) {
+    return {
+        statuses: {},
+        init() {
+            this.refresh();
+            setInterval(() => this.refresh(), 15000);
+        },
+        refresh() {
+            if (!config.ids.length) {
+                return;
+            }
+
+            const params = new URLSearchParams();
+            config.ids.forEach((id) => params.append('ids[]', id));
+
+            fetch(`${config.usersUrl}?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    (data.users || []).forEach((user) => {
+                        this.statuses[user.id] = user;
+                    });
+                })
+                .catch(() => {});
+        },
+        statusFor(id) {
+            return this.statuses[id] || { is_online: false, last_seen: null };
+        },
+    }
+}
+</script>
 
 @endsection

@@ -46,11 +46,13 @@ class LiveChatMessageCreated implements ShouldBroadcast
 
         return [
             'id' => $this->message->id,
+            'user_id' => $this->message->user_id,
             'user' => $this->message->user?->name ?? 'Sistem',
             'message' => e($this->message->message),
             'time' => $this->message->created_at?->format('H:i'),
             'is_online' => $this->message->user?->isOnline() ?? false,
             'reputation' => $this->message->user?->forum_reputation ?? 0,
+            'report_url' => route('reports.live-chat-messages.store', $this->message),
             'activity_id' => $this->activity?->id,
         ];
     }

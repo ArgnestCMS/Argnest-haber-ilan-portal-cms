@@ -6,7 +6,15 @@
 
 @section('content')
 
-<section class="mx-auto max-w-7xl px-4 py-8">
+<section
+    x-data="profilePresence({
+        userUrl: '{{ route('presence.user', $user) }}',
+        initialOnline: @js($user->isOnline()),
+        initialLastSeen: @js($user->last_seen_at?->diffForHumans()),
+    })"
+    x-init="init()"
+    class="mx-auto max-w-7xl px-4 py-8"
+>
     @if(session('success'))
         <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800">
             {{ session('success') }}
@@ -39,6 +47,15 @@
                         <h1 class="text-4xl font-black text-slate-950">{{ $user->name }}</h1>
                         <p class="mt-2 text-sm font-bold text-slate-500">
                             {{ $user->isOnline() ? 'Online' : 'Offline' }} · {{ $user->created_at?->format('d.m.Y') }} tarihinden beri uye
+                        </p>
+
+                        <p class="mt-2 text-sm font-bold text-slate-500">
+                            <span
+                                class="rounded-full px-2 py-0.5 text-xs font-black"
+                                :class="isOnline ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'"
+                                x-text="isOnline ? 'Realtime Online' : 'Realtime Offline'"
+                            ></span>
+                            <span class="ml-2" x-text="lastSeen ? 'Son gorulme: ' + lastSeen : ''"></span>
                         </p>
 
                         <div class="mt-4 flex flex-wrap gap-2">
@@ -232,5 +249,27 @@
         </div>
     </div>
 </section>
+
+<script>
+function profilePresence(config) {
+    return {
+        isOnline: config.initialOnline,
+        lastSeen: config.initialLastSeen,
+        init() {
+            this.refresh();
+            setInterval(() => this.refresh(), 15000);
+        },
+        refresh() {
+            fetch(config.userUrl)
+                .then(response => response.json())
+                .then(data => {
+                    this.isOnline = Boolean(data.is_online);
+                    this.lastSeen = data.last_seen;
+                })
+                .catch(() => {});
+        },
+    }
+}
+</script>
 
 @endsection

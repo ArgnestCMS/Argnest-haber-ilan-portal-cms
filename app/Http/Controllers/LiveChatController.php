@@ -164,6 +164,8 @@ class LiveChatController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'reputation' => $user->forum_reputation ?? 0,
+                'is_online' => $user->isOnline(),
+                'last_seen' => $user->last_seen_at?->diffForHumans(),
             ]);
 
         return response()->json([
