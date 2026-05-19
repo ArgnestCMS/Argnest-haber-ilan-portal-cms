@@ -43,6 +43,11 @@ class MediaAsset extends Model
     protected $appends = [
         'url',
         'thumbnail_url',
+        'human_size',
+        'is_orphan',
+        'is_large',
+        'storage_missing',
+        'thumbnail_missing',
     ];
 
     public function owner(): BelongsTo
@@ -71,6 +76,63 @@ class MediaAsset extends Model
             : null;
     }
 
+    public function getHumanSizeAttribute(): string
+    {
+        if ($this->size >= 1024 * 1024) {
+            return round($this->size / 1024 / 1024, 2) . ' MB';
+        }
+
+        return round($this->size / 1024, 1) . ' KB';
+    }
+
+    public function getIsOrphanAttribute(): bool
+    {
+        return ! $this->attachable_type || ! $this->attachable_id;
+    }
+
+    public function getIsLargeAttribute(): bool
+    {
+        return $this->size >= ((int) config('media.management.large_file_warning_mb', 20) * 1024 * 1024);
+    }
+
+    public function getStorageMissingAttribute(): bool
+    {
+        return ! Storage::disk($this->disk)->exists($this->path);
+    }
+
+    public function getThumbnailMissingAttribute(): bool
+    {
+        return $this->thumbnail_path !== null
+            && ! Storage::disk($this->disk)->exists($this->thumbnail_path);
+    }
+
+    public function markSuspicious(?string $note = null): void
+    {
+        $metadata = $this->metadata ?? [];
+        $metadata['suspicious_marked_at'] = now()->toISOString();
+        $metadata['suspicious_marked_by'] = auth()->id();
+
+        if ($note) {
+            $metadata['suspicious_note'] = $note;
+        }
+
+        $this->update([
+            'status' => 'suspicious',
+            'metadata' => $metadata,
+        ]);
+    }
+
+    public function markReady(): void
+    {
+        $metadata = $this->metadata ?? [];
+        unset($metadata['suspicious_marked_at'], $metadata['suspicious_marked_by'], $metadata['suspicious_note']);
+
+        $this->update([
+            'status' => 'ready',
+            'metadata' => $metadata,
+        ]);
+    }
+
     public function scopeReady($query)
     {
         return $query->where('status', 'ready');
@@ -79,5 +141,12 @@ class MediaAsset extends Model
     public function scopePublic($query)
     {
         return $query->where('visibility', 'public');
+    }
+
+    public function scopeOrphan($query)
+    {
+        return $query
+            ->whereNull('attachable_type')
+            ->whereNull('attachable_id');
     }
 }

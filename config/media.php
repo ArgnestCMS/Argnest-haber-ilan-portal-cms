@@ -11,4 +11,8 @@ return [
 
         'max_pixels' => env('MEDIA_IMAGE_MAX_PIXELS', 24_000_000),
     ],
+
+    'management' => [
+        'large_file_warning_mb' => env('MEDIA_LARGE_FILE_WARNING_MB', 20),
+    ],
 ];
