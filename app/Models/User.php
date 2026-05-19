@@ -37,6 +37,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'bio',
         'forum_reputation',
         'community_trust_score',
+        'message_privacy',
         'forum_xp',
         'forum_level',
         'forum_streak_days',
@@ -71,6 +72,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_active' => 'boolean',
             'forum_reputation' => 'integer',
             'community_trust_score' => 'integer',
+            'message_privacy' => 'string',
             'forum_xp' => 'integer',
             'forum_level' => 'integer',
             'forum_streak_days' => 'integer',
@@ -220,6 +222,52 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->following()
             ->whereKey($user->id)
             ->exists();
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot(['last_read_at', 'is_muted', 'muted_until'])
+            ->withTimestamps();
+    }
+
+    public function sentPrivateMessages(): HasMany
+    {
+        return $this->hasMany(PrivateMessage::class, 'sender_id');
+    }
+
+    public function messageBlocks(): HasMany
+    {
+        return $this->hasMany(UserMessageBlock::class, 'blocker_id');
+    }
+
+    public function messageBlockedBy(): HasMany
+    {
+        return $this->hasMany(UserMessageBlock::class, 'blocked_id');
+    }
+
+    public function hasBlockedMessagesFrom(User $user): bool
+    {
+        return $this->messageBlocks()
+            ->where('blocked_id', $user->id)
+            ->exists();
+    }
+
+    public function canReceiveMessageRequestFrom(User $user): bool
+    {
+        if ($this->id === $user->id) {
+            return false;
+        }
+
+        if ($this->hasBlockedMessagesFrom($user) || $user->hasBlockedMessagesFrom($this)) {
+            return false;
+        }
+
+        return match ($this->message_privacy ?: 'followers') {
+            'everyone' => true,
+            'followers' => $user->isFollowing($this),
+            default => false,
+        };
     }
 
     public function forumQuests(): BelongsToMany

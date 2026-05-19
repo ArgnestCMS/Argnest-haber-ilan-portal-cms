@@ -15,6 +15,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\SocialPresenceController;
+use App\Http\Controllers\PrivateMessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -156,6 +157,45 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
 
     Route::post('/canli-sohbet/typing', [SocialPresenceController::class, 'liveChatTyping'])
         ->name('live-chat.typing.store');
+
+    Route::get('/mesajlar', [PrivateMessageController::class, 'index'])
+        ->name('messages.index');
+
+    Route::get('/mesajlar/count', [PrivateMessageController::class, 'count'])
+        ->name('messages.count');
+
+    Route::get('/mesajlar/{conversation}', [PrivateMessageController::class, 'show'])
+        ->name('messages.show');
+
+    Route::get('/mesajlar/{conversation}/latest', [PrivateMessageController::class, 'latest'])
+        ->name('messages.latest');
+
+    Route::post('/mesajlar/{conversation}/mesaj', [PrivateMessageController::class, 'store'])
+        ->name('messages.store');
+
+    Route::post('/mesajlar/{conversation}/kabul', [PrivateMessageController::class, 'accept'])
+        ->name('messages.accept');
+
+    Route::post('/mesajlar/{conversation}/reddet', [PrivateMessageController::class, 'reject'])
+        ->name('messages.reject');
+
+    Route::post('/mesajlar/{conversation}/okundu', [PrivateMessageController::class, 'markRead'])
+        ->name('messages.read');
+
+    Route::post('/mesajlar/{conversation}/sessiz', [PrivateMessageController::class, 'toggleMute'])
+        ->name('messages.mute');
+
+    Route::post('/profil/{user}/mesaj', [PrivateMessageController::class, 'start'])
+        ->name('messages.start');
+
+    Route::post('/profil/{user}/mesaj-engelle', [PrivateMessageController::class, 'block'])
+        ->name('messages.block');
+
+    Route::delete('/profil/{user}/mesaj-engelle', [PrivateMessageController::class, 'unblock'])
+        ->name('messages.unblock');
+
+    Route::patch('/mesaj-ayarlar', [PrivateMessageController::class, 'updateSettings'])
+        ->name('messages.settings.update');
     /*
     |--------------------------------------------------------------------------
     | Profile

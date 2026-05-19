@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
 use App\Models\LiveChatMessage;
+use App\Models\PrivateMessage;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -177,11 +178,14 @@ class CommunitySafety
             'forum_topic' => ForumTopic::query(),
             'forum_post' => ForumPost::query(),
             'live_chat' => LiveChatMessage::query(),
+            'private_message' => PrivateMessage::query(),
             'comment' => Comment::query(),
             default => Comment::query(),
         };
 
-        return $query->when($userId, fn (Builder $builder) => $builder->where('user_id', $userId));
+        return $query->when($userId, function (Builder $builder) use ($surface, $userId) {
+            $builder->where($surface === 'private_message' ? 'sender_id' : 'user_id', $userId);
+        });
     }
 
     private static function contentFromRecord(object $record, string $surface): string
@@ -189,6 +193,7 @@ class CommunitySafety
         return match ($surface) {
             'forum_topic' => trim(($record->title ?? '') . ' ' . ($record->content ?? '')),
             'live_chat' => (string) ($record->message ?? ''),
+            'private_message' => (string) ($record->body ?? ''),
             default => (string) ($record->content ?? ''),
         };
     }
@@ -199,6 +204,7 @@ class CommunitySafety
             'forum_topic' => 2,
             'forum_post', 'comment' => 3,
             'live_chat' => 3,
+            'private_message' => 5,
             default => 3,
         };
     }

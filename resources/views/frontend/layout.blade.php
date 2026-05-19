@@ -386,6 +386,21 @@
 
                         <a href="/dashboard" class="hover:text-slate-200">Panelim</a>
 
+                        <a
+                            href="{{ route('messages.index') }}"
+                            x-data="privateMessageCounter()"
+                            x-init="init()"
+                            class="relative hover:text-slate-200"
+                        >
+                            Mesajlar
+                            <span
+                                x-show="count > 0"
+                                x-text="count"
+                                class="absolute -top-3 -right-4 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
+                                style="display:none;"
+                            ></span>
+                        </a>
+
                         <a href="/profil/{{ auth()->id() }}" class="hover:text-slate-200">Profilim</a>
 
                         <form method="POST" action="{{ route('logout') }}">
@@ -466,6 +481,20 @@
 
                     @auth
                         <a href="/dashboard" class="py-3 border-b border-white/10">Panelim</a>
+                        <a
+                            href="{{ route('messages.index') }}"
+                            x-data="privateMessageCounter()"
+                            x-init="init()"
+                            class="relative py-3 border-b border-white/10"
+                        >
+                            Mesajlar
+                            <span
+                                x-show="count > 0"
+                                x-text="count"
+                                class="ml-2 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
+                                style="display:none;"
+                            ></span>
+                        </a>
                         <a href="/bildirimler" class="py-3 border-b border-white/10">Bildirimler</a>
                         <a href="/profil/{{ auth()->id() }}" class="py-3 border-b border-white/10">Profilim</a>
 
@@ -868,6 +897,39 @@ function notificationSystem(initialCount = 0) {
 </script>
 @auth
 <script>
+function privateMessageCounter() {
+    return {
+        count: 0,
+        init() {
+            this.fetchCount();
+            this.listenForMessages();
+            setInterval(() => this.fetchCount(), 7000);
+        },
+        fetchCount() {
+            fetch('{{ route('messages.count') }}', {
+                headers: {
+                    'Accept': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    this.count = Number(data.count || 0);
+                })
+                .catch(() => {});
+        },
+        listenForMessages() {
+            if (!window.Echo) {
+                return;
+            }
+
+            window.Echo.private('users.{{ auth()->id() }}.messages')
+                .listen('.private-message.sent', () => {
+                    this.fetchCount();
+                });
+        },
+    };
+}
+
 setInterval(() => {
     fetch('{{ route('presence.heartbeat') }}', {
         method: 'POST',

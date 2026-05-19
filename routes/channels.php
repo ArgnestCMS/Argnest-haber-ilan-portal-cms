@@ -1,9 +1,14 @@
 <?php
 
 use App\Models\User;
+use App\Models\Conversation;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('users.{userId}.notifications', function (User $user, int $userId): bool {
+    return $user->id === $userId;
+});
+
+Broadcast::channel('users.{userId}.messages', function (User $user, int $userId): bool {
     return $user->id === $userId;
 });
 
@@ -28,4 +33,11 @@ Broadcast::channel('forum.topic.{topicId}', function (User $user, int $topicId):
         'level' => $user->forum_level ?? 1,
         'profile_url' => url('/profil/' . $user->id),
     ];
+});
+
+Broadcast::channel('conversations.{conversationId}', function (User $user, int $conversationId): bool {
+    return Conversation::query()
+        ->whereKey($conversationId)
+        ->whereHas('participants', fn ($query) => $query->where('user_id', $user->id))
+        ->exists();
 });

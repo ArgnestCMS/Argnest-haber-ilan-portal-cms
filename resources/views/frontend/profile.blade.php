@@ -171,6 +171,68 @@
                 </div>
 
                 <aside class="space-y-6">
+                    @auth
+                        @if(auth()->id() === $user->id)
+                            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <h2 class="text-xl font-black text-slate-950">Mesaj Ayarlari</h2>
+                                <form method="POST" action="{{ route('messages.settings.update') }}" class="mt-4 space-y-3">
+                                    @csrf
+                                    @method('PATCH')
+
+                                    <label class="block">
+                                        <span class="text-sm font-bold text-slate-600">Kim mesaj istegi gonderebilir?</span>
+                                        <select name="message_privacy" class="mt-2 w-full rounded-xl border-slate-300 text-sm focus:border-red-500 focus:ring-red-500">
+                                            <option value="followers" @selected(($user->message_privacy ?? 'followers') === 'followers')>Takipcilerim</option>
+                                            <option value="everyone" @selected(($user->message_privacy ?? 'followers') === 'everyone')>Herkes</option>
+                                            <option value="none" @selected(($user->message_privacy ?? 'followers') === 'none')>Kimse</option>
+                                        </select>
+                                    </label>
+
+                                    <button class="w-full rounded-lg bg-slate-950 px-4 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                                        Kaydet
+                                    </button>
+                                </form>
+                            </section>
+                        @else
+                            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <h2 class="text-xl font-black text-slate-950">Ozel Mesaj</h2>
+
+                                @if(auth()->user()->hasBlockedMessagesFrom($user))
+                                    <form method="POST" action="{{ route('messages.unblock', $user) }}" class="mt-4">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="w-full rounded-lg bg-green-600 px-4 py-3 text-sm font-black text-white transition hover:bg-green-700">
+                                            Mesaj Engelini Kaldir
+                                        </button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('messages.start', $user) }}" class="mt-4 space-y-3">
+                                        @csrf
+                                        <textarea
+                                            name="body"
+                                            rows="4"
+                                            required
+                                            maxlength="2000"
+                                            class="w-full rounded-xl border-slate-300 text-sm focus:border-red-500 focus:ring-red-500"
+                                            placeholder="Kisa bir mesaj yazin..."
+                                        >{{ old('body') }}</textarea>
+
+                                        <button class="w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                                            Mesaj Istegi Gonder
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{{ route('messages.block', $user) }}" class="mt-3">
+                                        @csrf
+                                        <button class="w-full rounded-lg bg-slate-200 px-4 py-3 text-xs font-black text-slate-700 transition hover:bg-slate-300">
+                                            Mesajlasmayi Engelle
+                                        </button>
+                                    </form>
+                                @endif
+                            </section>
+                        @endif
+                    @endauth
+
                     <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h2 class="text-xl font-black text-slate-950">Rozet Vitrini</h2>
                         <div class="mt-4 flex flex-wrap gap-2">
