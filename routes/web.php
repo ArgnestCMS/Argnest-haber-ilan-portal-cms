@@ -12,6 +12,7 @@ use App\Http\Controllers\LiveChatController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CommunityReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -168,11 +169,20 @@ Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
     Route::post('/forum/konu/{topic}/favori', [ForumController::class, 'toggleBookmark'])
         ->name('forum.topics.bookmark');
 
+    Route::post('/rapor/forum-konu/{topic}', [CommunityReportController::class, 'reportTopic'])
+        ->name('reports.forum-topics.store');
+
+    Route::post('/rapor/forum-cevap/{post}', [CommunityReportController::class, 'reportPost'])
+        ->name('reports.forum-posts.store');
+
     Route::get('/forum/panelim', [ForumDashboardController::class, 'index'])
         ->name('forum.dashboard');
 
     Route::post('/canli-sohbet/mesaj', [LiveChatController::class, 'store'])
         ->name('live-chat.messages.store');
+
+    Route::post('/rapor/canli-sohbet/{message}', [CommunityReportController::class, 'reportLiveChatMessage'])
+        ->name('reports.live-chat-messages.store');
 
 });
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LiveChatMessage extends Model
@@ -39,6 +40,11 @@ class LiveChatMessage extends Model
     public function moderator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'moderated_by');
+    }
+
+    public function communityReports(): MorphMany
+    {
+        return $this->morphMany(CommunityReport::class, 'reportable');
     }
 
     public function scopeApproved($query)

@@ -28,11 +28,13 @@ class LiveChatController extends Controller
             ->values()
             ->map(fn (LiveChatMessage $message) => [
                 'id' => $message->id,
+                'user_id' => $message->user_id,
                 'user' => $message->user?->name ?? 'Sistem',
                 'message' => e($message->message),
                 'time' => $message->created_at?->format('H:i'),
                 'is_online' => $message->user?->isOnline() ?? false,
                 'reputation' => $message->user?->forum_reputation ?? 0,
+                'report_url' => route('reports.live-chat-messages.store', $message),
             ]);
 
         return response()->json([

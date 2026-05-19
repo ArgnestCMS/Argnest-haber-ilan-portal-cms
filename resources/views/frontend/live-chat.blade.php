@@ -25,6 +25,12 @@
 
 @section('content')
 
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+
 <section
     x-data="liveChat({
         messagesUrl: '{{ route('live-chat.messages') }}',
@@ -33,18 +39,21 @@
         csrf: '{{ csrf_token() }}',
         initialMessages: @js($messages->map(fn ($message) => [
             'id' => $message->id,
+            'user_id' => $message->user_id,
             'user' => $message->user?->name ?? 'Sistem',
             'message' => e($message->message),
             'time' => $message->created_at?->format('H:i'),
             'is_online' => $message->user?->isOnline() ?? false,
             'reputation' => $message->user?->forum_reputation ?? 0,
+            'report_url' => route('reports.live-chat-messages.store', $message),
         ])),
         initialOnline: @js($onlineUsers->map(fn ($user) => [
             'id' => $user->id,
             'name' => $user->name,
             'reputation' => $user->forum_reputation ?? 0,
         ])),
-        canSend: @js(auth()->check() && ($siteSetting?->live_chat_enabled ?? false))
+        canSend: @js(auth()->check() && ($siteSetting?->live_chat_enabled ?? false)),
+        authUserId: @js(auth()->id()),
     })"
     x-init="init()"
     class="mx-auto grid max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[1fr_340px]"
@@ -85,7 +94,17 @@
                                 <span class="text-xs font-bold text-slate-400" x-text="message.reputation + ' itibar'"></span>
                             </div>
 
-                            <div class="text-xs font-bold text-slate-400" x-text="message.time"></div>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    x-show="config.authUserId && message.user_id !== config.authUserId"
+                                    type="button"
+                                    @click="openReport(message)"
+                                    class="rounded-lg border border-slate-200 px-2 py-1 text-xs font-black text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                >
+                                    Raporla
+                                </button>
+                                <div class="text-xs font-bold text-slate-400" x-text="message.time"></div>
+                            </div>
                         </div>
 
                         <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700" x-html="message.message"></p>
@@ -170,16 +189,55 @@
             </a>
         </div>
     </aside>
+
+    @auth
+        <div
+            x-show="reportMessage"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4"
+        >
+            <form method="POST" :action="reportMessage?.report_url" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                @csrf
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-950">Mesaji Raporla</h2>
+                        <p class="mt-1 text-sm text-slate-500" x-text="reportMessage?.user"></p>
+                    </div>
+                    <button type="button" @click="reportMessage = null" class="rounded-lg bg-slate-100 px-3 py-2 text-xs font-black text-slate-600">
+                        Kapat
+                    </button>
+                </div>
+
+                <div class="mt-5 space-y-4">
+                    <select name="reason" required class="w-full rounded-lg border-slate-300 text-sm">
+                        <option value="">Sebep secin</option>
+                        <option value="spam">Spam</option>
+                        <option value="insult">Hakaret</option>
+                        <option value="inappropriate">Uygunsuz icerik</option>
+                        <option value="misinformation">Yanlis bilgi</option>
+                        <option value="advertising">Reklam</option>
+                        <option value="other">Diger</option>
+                    </select>
+                    <textarea name="details" rows="3" maxlength="1000" class="w-full rounded-lg border-slate-300 text-sm" placeholder="Ek aciklama"></textarea>
+                    <button type="submit" class="w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                        Rapor Gonder
+                    </button>
+                </div>
+            </form>
+        </div>
+    @endauth
 </section>
 
 <script>
 function liveChat(config) {
     return {
+        config,
         messages: config.initialMessages || [],
         onlineUsers: config.initialOnline || [],
         draft: '',
         notice: '',
         sending: false,
+        reportMessage: null,
         init() {
             this.fetchMessages();
             this.fetchOnlineUsers();
@@ -253,6 +311,9 @@ function liveChat(config) {
                 .finally(() => {
                     this.sending = false;
                 });
+        },
+        openReport(message) {
+            this.reportMessage = message;
         },
     }
 }

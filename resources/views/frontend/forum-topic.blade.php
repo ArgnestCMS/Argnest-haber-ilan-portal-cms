@@ -127,6 +127,28 @@
                         {{ $topic->bookmarkedBy(auth()->user()) ? 'Favoride' : 'Favoriye Al' }}
                     </button>
                 </form>
+
+                @if($topic->user_id !== auth()->id())
+                    <details class="rounded-lg border border-white/20 px-4 py-2 text-sm font-black text-white">
+                        <summary class="cursor-pointer list-none">Raporla</summary>
+                        <form method="POST" action="{{ route('reports.forum-topics.store', $topic) }}" class="mt-3 grid gap-3 text-slate-950 sm:w-80">
+                            @csrf
+                            <select name="reason" required class="rounded-lg border-slate-300 text-sm">
+                                <option value="">Sebep secin</option>
+                                <option value="spam">Spam</option>
+                                <option value="insult">Hakaret</option>
+                                <option value="inappropriate">Uygunsuz icerik</option>
+                                <option value="misinformation">Yanlis bilgi</option>
+                                <option value="advertising">Reklam</option>
+                                <option value="other">Diger</option>
+                            </select>
+                            <textarea name="details" rows="3" maxlength="1000" class="rounded-lg border-slate-300 text-sm" placeholder="Ek aciklama"></textarea>
+                            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-black text-white transition hover:bg-red-700">
+                                Rapor Gonder
+                            </button>
+                        </form>
+                    </details>
+                @endif
             </div>
         @endauth
     </div>
@@ -258,6 +280,27 @@
                                 >
                                     Alintila
                                 </button>
+                                @if($post->user_id !== auth()->id())
+                                    <details class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black text-slate-700">
+                                        <summary class="cursor-pointer list-none">Raporla</summary>
+                                        <form method="POST" action="{{ route('reports.forum-posts.store', $post) }}" class="mt-3 grid gap-3 sm:w-72">
+                                            @csrf
+                                            <select name="reason" required class="rounded-lg border-slate-300 text-sm">
+                                                <option value="">Sebep secin</option>
+                                                <option value="spam">Spam</option>
+                                                <option value="insult">Hakaret</option>
+                                                <option value="inappropriate">Uygunsuz icerik</option>
+                                                <option value="misinformation">Yanlis bilgi</option>
+                                                <option value="advertising">Reklam</option>
+                                                <option value="other">Diger</option>
+                                            </select>
+                                            <textarea name="details" rows="3" maxlength="1000" class="rounded-lg border-slate-300 text-sm" placeholder="Ek aciklama"></textarea>
+                                            <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-black text-white transition hover:bg-red-700">
+                                                Gonder
+                                            </button>
+                                        </form>
+                                    </details>
+                                @endif
                             </div>
                         @endauth
                     </div>

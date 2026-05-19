@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ForumTopic extends Model
@@ -88,6 +89,11 @@ class ForumTopic extends Model
             ->with(['parent.user', 'quotedPost.user'])
             ->where('status', 'approved')
             ->oldest();
+    }
+
+    public function communityReports(): MorphMany
+    {
+        return $this->morphMany(CommunityReport::class, 'reportable');
     }
 
     public function scopePublished($query)

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ForumPost extends Model
@@ -59,6 +60,11 @@ class ForumPost extends Model
     public function quotedPost(): BelongsTo
     {
         return $this->belongsTo(ForumPost::class, 'quoted_post_id');
+    }
+
+    public function communityReports(): MorphMany
+    {
+        return $this->morphMany(CommunityReport::class, 'reportable');
     }
 
     public function isPending(): bool

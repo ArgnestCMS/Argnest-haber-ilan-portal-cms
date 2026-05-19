@@ -21,6 +21,8 @@ class ForumGamification
         'content_rejected' => ['points' => -5, 'xp' => -10, 'quest' => null, 'description' => 'Icerik reddedildi'],
         'high_ai_risk' => ['points' => -3, 'xp' => -5, 'quest' => null, 'description' => 'Yuksek AI risk skoru'],
         'punishment' => ['points' => -15, 'xp' => -20, 'quest' => null, 'description' => 'Moderasyon cezasi'],
+        'report_resolved' => ['points' => 2, 'xp' => 15, 'quest' => null, 'description' => 'Dogru topluluk raporu'],
+        'report_rejected' => ['points' => -2, 'xp' => -5, 'quest' => null, 'description' => 'Hatali topluluk raporu'],
         'quest_completed' => ['points' => 0, 'xp' => 0, 'quest' => null, 'description' => 'Gorev tamamlandi'],
     ];
 

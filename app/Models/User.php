@@ -36,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'bio',
         'forum_reputation',
+        'community_trust_score',
         'forum_xp',
         'forum_level',
         'forum_streak_days',
@@ -69,6 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
             'is_active' => 'boolean',
             'forum_reputation' => 'integer',
+            'community_trust_score' => 'integer',
             'forum_xp' => 'integer',
             'forum_level' => 'integer',
             'forum_streak_days' => 'integer',
@@ -190,6 +192,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(ForumReputationEvent::class)
             ->latest();
+    }
+
+    public function communityReports(): HasMany
+    {
+        return $this->hasMany(CommunityReport::class);
     }
 
     public function forumQuests(): BelongsToMany

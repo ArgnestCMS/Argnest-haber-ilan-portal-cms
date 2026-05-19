@@ -77,8 +77,23 @@ class NotificationHelper
         ?string $url = null,
         array $data = []
     ): void {
-        self::sendToRoles(
-            roles: ['admin', 'moderator'],
+        $users = User::query()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereIn('role', ['admin', 'moderator'])
+                    ->orWhereHas('roleModel.permissions', fn ($permissions) => $permissions->where('slug', 'forum_moderasyonu'));
+            })
+            ->pluck('id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($users)) {
+            return;
+        }
+
+        SendNotificationJob::dispatch(
+            users: $users,
             type: $type,
             title: $title,
             message: $message,
