@@ -160,6 +160,36 @@
         .mobile-app-banner {
             bottom: calc(var(--mobile-shell-bottom) + var(--safe-bottom) + 12px);
         }
+
+        .mobile-ux-toast-area {
+            bottom: calc(var(--mobile-shell-bottom) + var(--safe-bottom) + 86px);
+        }
+
+        .mobile-realtime-pill {
+            bottom: calc(var(--mobile-shell-bottom) + var(--safe-bottom) + 14px);
+        }
+
+        .mobile-push-banner {
+            padding: 12px;
+        }
+
+        .mobile-push-banner p {
+            display: none;
+        }
+    }
+
+    @keyframes mobileBadgePulse {
+        0% { transform: scale(1); }
+        40% { transform: scale(1.18); }
+        100% { transform: scale(1); }
+    }
+
+    .mobile-badge {
+        box-shadow: 0 0 0 2px rgba(255,255,255,0.95);
+    }
+
+    .mobile-badge-pop {
+        animation: mobileBadgePulse 420ms ease-out;
     }
 </style>
 </head>
@@ -452,6 +482,24 @@
                 </div>
 
                 <div class="flex md:hidden items-center gap-3">
+                    @auth
+                        <a
+                            href="{{ route('user.notifications') }}"
+                            x-data="notificationSystem({{ auth()->user()->unreadNotifications()->count() }})"
+                            x-init="init()"
+                            class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg"
+                            aria-label="Bildirimler"
+                        >
+                            <span>!</span>
+                            <span
+                                x-show="count > 0"
+                                x-text="count"
+                                :class="{ 'mobile-badge-pop': pulse }"
+                                class="mobile-badge absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
+                                style="display:none;"
+                            ></span>
+                        </a>
+                    @endauth
                     <button @click="mobileSearch = !mobileSearch" class="text-xl">
                         🔍
                     </button>
@@ -522,7 +570,21 @@
                                 style="display:none;"
                             ></span>
                         </a>
-                        <a href="/bildirimler" class="py-3 border-b border-white/10">Bildirimler</a>
+                        <a
+                            href="{{ route('user.notifications') }}"
+                            x-data="notificationSystem({{ auth()->user()->unreadNotifications()->count() }})"
+                            x-init="init()"
+                            class="relative py-3 border-b border-white/10"
+                        >
+                            Bildirimler
+                            <span
+                                x-show="count > 0"
+                                x-text="count"
+                                :class="{ 'mobile-badge-pop': pulse }"
+                                class="mobile-badge ml-2 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
+                                style="display:none;"
+                            ></span>
+                        </a>
                         <a href="/profil/{{ auth()->id() }}" class="py-3 border-b border-white/10">Profilim</a>
 
                         <form method="POST" action="{{ route('logout') }}" class="py-3">
@@ -863,9 +925,9 @@
 @auth
     <div
         id="pwa-notification-banner"
-        class="mobile-app-banner fixed inset-x-4 z-[9997] hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-950 shadow-2xl md:bottom-4 md:left-auto md:w-96"
+        class="mobile-app-banner mobile-push-banner fixed inset-x-4 z-[9997] hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-950 shadow-2xl md:bottom-4 md:left-auto md:w-96"
     >
-        <div class="text-sm font-black">Bildirimlere hazir olun</div>
+        <div class="text-sm font-black">Bildirimleri ac</div>
         <p class="mt-1 text-xs font-bold leading-5 text-blue-800/80">Forum, mesaj ve moderasyon bildirimlerini tarayicinizdan alabilirsiniz.</p>
         <div class="mt-3 flex gap-2">
             <button type="button" data-pwa-notification-enable class="rounded-lg bg-blue-700 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-800">
@@ -907,7 +969,8 @@
                 <span
                     x-show="count > 0"
                     x-text="count"
-                    class="absolute right-4 top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
+                    :class="{ 'mobile-badge-pop': pulse }"
+                    class="mobile-badge absolute right-4 top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-black text-white"
                     style="display:none;"
                 ></span>
             </a>
@@ -923,7 +986,8 @@
                 <span
                     x-show="count > 0"
                     x-text="count"
-                    class="absolute right-4 top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-700 px-1 text-[10px] font-black text-white"
+                    :class="{ 'mobile-badge-pop': pulse }"
+                    class="mobile-badge absolute right-4 top-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-blue-700 px-1 text-[10px] font-black text-white"
                     style="display:none;"
                 ></span>
             </a>
@@ -940,6 +1004,53 @@
         @endauth
     </div>
 </nav>
+
+@auth
+    <div
+        x-data="realtimeMobileUx()"
+        x-init="init()"
+        class="pointer-events-none fixed inset-x-4 z-[9995] md:hidden"
+    >
+        <div class="mobile-ux-toast-area fixed inset-x-4 space-y-2">
+            <template x-for="toast in toasts" :key="toast.id">
+                <a
+                    :href="toast.url || '#'"
+                    x-show="toast.visible"
+                    x-transition
+                    class="pointer-events-auto block rounded-2xl border border-slate-200 bg-white p-3 text-slate-950 shadow-2xl"
+                >
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
+                            :class="toast.kind === 'message' ? 'bg-red-600' : 'bg-blue-700'"
+                        ></div>
+                        <div class="min-w-0">
+                            <div class="truncate text-sm font-black" x-text="toast.title"></div>
+                            <div class="mt-0.5 line-clamp-2 text-xs font-bold leading-5 text-slate-500" x-text="toast.message"></div>
+                        </div>
+                    </div>
+                </a>
+            </template>
+        </div>
+
+        <div
+            x-show="showPill"
+            x-transition
+            class="mobile-realtime-pill pointer-events-none fixed left-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 py-2 text-[11px] font-black text-slate-700 shadow-lg backdrop-blur"
+            style="display:none;"
+        >
+            <span
+                class="h-2 w-2 rounded-full"
+                :class="{
+                    'bg-green-500': online && status === 'connected',
+                    'bg-amber-500': online && status === 'polling',
+                    'bg-red-500': !online || status === 'disconnected',
+                }"
+            ></span>
+            <span x-text="label"></span>
+        </div>
+    </div>
+@endauth
 
 <footer class="bg-slate-900 text-white mt-12 pb-24 md:pb-0">
     <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
@@ -1169,6 +1280,7 @@
 function notificationSystem(initialCount = 0) {
     return {
         count: initialCount,
+        pulse: false,
 
         init() {
             this.fetchCount();
@@ -1183,8 +1295,24 @@ function notificationSystem(initialCount = 0) {
             fetch('/bildirimler/count')
                 .then(res => res.json())
                 .then(data => {
-                    this.count = data.count;
+                    this.updateCount(Number(data.count || 0));
                 });
+        },
+
+        updateCount(nextCount) {
+            if (nextCount > this.count) {
+                this.flashBadge();
+            }
+
+            this.count = nextCount;
+        },
+
+        flashBadge() {
+            this.pulse = false;
+            requestAnimationFrame(() => {
+                this.pulse = true;
+                setTimeout(() => this.pulse = false, 450);
+            });
         },
 
         listenForNotifications() {
@@ -1193,8 +1321,18 @@ function notificationSystem(initialCount = 0) {
             }
 
             window.Echo.private('users.{{ auth()->id() }}.notifications')
-                .listen('.user-notification.created', () => {
+                .listen('.user-notification.created', (notification) => {
                     this.count += 1;
+                    this.flashBadge();
+                    window.dispatchEvent(new CustomEvent('realtime-ux:toast', {
+                        detail: {
+                            id: 'notification-' + (notification?.id || Date.now()),
+                            kind: notification?.type === 'mention' ? 'mention' : 'notification',
+                            title: notification?.title || 'Yeni bildirim',
+                            message: notification?.message || 'Bildirim merkezinde yeni bir hareket var.',
+                            url: notification?.url || '{{ route('user.notifications') }}',
+                        },
+                    }));
                 });
         }
     }
@@ -1205,6 +1343,7 @@ function notificationSystem(initialCount = 0) {
 function privateMessageCounter() {
     return {
         count: 0,
+        pulse: false,
         init() {
             this.fetchCount();
             this.listenForMessages();
@@ -1218,9 +1357,23 @@ function privateMessageCounter() {
             })
                 .then(response => response.json())
                 .then(data => {
-                    this.count = Number(data.count || 0);
+                    this.updateCount(Number(data.count || 0));
                 })
                 .catch(() => {});
+        },
+        updateCount(nextCount) {
+            if (nextCount > this.count) {
+                this.flashBadge();
+            }
+
+            this.count = nextCount;
+        },
+        flashBadge() {
+            this.pulse = false;
+            requestAnimationFrame(() => {
+                this.pulse = true;
+                setTimeout(() => this.pulse = false, 450);
+            });
         },
         listenForMessages() {
             if (!window.Echo) {
@@ -1228,9 +1381,144 @@ function privateMessageCounter() {
             }
 
             window.Echo.private('users.{{ auth()->id() }}.messages')
-                .listen('.private-message.sent', () => {
+                .listen('.private-message.sent', (message) => {
                     this.fetchCount();
+                    this.flashBadge();
+                    window.dispatchEvent(new CustomEvent('realtime-ux:toast', {
+                        detail: {
+                            id: 'message-' + (message?.id || Date.now()),
+                            kind: 'message',
+                            title: message?.sender ? 'Yeni mesaj: ' + message.sender : 'Yeni mesaj',
+                            message: message?.body || 'Mesaj kutunuzda yeni bir mesaj var.',
+                            url: '{{ route('messages.index') }}',
+                        },
+                    }));
                 });
+        },
+    };
+}
+
+function realtimeMobileUx() {
+    return {
+        online: navigator.onLine,
+        status: window.Echo ? 'connecting' : 'polling',
+        toasts: [],
+        seenToastIds: new Set(),
+        showPill: false,
+        get label() {
+            if (!this.online) {
+                return 'Cevrimdisi';
+            }
+
+            if (this.status === 'connected') {
+                return 'Canli bagli';
+            }
+
+            if (this.status === 'disconnected') {
+                return 'Yeniden baglaniyor';
+            }
+
+            return 'Sessiz polling';
+        },
+        init() {
+            this.bindNetwork();
+            this.bindRealtime();
+            this.bindToasts();
+            this.updatePill();
+        },
+        bindNetwork() {
+            window.addEventListener('online', () => {
+                this.online = true;
+                this.pushToast({
+                    id: 'network-online-' + Date.now(),
+                    kind: 'status',
+                    title: 'Tekrar cevrimici',
+                    message: 'Canli bildirimler kaldigi yerden devam edecek.',
+                }, 2600);
+                this.updatePill();
+            });
+
+            window.addEventListener('offline', () => {
+                this.online = false;
+                this.pushToast({
+                    id: 'network-offline-' + Date.now(),
+                    kind: 'status',
+                    title: 'Baglanti koptu',
+                    message: 'Sayfa sessizce tekrar baglanmayi deneyecek.',
+                }, 4200);
+                this.updatePill(true);
+            });
+        },
+        bindRealtime() {
+            const connection = window.Echo?.connector?.pusher?.connection;
+
+            if (!connection) {
+                this.status = 'polling';
+                this.updatePill();
+
+                return;
+            }
+
+            this.status = connection.state === 'connected' ? 'connected' : 'connecting';
+
+            connection.bind('state_change', (states) => {
+                this.status = states.current === 'connected' ? 'connected' : 'disconnected';
+                this.updatePill(states.current !== 'connected');
+            });
+
+            connection.bind('connected', () => {
+                this.status = 'connected';
+                this.updatePill();
+            });
+
+            connection.bind('unavailable', () => {
+                this.status = 'disconnected';
+                this.updatePill(true);
+            });
+
+            connection.bind('error', () => {
+                this.status = 'disconnected';
+                this.updatePill(true);
+            });
+        },
+        bindToasts() {
+            window.addEventListener('realtime-ux:toast', (event) => {
+                this.pushToast(event.detail || {});
+            });
+        },
+        updatePill(keepVisible = false) {
+            this.showPill = keepVisible || !this.online || this.status !== 'connected';
+
+            if (!keepVisible && this.online && this.status === 'connected') {
+                setTimeout(() => {
+                    if (this.online && this.status === 'connected') {
+                        this.showPill = false;
+                    }
+                }, 1800);
+            }
+        },
+        pushToast(detail, timeout = 5200) {
+            if (!detail?.id || this.seenToastIds.has(detail.id)) {
+                return;
+            }
+
+            this.seenToastIds.add(detail.id);
+
+            const toast = {
+                id: detail.id,
+                kind: detail.kind || 'notification',
+                title: detail.title || 'Yeni hareket',
+                message: detail.message || 'Bildirim merkezinde yeni bir hareket var.',
+                url: detail.url || '{{ route('user.notifications') }}',
+                visible: true,
+            };
+
+            this.toasts = [toast, ...this.toasts].slice(0, 3);
+
+            setTimeout(() => {
+                toast.visible = false;
+                this.toasts = this.toasts.filter((item) => item.id !== toast.id);
+            }, timeout);
         },
     };
 }
