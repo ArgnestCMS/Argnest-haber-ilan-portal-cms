@@ -108,6 +108,40 @@
 
 @section('content')
 
+@php
+    $forumMediaItems = collect();
+
+    $topic->mediaAssets->each(function ($media) use ($forumMediaItems, $topic) {
+        if ($media->url) {
+            $forumMediaItems->push([
+                'id' => 'topic-' . $media->id,
+                'src' => $media->url,
+                'thumb' => $media->thumbnail_url ?? $media->url,
+                'label' => 'Konu medyasi',
+                'meta' => trim(($topic->user?->name ?? 'Sistem') . ' - ' . ($topic->created_at?->format('d.m.Y H:i') ?? '')),
+                'width' => $media->width,
+                'height' => $media->height,
+            ]);
+        }
+    });
+
+    $topic->approvedPosts->each(function ($post) use ($forumMediaItems) {
+        $post->mediaAssets->each(function ($media) use ($forumMediaItems, $post) {
+            if ($media->url) {
+                $forumMediaItems->push([
+                    'id' => 'post-' . $media->id,
+                    'src' => $media->url,
+                    'thumb' => $media->thumbnail_url ?? $media->url,
+                    'label' => 'Cevap medyasi',
+                    'meta' => trim(($post->user?->name ?? 'Sistem') . ' - ' . ($post->created_at?->format('d.m.Y H:i') ?? '')),
+                    'width' => $media->width,
+                    'height' => $media->height,
+                ]);
+            }
+        });
+    });
+@endphp
+
 <style>
     .forum-rich-content iframe {
         aspect-ratio: 16 / 9;
@@ -122,6 +156,58 @@
         border-radius: 0.75rem;
         height: auto;
         max-width: 100%;
+    }
+
+    .forum-media-masonry {
+        columns: 1;
+        column-gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+        .forum-media-masonry {
+            columns: 2;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .forum-media-masonry {
+            columns: 3;
+        }
+    }
+
+    .forum-media-tile {
+        break-inside: avoid;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+
+    .forum-media-skeleton {
+        background:
+            linear-gradient(90deg, rgba(226, 232, 240, 0.7), rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.7));
+        background-size: 220% 100%;
+        animation: forum-media-shimmer 1.4s ease-in-out infinite;
+    }
+
+    .forum-media-tile img {
+        filter: blur(12px);
+        opacity: 0;
+        transform: scale(1.02);
+        transition: filter 220ms ease, opacity 220ms ease, transform 220ms ease;
+    }
+
+    .forum-media-tile img.is-loaded {
+        filter: blur(0);
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    @keyframes forum-media-shimmer {
+        0% { background-position: 120% 0; }
+        100% { background-position: -120% 0; }
+    }
+
+    [x-cloak] {
+        display: none !important;
     }
 </style>
 
@@ -324,17 +410,33 @@
 
             @if($topic->mediaAssets->isNotEmpty())
                 <div class="mt-6 border-t border-slate-100 pt-5">
-                    <div class="mb-3 text-xs font-black uppercase text-slate-400">Konu medya galerisi</div>
-                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <div class="text-xs font-black uppercase text-slate-400">Konu medya galerisi</div>
+                        <div class="text-xs font-bold text-slate-400">{{ $topic->mediaAssets->count() }} gorsel</div>
+                    </div>
+                    <div class="forum-media-masonry">
                         @foreach($topic->mediaAssets as $media)
-                            <a href="{{ $media->url }}" target="_blank" rel="noopener noreferrer" class="group block overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                                <img
-                                    src="{{ $media->thumbnail_url ?? $media->url }}"
-                                    alt=""
-                                    loading="lazy"
-                                    class="h-40 w-full object-cover transition group-hover:scale-[1.02]"
+                            @php($mediaIndex = $forumMediaItems->search(fn ($item) => $item['id'] === 'topic-' . $media->id))
+                            @if($mediaIndex !== false)
+                                <button
+                                    type="button"
+                                    data-forum-media-index="{{ $mediaIndex }}"
+                                    class="forum-media-tile group w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left shadow-sm transition hover:border-red-200 hover:shadow-md"
                                 >
-                            </a>
+                                    <span class="forum-media-skeleton block overflow-hidden">
+                                        <img
+                                            src="{{ $media->thumbnail_url ?? $media->url }}"
+                                            alt=""
+                                            loading="lazy"
+                                            decoding="async"
+                                            width="{{ $media->width ?? 800 }}"
+                                            height="{{ $media->height ?? 600 }}"
+                                            class="max-h-72 w-full object-cover transition group-hover:scale-[1.02]"
+                                            onload="this.classList.add('is-loaded')"
+                                        >
+                                    </span>
+                                </button>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -405,17 +507,33 @@
 
                         @if($post->mediaAssets->isNotEmpty())
                             <div class="mt-5 border-t border-slate-100 pt-4">
-                                <div class="mb-3 text-xs font-black uppercase text-slate-400">Cevap medyasi</div>
-                                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                                    <div class="text-xs font-black uppercase text-slate-400">Cevap medyasi</div>
+                                    <div class="text-xs font-bold text-slate-400">{{ $post->mediaAssets->count() }} gorsel</div>
+                                </div>
+                                <div class="forum-media-masonry">
                                     @foreach($post->mediaAssets as $media)
-                                        <a href="{{ $media->url }}" target="_blank" rel="noopener noreferrer" class="group block overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                                            <img
-                                                src="{{ $media->thumbnail_url ?? $media->url }}"
-                                                alt=""
-                                                loading="lazy"
-                                                class="h-32 w-full object-cover transition group-hover:scale-[1.02]"
+                                        @php($mediaIndex = $forumMediaItems->search(fn ($item) => $item['id'] === 'post-' . $media->id))
+                                        @if($mediaIndex !== false)
+                                            <button
+                                                type="button"
+                                                data-forum-media-index="{{ $mediaIndex }}"
+                                                class="forum-media-tile group w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left shadow-sm transition hover:border-red-200 hover:shadow-md"
                                             >
-                                        </a>
+                                                <span class="forum-media-skeleton block overflow-hidden">
+                                                    <img
+                                                        src="{{ $media->thumbnail_url ?? $media->url }}"
+                                                        alt=""
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        width="{{ $media->width ?? 800 }}"
+                                                        height="{{ $media->height ?? 600 }}"
+                                                        class="max-h-64 w-full object-cover transition group-hover:scale-[1.02]"
+                                                        onload="this.classList.add('is-loaded')"
+                                                    >
+                                                </span>
+                                            </button>
+                                        @endif
                                     @endforeach
                                 </div>
                             </div>
@@ -553,6 +671,80 @@
     </div>
 </section>
 
+@if($forumMediaItems->isNotEmpty())
+    <div
+        x-data="forumMediaViewer(@js($forumMediaItems->values()))"
+        x-init="init()"
+        x-show="open"
+        x-cloak
+        class="fixed inset-0 z-[10000] bg-slate-950/95 text-white"
+        @click.self="close()"
+        @touchstart.passive="touchStart($event)"
+        @touchend.passive="touchEnd($event)"
+    >
+        <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 bg-gradient-to-b from-slate-950/90 to-transparent px-4 py-4">
+            <div class="min-w-0">
+                <div class="truncate text-sm font-black" x-text="current.label"></div>
+                <div class="mt-1 truncate text-xs font-bold text-slate-300" x-text="current.meta"></div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="button" @click="zoomOut()" class="rounded-lg bg-white/10 px-3 py-2 text-sm font-black transition hover:bg-white/20">-</button>
+                <button type="button" @click="resetZoom()" class="rounded-lg bg-white/10 px-3 py-2 text-xs font-black transition hover:bg-white/20" x-text="Math.round(zoom * 100) + '%'"></button>
+                <button type="button" @click="zoomIn()" class="rounded-lg bg-white/10 px-3 py-2 text-sm font-black transition hover:bg-white/20">+</button>
+                <button type="button" @click="close()" class="rounded-lg bg-white px-3 py-2 text-sm font-black text-slate-950 transition hover:bg-red-50">Kapat</button>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            @click="prev()"
+            class="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl font-black transition hover:bg-white/20"
+            x-show="items.length > 1"
+        >‹</button>
+
+        <button
+            type="button"
+            @click="next()"
+            class="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-2xl font-black transition hover:bg-white/20"
+            x-show="items.length > 1"
+        >›</button>
+
+        <div class="flex h-full items-center justify-center px-4 py-20">
+            <div class="forum-media-skeleton max-h-full max-w-full overflow-hidden rounded-xl bg-slate-900">
+                <img
+                    :src="current.src"
+                    alt=""
+                    class="max-h-[78vh] max-w-[92vw] object-contain transition duration-200"
+                    :style="`transform: scale(${zoom}); cursor: ${zoom > 1 ? 'zoom-out' : 'zoom-in'};`"
+                    @click="toggleZoom()"
+                    @load="$event.target.classList.add('is-loaded')"
+                >
+            </div>
+        </div>
+
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/95 to-transparent px-4 pb-4 pt-10">
+            <div class="mx-auto flex max-w-4xl items-center justify-between gap-4">
+                <div class="text-xs font-black text-slate-300">
+                    <span x-text="index + 1"></span>/<span x-text="items.length"></span>
+                </div>
+                <div class="flex min-w-0 flex-1 gap-2 overflow-x-auto">
+                    <template x-for="(item, itemIndex) in items" :key="item.id">
+                        <button
+                            type="button"
+                            @click="go(itemIndex)"
+                            class="h-14 w-16 shrink-0 overflow-hidden rounded border transition"
+                            :class="itemIndex === index ? 'border-white' : 'border-white/20 opacity-60 hover:opacity-100'"
+                        >
+                            <img :src="item.thumb" alt="" loading="lazy" class="h-full w-full object-cover">
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 @auth
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -634,6 +826,88 @@
 @endauth
 
 <script>
+function forumMediaViewer(items) {
+    return {
+        items,
+        open: false,
+        index: 0,
+        zoom: 1,
+        touchX: null,
+        get current() {
+            return this.items[this.index] || {};
+        },
+        init() {
+            document.querySelectorAll('[data-forum-media-index]').forEach((button) => {
+                button.addEventListener('click', () => this.show(Number(button.dataset.forumMediaIndex || 0)));
+            });
+
+            window.addEventListener('keydown', (event) => {
+                if (! this.open) {
+                    return;
+                }
+
+                if (event.key === 'Escape') {
+                    this.close();
+                } else if (event.key === 'ArrowRight') {
+                    this.next();
+                } else if (event.key === 'ArrowLeft') {
+                    this.prev();
+                }
+            });
+        },
+        show(index) {
+            this.index = Math.max(0, Math.min(index, this.items.length - 1));
+            this.zoom = 1;
+            this.open = true;
+            document.body.style.overflow = 'hidden';
+        },
+        close() {
+            this.open = false;
+            this.zoom = 1;
+            document.body.style.overflow = '';
+        },
+        go(index) {
+            this.index = Math.max(0, Math.min(index, this.items.length - 1));
+            this.zoom = 1;
+        },
+        next() {
+            this.go((this.index + 1) % this.items.length);
+        },
+        prev() {
+            this.go((this.index - 1 + this.items.length) % this.items.length);
+        },
+        zoomIn() {
+            this.zoom = Math.min(3, Number((this.zoom + 0.25).toFixed(2)));
+        },
+        zoomOut() {
+            this.zoom = Math.max(1, Number((this.zoom - 0.25).toFixed(2)));
+        },
+        resetZoom() {
+            this.zoom = 1;
+        },
+        toggleZoom() {
+            this.zoom = this.zoom > 1 ? 1 : 2;
+        },
+        touchStart(event) {
+            this.touchX = event.changedTouches?.[0]?.clientX ?? null;
+        },
+        touchEnd(event) {
+            if (this.touchX === null) {
+                return;
+            }
+
+            const delta = (event.changedTouches?.[0]?.clientX ?? this.touchX) - this.touchX;
+            this.touchX = null;
+
+            if (Math.abs(delta) < 45 || this.items.length < 2) {
+                return;
+            }
+
+            delta < 0 ? this.next() : this.prev();
+        },
+    };
+}
+
 function topicPresence(config) {
     return {
         users: [],
