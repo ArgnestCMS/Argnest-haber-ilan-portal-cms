@@ -47,6 +47,12 @@ Route::get('/galeri/{slug}', [FrontendController::class, 'galleryDetail'])
 Route::get('/forum', [FrontendController::class, 'forum'])
     ->name('forum.index');
 
+Route::get('/forum/kategori/{slug}', [FrontendController::class, 'forumCategory'])
+    ->name('forum.categories.show');
+
+Route::get('/forum/etiket/{slug}', [FrontendController::class, 'forumTag'])
+    ->name('forum.tags.show');
+
 Route::get('/forum/konu/{slug}', [FrontendController::class, 'forumTopic'])
     ->name('forum.topics.show');
 

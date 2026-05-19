@@ -196,6 +196,37 @@ $mostReadNews = News::orderByDesc('views')
 
     public function forum()
     {
+        $selectedCategory = request('category')
+            ? ForumCategory::active()->whereKey(request('category'))->first()
+            : null;
+
+        $selectedTag = request('tag')
+            ? ForumTag::active()->where('slug', request('tag'))->first()
+            : null;
+
+        return $this->forumView($selectedCategory, $selectedTag);
+    }
+
+    public function forumCategory(string $slug)
+    {
+        $selectedCategory = ForumCategory::active()
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return $this->forumView($selectedCategory);
+    }
+
+    public function forumTag(string $slug)
+    {
+        $selectedTag = ForumTag::active()
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return $this->forumView(null, $selectedTag);
+    }
+
+    private function forumView(?ForumCategory $selectedCategory = null, ?ForumTag $selectedTag = null)
+    {
         $siteSetting = SiteSetting::first();
         $forumCategories = ForumCategory::active()
             ->withCount([
@@ -239,10 +270,6 @@ $mostReadNews = News::orderByDesc('views')
             ->take(24)
             ->get();
 
-        $selectedTag = request('tag')
-            ? ForumTag::active()->where('slug', request('tag'))->first()
-            : null;
-
         $discoveryTopics = ForumTopic::published()
             ->with($topicRelations)
             ->withCount($topicCounts)
@@ -253,7 +280,7 @@ $mostReadNews = News::orderByDesc('views')
                         ->orWhereHas('approvedPosts', fn ($postQuery) => $postQuery->where('content', 'like', "%{$search}%"));
                 });
             })
-            ->when(request('category'), fn ($query, $categoryId) => $query->where('forum_category_id', $categoryId))
+            ->when($selectedCategory, fn ($query) => $query->where('forum_category_id', $selectedCategory->id))
             ->when($selectedTag, fn ($query) => $query->whereHas('tags', fn ($tagQuery) => $tagQuery->whereKey($selectedTag->id)))
             ->when(request('filter'), function ($query, $filter) {
                 match ($filter) {
@@ -304,6 +331,7 @@ $mostReadNews = News::orderByDesc('views')
             'latestForumTopics',
             'trendingForumTopics',
             'forumTags',
+            'selectedCategory',
             'selectedTag',
             'discoveryTopics',
             'myForumTopics',

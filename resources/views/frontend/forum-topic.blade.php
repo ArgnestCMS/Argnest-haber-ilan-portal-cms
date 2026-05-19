@@ -8,18 +8,99 @@
 
 @section('canonical', route('forum.topics.show', $topic->slug))
 
+@section('og_type', 'article')
+
 @section('schema')
     <script type="application/ld+json">
         {!! json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'DiscussionForumPosting',
+            'mainEntityOfPage' => [
+                '@type' => 'WebPage',
+                '@id' => route('forum.topics.show', $topic->slug),
+            ],
             'headline' => $topic->title,
-            'text' => strip_tags($topic->content),
+            'description' => (string) str($topic->content)->stripTags()->limit(180),
+            'text' => \App\Support\ForumContent::plainText($topic->content),
             'url' => route('forum.topics.show', $topic->slug),
             'datePublished' => $topic->created_at?->toIso8601String(),
+            'dateModified' => $topic->updated_at?->toIso8601String(),
             'author' => [
                 '@type' => 'Person',
                 'name' => $topic->user?->name ?? 'ilanhaber.net',
+            ],
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => asset('favicon.png'),
+                ],
+            ],
+            'articleSection' => $topic->category?->name,
+            'keywords' => $topic->tags->pluck('name')->push($topic->category?->name)->filter()->implode(', '),
+            'interactionStatistic' => [
+                [
+                    '@type' => 'InteractionCounter',
+                    'interactionType' => ['@type' => 'ViewAction'],
+                    'userInteractionCount' => (int) $topic->views,
+                ],
+                [
+                    '@type' => 'InteractionCounter',
+                    'interactionType' => ['@type' => 'LikeAction'],
+                    'userInteractionCount' => (int) $topic->likes_count,
+                ],
+                [
+                    '@type' => 'InteractionCounter',
+                    'interactionType' => ['@type' => 'CommentAction'],
+                    'userInteractionCount' => (int) $topic->approvedPosts->count(),
+                ],
+            ],
+            'commentCount' => (int) $topic->approvedPosts->count(),
+            'comment' => $topic->approvedPosts
+                ->take(10)
+                ->map(fn ($post) => [
+                    '@type' => 'Comment',
+                    'text' => \App\Support\ForumContent::plainText($post->content),
+                    'datePublished' => $post->created_at?->toIso8601String(),
+                    'author' => [
+                        '@type' => 'Person',
+                        'name' => $post->user?->name ?? 'ilanhaber.net',
+                    ],
+                ])
+                ->values()
+                ->all(),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Anasayfa',
+                    'item' => url('/'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Forum',
+                    'item' => route('forum.index'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 3,
+                    'name' => $topic->category?->name ?? 'Kategori',
+                    'item' => $topic->category ? route('forum.categories.show', $topic->category->slug) : route('forum.index'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 4,
+                    'name' => $topic->title,
+                    'item' => route('forum.topics.show', $topic->slug),
+                ],
             ],
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
@@ -49,6 +130,12 @@
         <a href="{{ route('forum.index') }}" class="text-sm font-bold text-red-200 hover:text-white">
             Forum
         </a>
+        @if($topic->category)
+            <span class="mx-2 text-sm text-slate-500">/</span>
+            <a href="{{ route('forum.categories.show', $topic->category->slug) }}" class="text-sm font-bold text-red-200 hover:text-white">
+                {{ $topic->category->name }}
+            </a>
+        @endif
 
         <div class="mt-4 flex flex-wrap items-center gap-2">
             <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-slate-200">
@@ -97,7 +184,7 @@
         @if($topic->tags->isNotEmpty())
             <div class="mt-4 flex flex-wrap gap-2">
                 @foreach($topic->tags as $tag)
-                    <a href="{{ route('forum.index', ['tag' => $tag->slug]) }}" class="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-slate-100 transition hover:bg-white/20">
+                    <a href="{{ route('forum.tags.show', $tag->slug) }}" class="rounded-full bg-white/10 px-3 py-1 text-xs font-black text-slate-100 transition hover:bg-white/20">
                         #{{ $tag->name }}
                     </a>
                 @endforeach

@@ -1,24 +1,97 @@
 @extends('frontend.layout')
 
-@section('title', 'Forum | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
+@php
+    $forumBaseTitle = $selectedCategory
+        ? $selectedCategory->name . ' Forum'
+        : ($selectedTag ? '#' . $selectedTag->name . ' Forum Konulari' : 'Forum');
+
+    $forumDescription = $selectedCategory
+        ? ($selectedCategory->description ?: $selectedCategory->name . ' kategorisindeki guncel forum konulari, sorular ve topluluk tartismalari.')
+        : ($selectedTag
+            ? '#' . $selectedTag->name . ' etiketiyle yayinlanan guncel forum konulari ve topluluk tartismalari.'
+            : 'ilanhaber.net forum alaninda kamu ilanlari, haberler, KPSS, personel alimlari ve guncel konular tartisilir.');
+
+    $forumCanonical = $selectedCategory
+        ? route('forum.categories.show', $selectedCategory->slug)
+        : ($selectedTag ? route('forum.tags.show', $selectedTag->slug) : route('forum.index'));
+
+    $forumKeywords = collect([
+        'forum',
+        $selectedCategory?->name,
+        $selectedTag ? $selectedTag->name : null,
+        'kamu ilanlari forum',
+        'haber forum',
+        'KPSS forum',
+        'personel alimi',
+    ])->filter()->implode(', ');
+@endphp
+
+@section('title', $forumBaseTitle . ' | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
 
 @section(
     'meta_description',
-    'ilanhaber.net forum alaninda kamu ilanlari, haberler, KPSS, personel alimlari ve guncel konular tartisilir.'
+    str($forumDescription)->limit(160)
 )
 
-@section('meta_keywords', 'forum, kamu ilanlari forum, haber forum, KPSS forum, personel alimi')
+@section('meta_keywords', $forumKeywords)
 
-@section('canonical', route('forum.index'))
+@section('canonical', $forumCanonical)
 
 @section('schema')
     <script type="application/ld+json">
         {!! json_encode([
             '@context' => 'https://schema.org',
-            '@type' => 'WebPage',
-            'name' => 'Forum',
-            'description' => 'ilanhaber.net forum alaninda kamu ilanlari, haberler ve guncel konular tartisilir.',
-            'url' => route('forum.index'),
+            '@type' => 'CollectionPage',
+            'name' => $forumBaseTitle,
+            'description' => (string) str($forumDescription)->limit(200),
+            'url' => $forumCanonical,
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+                'url' => url('/'),
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => array_values(array_filter([
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Anasayfa',
+                    'item' => url('/'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Forum',
+                    'item' => route('forum.index'),
+                ],
+                ($selectedCategory || $selectedTag) ? [
+                    '@type' => 'ListItem',
+                    'position' => 3,
+                    'name' => $selectedCategory?->name ?? ('#' . $selectedTag?->name),
+                    'item' => $forumCanonical,
+                ] : null,
+            ])),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    </script>
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'ItemList',
+            'name' => $forumBaseTitle,
+            'itemListElement' => $discoveryTopics->getCollection()
+                ->values()
+                ->map(fn ($topic, $index) => [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => route('forum.topics.show', $topic->slug),
+                    'name' => $topic->title,
+                ])
+                ->all(),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
 @endsection
@@ -33,11 +106,11 @@
             </div>
 
             <h1 class="max-w-3xl text-4xl font-black leading-tight md:text-5xl">
-                Forum
+                {{ $forumBaseTitle }}
             </h1>
 
             <p class="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-                Haberler, kamu ilanlari, personel alimlari ve gundemdeki basliklar icin premium topluluk alani.
+                {{ $forumDescription }}
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
@@ -116,7 +189,7 @@
                 <select name="category" class="rounded-lg border-slate-300 text-sm">
                     <option value="">Tum kategoriler</option>
                     @foreach($forumCategories as $category)
-                        <option value="{{ $category->id }}" @selected((string) request('category') === (string) $category->id)>
+                        <option value="{{ $category->id }}" @selected((string) ($selectedCategory?->id ?? request('category')) === (string) $category->id)>
                             {{ $category->name }}
                         </option>
                     @endforeach
@@ -144,14 +217,14 @@
         <div class="mt-5 flex flex-wrap gap-2">
             @foreach($forumTags as $tag)
                 <a
-                    href="{{ route('forum.index', array_filter([...request()->except('page'), 'tag' => $tag->slug])) }}"
+                    href="{{ route('forum.tags.show', $tag->slug) }}"
                     class="rounded-full border px-3 py-1.5 text-xs font-black transition {{ $selectedTag?->id === $tag->id ? 'border-red-600 bg-red-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700' }}"
                 >
                     #{{ $tag->name }} {{ $tag->topics_count }}
                 </a>
             @endforeach
 
-            @if($selectedTag || request()->hasAny(['q', 'category', 'filter']))
+            @if($selectedCategory || $selectedTag || request()->hasAny(['q', 'category', 'filter']))
                 <a href="{{ route('forum.index') }}" class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-black text-slate-500 transition hover:bg-slate-50">
                     Filtreleri temizle
                 </a>
@@ -454,7 +527,7 @@
 <section id="forum-kategorileri" class="mx-auto max-w-7xl px-4 py-10">
     <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         @forelse($forumCategories as $category)
-            <article class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+            <a href="{{ route('forum.categories.show', $category->slug) }}" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
                 <div class="text-lg font-black text-slate-950">{{ $category->name }}</div>
                 <p class="mt-3 min-h-12 text-sm leading-6 text-slate-600">
                     {{ $category->description ?: 'Bu kategorideki guncel forum basliklarini takip edin.' }}
@@ -462,7 +535,7 @@
                 <div class="mt-5 text-xs font-black uppercase text-red-600">
                     {{ $category->topics_count }} konu
                 </div>
-            </article>
+            </a>
         @empty
             <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm md:col-span-2 xl:col-span-4">
                 <div class="text-xl font-black text-slate-950">Forum kategorisi henuz eklenmedi</div>

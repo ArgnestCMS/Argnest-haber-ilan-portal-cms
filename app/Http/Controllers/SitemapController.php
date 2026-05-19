@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\Category;
 use App\Models\Gallery;
+use App\Models\ForumCategory;
+use App\Models\ForumTag;
+use App\Models\ForumTopic;
 use App\Models\News;
 use App\Models\Video;
 
@@ -17,6 +20,17 @@ class SitemapController extends Controller
         $videos = Video::latest()->get();
         $galleries = Gallery::latest()->get();
         $categories = Category::latest()->get();
+        $forumCategories = ForumCategory::active()
+            ->whereHas('topics', fn ($query) => $query->published())
+            ->latest()
+            ->get();
+        $forumTags = ForumTag::active()
+            ->whereHas('topics', fn ($query) => $query->published())
+            ->latest()
+            ->get();
+        $forumTopics = ForumTopic::published()
+            ->latest('updated_at')
+            ->get();
 
         return response()
             ->view(
@@ -26,7 +40,10 @@ class SitemapController extends Controller
                     'announcements',
                     'videos',
                     'galleries',
-                    'categories'
+                    'categories',
+                    'forumCategories',
+                    'forumTags',
+                    'forumTopics'
                 )
             )
             ->header('Content-Type', 'application/xml');

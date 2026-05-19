@@ -39,12 +39,37 @@
         <priority>0.8</priority>
     </url>
 
+    <url>
+        <loc>{{ route('forum.index') }}</loc>
+        <lastmod>{{ now()->toAtomString() }}</lastmod>
+        <changefreq>hourly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
     @foreach ($categories as $category)
         <url>
             <loc>{{ url('/kategori/' . $category->slug) }}</loc>
             <lastmod>{{ optional($category->updated_at)->toAtomString() }}</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.7</priority>
+        </url>
+    @endforeach
+
+    @foreach ($forumCategories as $category)
+        <url>
+            <loc>{{ route('forum.categories.show', $category->slug) }}</loc>
+            <lastmod>{{ optional($category->updated_at)->toAtomString() }}</lastmod>
+            <changefreq>daily</changefreq>
+            <priority>0.7</priority>
+        </url>
+    @endforeach
+
+    @foreach ($forumTags as $tag)
+        <url>
+            <loc>{{ route('forum.tags.show', $tag->slug) }}</loc>
+            <lastmod>{{ optional($tag->updated_at)->toAtomString() }}</lastmod>
+            <changefreq>daily</changefreq>
+            <priority>0.6</priority>
         </url>
     @endforeach
 
@@ -80,6 +105,15 @@
             <loc>{{ route('galleries.show', $item->slug) }}</loc>
             <lastmod>{{ optional($item->updated_at)->toAtomString() }}</lastmod>
             <changefreq>weekly</changefreq>
+            <priority>0.7</priority>
+        </url>
+    @endforeach
+
+    @foreach ($forumTopics as $topic)
+        <url>
+            <loc>{{ route('forum.topics.show', $topic->slug) }}</loc>
+            <lastmod>{{ optional($topic->updated_at)->toAtomString() }}</lastmod>
+            <changefreq>daily</changefreq>
             <priority>0.7</priority>
         </url>
     @endforeach
