@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'pwa-foundation-v1';
+const CACHE_VERSION = 'pwa-foundation-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -13,6 +13,7 @@ const ADMIN_PREFIX = '/admin';
 const REALTIME_PREFIXES = [
     '/bildirimler/count',
     '/bildirimler/latest',
+    '/push/',
     '/mesajlar/count',
     '/presence/',
     '/canli-aktivite/latest',
@@ -84,8 +85,11 @@ self.addEventListener('push', (event) => {
         body: payload.body || payload.message || 'Yeni bir bildiriminiz var.',
         icon: '/pwa/icon.svg',
         badge: '/pwa/maskable-icon.svg',
+        tag: payload.tag || 'ilanhaber-notification',
+        renotify: true,
         data: {
-            url: payload.url || '/'
+            url: payload.url || '/',
+            notification_id: payload.notification_id || null
         }
     };
 

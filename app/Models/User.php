@@ -164,6 +164,11 @@ class User extends Authenticatable implements MustVerifyEmail
             ->latest();
     }
 
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function forumTopics(): HasMany
     {
         return $this->hasMany(ForumTopic::class);

@@ -841,7 +841,7 @@
         class="fixed inset-x-4 bottom-4 z-[9997] hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-950 shadow-2xl md:left-auto md:w-96"
     >
         <div class="text-sm font-black">Bildirimlere hazir olun</div>
-        <p class="mt-1 text-xs font-bold leading-5 text-blue-800/80">Anlik bildirim altyapisi hazirlandiginda tarayici izniniz kullanilabilecek.</p>
+        <p class="mt-1 text-xs font-bold leading-5 text-blue-800/80">Forum, mesaj ve moderasyon bildirimlerini tarayicinizdan alabilirsiniz.</p>
         <div class="mt-3 flex gap-2">
             <button type="button" data-pwa-notification-enable class="rounded-lg bg-blue-700 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-800">
                 Izin ver
@@ -953,8 +953,72 @@
         setTimeout(() => notificationBanner.classList.remove('hidden'), 2500);
     }
 
+    const urlBase64ToUint8Array = (base64String) => {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+
+        return outputArray;
+    };
+
+    const subscribeToPush = async () => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return false;
+        }
+
+        const permission = await Notification.requestPermission().catch(() => 'denied');
+
+        if (permission !== 'granted') {
+            return false;
+        }
+
+        const configResponse = await fetch('{{ route('push.config') }}', {
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+        const config = await configResponse.json();
+
+        if (!config.enabled || !config.public_key) {
+            return false;
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(config.public_key),
+        });
+
+        const payload = subscription.toJSON();
+
+        await fetch('{{ route('push.subscriptions.store') }}', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({
+                endpoint: payload.endpoint,
+                keys: payload.keys,
+                content_encoding: 'aes128gcm',
+                preferences: {
+                    enabled: true,
+                    types: {},
+                },
+            }),
+        });
+
+        return true;
+    };
+
     notificationEnable?.addEventListener('click', async () => {
-        await Notification.requestPermission().catch(() => null);
+        await subscribeToPush().catch(() => false);
         notificationBanner?.classList.add('hidden');
     });
 

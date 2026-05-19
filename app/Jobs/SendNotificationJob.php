@@ -60,6 +60,7 @@ class SendNotificationJob implements ShouldQueue
             ]);
 
             UserNotificationCreated::dispatch($notification);
+            SendPushNotificationJob::dispatch($notification->id);
         }
     }
 }

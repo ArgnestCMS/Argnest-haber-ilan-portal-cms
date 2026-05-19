@@ -16,6 +16,7 @@ use App\Http\Controllers\CommunityReportController;
 use App\Http\Controllers\UserFollowController;
 use App\Http\Controllers\SocialPresenceController;
 use App\Http\Controllers\PrivateMessageController;
+use App\Http\Controllers\PushSubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -214,6 +215,18 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
 
     Route::patch('/mesaj-ayarlar', [PrivateMessageController::class, 'updateSettings'])
         ->name('messages.settings.update');
+
+    Route::get('/push/config', [PushSubscriptionController::class, 'config'])
+        ->name('push.config');
+
+    Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store'])
+        ->name('push.subscriptions.store');
+
+    Route::patch('/push/subscriptions/preferences', [PushSubscriptionController::class, 'updatePreferences'])
+        ->name('push.subscriptions.preferences');
+
+    Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy'])
+        ->name('push.subscriptions.destroy');
     /*
     |--------------------------------------------------------------------------
     | Profile
