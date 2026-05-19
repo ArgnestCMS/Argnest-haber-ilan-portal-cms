@@ -2,12 +2,25 @@
     $editorId = $id ?? 'forum-editor-' . \Illuminate\Support\Str::random(8);
     $fieldName = $name ?? 'content';
     $initialValue = \App\Support\ForumContent::sanitize($value ?? '');
+    $selectedMediaIds = collect(old('media_asset_ids', $mediaAssetIds ?? []))
+        ->map(fn ($id) => (int) $id)
+        ->filter()
+        ->unique()
+        ->values();
+    $mediaLimits = config('media.images.limits', []);
+    $mediaLimitMb = auth()->user()?->isAdmin() || auth()->user()?->isModerator()
+        ? (int) ($mediaLimits['moderator_admin_mb'] ?? 50)
+        : (((int) (auth()->user()?->forum_reputation ?? 0) >= (int) ($mediaLimits['trusted_reputation'] ?? 100))
+            ? (int) ($mediaLimits['trusted_mb'] ?? 20)
+            : (int) ($mediaLimits['default_mb'] ?? 15));
 @endphp
 
 <div
     class="forum-rich-editor rounded-xl border border-slate-200 bg-white"
     data-upload-url="{{ route('forum.images.store') }}"
     data-csrf="{{ csrf_token() }}"
+    data-max-image-bytes="{{ $mediaLimitMb * 1024 * 1024 }}"
+    data-max-image-label="{{ $mediaLimitMb }} MB"
 >
     <div class="flex flex-wrap gap-1 border-b border-slate-200 bg-slate-50 p-2">
         <button type="button" data-command="bold" class="rounded px-3 py-1.5 text-sm font-black text-slate-700 hover:bg-white">B</button>
@@ -18,8 +31,16 @@
         <button type="button" data-action="video" class="rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">Video</button>
         <label class="cursor-pointer rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">
             Resim
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-action="image" class="hidden">
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-action="image" class="hidden" multiple>
         </label>
+    </div>
+
+    <div class="forum-media-drop-zone m-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500 transition">
+        Gorselleri buraya surukleyin veya Resim dugmesiyle secin. JPG, PNG, WEBP, GIF; dosya basina {{ $mediaLimitMb }} MB, en fazla 8 gorsel.
+    </div>
+
+    <div class="forum-media-preview hidden border-y border-slate-100 bg-white px-3 py-3">
+        <div class="flex flex-wrap gap-3" data-media-preview-list></div>
     </div>
 
     <div
@@ -30,6 +51,11 @@
     >{!! $initialValue !!}</div>
 
     <textarea name="{{ $fieldName }}" class="hidden" required>{{ $initialValue }}</textarea>
+    <div data-media-hidden-inputs>
+        @foreach($selectedMediaIds as $mediaId)
+            <input type="hidden" name="media_asset_ids[]" value="{{ $mediaId }}">
+        @endforeach
+    </div>
 </div>
 
 @once
@@ -55,24 +81,166 @@
             height: auto;
             max-width: 100%;
         }
+
+        .forum-media-drop-zone.is-dragging {
+            background: #fff1f2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
     </style>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        window.initForumRichEditors = function () {
             document.querySelectorAll('.forum-rich-editor').forEach((wrapper) => {
+                if (wrapper.dataset.editorReady === '1') {
+                    return;
+                }
+
+                wrapper.dataset.editorReady = '1';
+
                 const editor = wrapper.querySelector('[contenteditable="true"]');
                 const textarea = wrapper.querySelector('textarea');
                 const uploadUrl = wrapper.dataset.uploadUrl;
                 const csrf = wrapper.dataset.csrf;
+                const maxImageLabel = wrapper.dataset.maxImageLabel || '15 MB';
+                const fileInput = wrapper.querySelector('[data-action="image"]');
+                const dropZone = wrapper.querySelector('.forum-media-drop-zone');
+                const preview = wrapper.querySelector('.forum-media-preview');
+                const previewList = wrapper.querySelector('[data-media-preview-list]');
+                const hiddenInputs = wrapper.querySelector('[data-media-hidden-inputs]');
+                const mediaIds = new Set(Array.from(hiddenInputs?.querySelectorAll('input') || []).map((input) => input.value));
+                const maxFiles = 8;
+                const maxBytes = Number(wrapper.dataset.maxImageBytes || 15 * 1024 * 1024);
+                const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
                 const sync = () => {
+                    if (! textarea || ! editor) {
+                        return;
+                    }
+
                     textarea.value = editor.innerHTML.trim();
                 };
 
                 const insertHtml = (html) => {
+                    if (! editor) {
+                        return;
+                    }
+
                     editor.focus();
                     document.execCommand('insertHTML', false, html);
                     sync();
+                };
+
+                const refreshHiddenInputs = () => {
+                    if (! hiddenInputs) {
+                        return;
+                    }
+
+                    hiddenInputs.innerHTML = '';
+                    mediaIds.forEach((id) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'media_asset_ids[]';
+                        input.value = id;
+                        hiddenInputs.appendChild(input);
+                    });
+                };
+
+                const refreshPreviewState = () => {
+                    if (! preview || ! previewList) {
+                        return;
+                    }
+
+                    preview.classList.toggle('hidden', previewList.children.length === 0);
+                };
+
+                const addPreviewItem = (file) => {
+                    const item = document.createElement('div');
+                    item.className = 'relative h-24 w-24 overflow-hidden rounded-lg border border-slate-200 bg-slate-100';
+                    item.innerHTML = `
+                        <img alt="" class="h-full w-full object-cover">
+                        <div class="absolute inset-x-0 bottom-0 bg-slate-950/70 px-2 py-1 text-[10px] font-black text-white">Yukleniyor</div>
+                    `;
+
+                    item.querySelector('img').src = URL.createObjectURL(file);
+                    previewList?.appendChild(item);
+                    refreshPreviewState();
+
+                    return item;
+                };
+
+                const markPreviewItem = (item, text, failed = false) => {
+                    const label = item.querySelector('div');
+                    label.textContent = text;
+                    label.className = failed
+                        ? 'absolute inset-x-0 bottom-0 bg-red-700/85 px-2 py-1 text-[10px] font-black text-white'
+                        : 'absolute inset-x-0 bottom-0 bg-green-700/85 px-2 py-1 text-[10px] font-black text-white';
+                };
+
+                const removeMediaId = (id) => {
+                    mediaIds.delete(String(id));
+                    refreshHiddenInputs();
+                };
+
+                const uploadFile = async (file) => {
+                    if (! allowedTypes.has(file.type) || file.size > maxBytes) {
+                        window.alert(`Gorsel JPG, PNG, WEBP veya GIF olmali ve ${maxImageLabel} sinirini asmamalidir.`);
+                        return;
+                    }
+
+                    if (mediaIds.size >= maxFiles) {
+                        window.alert('Bir icerige en fazla 8 gorsel eklenebilir.');
+                        return;
+                    }
+
+                    const item = addPreviewItem(file);
+                    const formData = new FormData();
+                    formData.append('image', file);
+
+                    try {
+                        const response = await fetch(uploadUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json',
+                            },
+                            body: formData,
+                        });
+
+                        if (! response.ok) {
+                            markPreviewItem(item, 'Hata', true);
+                            window.alert('Gorsel yuklenemedi.');
+                            return;
+                        }
+
+                        const data = await response.json();
+                        mediaIds.add(String(data.id));
+                        refreshHiddenInputs();
+                        markPreviewItem(item, 'Hazir');
+
+                        const removeButton = document.createElement('button');
+                        removeButton.type = 'button';
+                        removeButton.className = 'absolute right-1 top-1 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-black text-slate-800';
+                        removeButton.textContent = 'Sil';
+                        removeButton.addEventListener('click', () => {
+                            removeMediaId(data.id);
+                            item.remove();
+                            refreshPreviewState();
+                        });
+                        item.appendChild(removeButton);
+
+                        insertHtml(`<p><img src="${data.url}" alt="" loading="lazy"></p>`);
+                    } catch (error) {
+                        console.error('Forum image upload failed', error);
+                        markPreviewItem(item, 'Hata', true);
+                        window.alert('Gorsel yuklenemedi.');
+                    }
+                };
+
+                const uploadFiles = async (files) => {
+                    for (const file of Array.from(files || [])) {
+                        await uploadFile(file);
+                    }
                 };
 
                 const youtubeEmbedUrl = (url) => {
@@ -127,34 +295,26 @@
                     insertHtml(`<p><iframe src="${embedUrl}" title="YouTube video" loading="lazy" allowfullscreen></iframe></p>`);
                 });
 
-                wrapper.querySelector('[data-action="image"]')?.addEventListener('change', async (event) => {
-                    const file = event.target.files?.[0];
+                fileInput?.addEventListener('change', async (event) => {
+                    const files = Array.from(event.target.files || []);
                     event.target.value = '';
 
-                    if (! file || ! file.type.match(/^image\/(jpeg|png|webp|gif)$/) || file.size > 2 * 1024 * 1024) {
-                        window.alert('Resim JPG, PNG, WEBP veya GIF olmali ve 2 MB sinirini asmamalidir.');
-                        return;
-                    }
+                    await uploadFiles(files);
+                });
 
-                    const formData = new FormData();
-                    formData.append('image', file);
+                dropZone?.addEventListener('dragover', (event) => {
+                    event.preventDefault();
+                    dropZone.classList.add('is-dragging');
+                });
 
-                    const response = await fetch(uploadUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrf,
-                            'Accept': 'application/json',
-                        },
-                        body: formData,
-                    });
+                dropZone?.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('is-dragging');
+                });
 
-                    if (! response.ok) {
-                        window.alert('Resim yuklenemedi.');
-                        return;
-                    }
-
-                    const data = await response.json();
-                    insertHtml(`<p><img src="${data.url}" alt="" loading="lazy"></p>`);
+                dropZone?.addEventListener('drop', async (event) => {
+                    event.preventDefault();
+                    dropZone.classList.remove('is-dragging');
+                    await uploadFiles(event.dataTransfer?.files || []);
                 });
 
                 editor.addEventListener('input', sync);
@@ -167,8 +327,16 @@
                     insertHtml(event.detail?.html || '');
                 });
                 editor.closest('form')?.addEventListener('submit', sync);
+                refreshHiddenInputs();
+                refreshPreviewState();
                 sync();
             });
-        });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.initForumRichEditors, { once: true });
+        } else {
+            window.initForumRichEditors();
+        }
     </script>
 @endonce

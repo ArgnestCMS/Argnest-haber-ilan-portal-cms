@@ -67,6 +67,14 @@ class ForumPost extends Model
         return $this->morphMany(CommunityReport::class, 'reportable');
     }
 
+    public function mediaAssets(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable')
+            ->ready()
+            ->public()
+            ->oldest();
+    }
+
     public function isPending(): bool
     {
         return $this->status === 'pending';

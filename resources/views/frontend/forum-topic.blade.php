@@ -321,6 +321,24 @@
             <div class="forum-rich-content prose max-w-none text-slate-700">
                 {!! \App\Support\ForumContent::sanitize($topic->content) !!}
             </div>
+
+            @if($topic->mediaAssets->isNotEmpty())
+                <div class="mt-6 border-t border-slate-100 pt-5">
+                    <div class="mb-3 text-xs font-black uppercase text-slate-400">Konu medya galerisi</div>
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach($topic->mediaAssets as $media)
+                            <a href="{{ $media->url }}" target="_blank" rel="noopener noreferrer" class="group block overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                <img
+                                    src="{{ $media->thumbnail_url ?? $media->url }}"
+                                    alt=""
+                                    loading="lazy"
+                                    class="h-40 w-full object-cover transition group-hover:scale-[1.02]"
+                                >
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
     </article>
 
@@ -384,6 +402,24 @@
                         <div class="forum-rich-content prose max-w-none text-sm leading-7 text-slate-700">
                             {!! \App\Support\ForumContent::sanitize($post->content) !!}
                         </div>
+
+                        @if($post->mediaAssets->isNotEmpty())
+                            <div class="mt-5 border-t border-slate-100 pt-4">
+                                <div class="mb-3 text-xs font-black uppercase text-slate-400">Cevap medyasi</div>
+                                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    @foreach($post->mediaAssets as $media)
+                                        <a href="{{ $media->url }}" target="_blank" rel="noopener noreferrer" class="group block overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                            <img
+                                                src="{{ $media->thumbnail_url ?? $media->url }}"
+                                                alt=""
+                                                loading="lazy"
+                                                class="h-32 w-full object-cover transition group-hover:scale-[1.02]"
+                                            >
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
 
                         @auth
                             <div class="mt-4 flex flex-wrap gap-2">

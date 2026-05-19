@@ -18,6 +18,8 @@ class StoreForumTopicRequest extends FormRequest
             'title' => ['required', 'string', 'min:5', 'max:180'],
             'content' => ['required', 'string', 'min:20', 'max:12000'],
             'tag_names' => ['nullable', 'string', 'max:300'],
+            'media_asset_ids' => ['nullable', 'array', 'max:8'],
+            'media_asset_ids.*' => ['integer', 'exists:media_assets,id'],
         ];
     }
 }

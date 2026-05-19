@@ -96,6 +96,14 @@ class ForumTopic extends Model
         return $this->morphMany(CommunityReport::class, 'reportable');
     }
 
+    public function mediaAssets(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable')
+            ->ready()
+            ->public()
+            ->oldest();
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published');

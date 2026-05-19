@@ -19,10 +19,10 @@ use App\Support\CommunitySafety;
 use App\Support\ForumAssistant;
 use App\Support\ForumContent;
 use App\Support\ForumGamification;
+use App\Support\MediaUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ForumController extends Controller
@@ -103,6 +103,11 @@ class ForumController extends Controller
         ]);
 
         $topic->tags()->sync($this->tagIdsFromInput((string) $request->input('tag_names')));
+        app(MediaUploadService::class)->attachForumMedia(
+            $request->input('media_asset_ids', []),
+            $topic,
+            auth()->user()
+        );
 
         ForumGamification::award(auth()->user(), 'topic_created', $topic, [
             'status' => $topic->status,
@@ -204,6 +209,11 @@ class ForumController extends Controller
             ...$safetyAttributes,
             'ip_address' => request()->ip(),
         ]);
+        app(MediaUploadService::class)->attachForumMedia(
+            $request->input('media_asset_ids', []),
+            $post,
+            auth()->user()
+        );
 
         ForumGamification::award(auth()->user(), 'post_created', $post, [
             'topic_id' => $topic->id,
@@ -259,20 +269,28 @@ class ForumController extends Controller
         return back()->with('success', 'Cevabınız moderatör onayına gönderildi.');
     }
 
-    public function uploadImage(Request $request): JsonResponse
+    public function uploadImage(Request $request, MediaUploadService $media): JsonResponse
     {
         if (! $this->forumIsEnabled() || $this->userIsMuted()) {
             abort(403);
         }
 
+        $maxKilobytes = (int) config('media.images.limits.moderator_admin_mb', 50) * 1024;
+
         $data = $request->validate([
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
+            'image' => ['required', 'file', 'max:' . $maxKilobytes],
         ]);
 
-        $path = $data['image']->store('forum', 'public');
+        $asset = $media->storeForumImage($data['image'], $request->user());
 
         return response()->json([
-            'url' => Storage::disk('public')->url($path),
+            'id' => $asset->id,
+            'url' => $asset->url,
+            'thumbnail_url' => $asset->thumbnail_url,
+            'width' => $asset->width,
+            'height' => $asset->height,
+            'size' => $asset->size,
+            'mime_type' => $asset->mime_type,
         ]);
     }
 

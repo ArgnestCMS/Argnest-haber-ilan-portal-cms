@@ -353,8 +353,9 @@ $mostReadNews = News::orderByDesc('views')
                 'likes',
                 'bookmarks',
                 'tags',
+                'mediaAssets',
             ])
-            ->with(['approvedPosts' => fn ($query) => $query->with('user')])
+            ->with(['approvedPosts' => fn ($query) => $query->with(['user', 'mediaAssets'])])
             ->withCount(['likes', 'bookmarks'])
             ->where('slug', $slug)
             ->firstOrFail();
