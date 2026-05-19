@@ -37,6 +37,7 @@ Route::get('/ilan/{slug}', [FrontendController::class, 'announcementDetail']);
 
 Route::get('/kategori/{slug}', [FrontendController::class, 'category']);
 Route::get('/arama/instant', [SearchController::class, 'instant'])
+    ->middleware('throttle:60,1')
     ->name('search.instant');
 Route::get('/arama', [SearchController::class, 'index'])
     ->name('search');
@@ -71,15 +72,18 @@ Route::get('/canli-aktivite', [FrontendController::class, 'liveActivity'])
     ->name('live-activity.index');
 
 Route::get('/canli-aktivite/latest', [LiveActivityController::class, 'latest'])
+    ->middleware('throttle:120,1')
     ->name('live-activity.latest');
 
 Route::get('/canli-sohbet', [FrontendController::class, 'liveChat'])
     ->name('live-chat.index');
 
 Route::get('/canli-sohbet/mesajlar', [LiveChatController::class, 'messages'])
+    ->middleware('throttle:120,1')
     ->name('live-chat.messages');
 
 Route::get('/canli-sohbet/online', [LiveChatController::class, 'onlineUsers'])
+    ->middleware('throttle:120,1')
     ->name('live-chat.online');
 
 Route::get('/presence/user/{user}', [SocialPresenceController::class, 'user'])
@@ -89,12 +93,15 @@ Route::get('/presence/users', [SocialPresenceController::class, 'users'])
     ->name('presence.users');
 
 Route::get('/canli-sohbet/typing', [SocialPresenceController::class, 'liveChatTypingUsers'])
+    ->middleware('throttle:120,1')
     ->name('live-chat.typing');
 
 Route::post('/yorum/video/{video}', [CommentController::class, 'storeVideo'])
+    ->middleware('throttle:6,1')
     ->name('comments.video.store');
 
 Route::post('/yorum/galeri/{gallery}', [CommentController::class, 'storeGallery'])
+    ->middleware('throttle:6,1')
     ->name('comments.gallery.store');
 /*
 |--------------------------------------------------------------------------
@@ -155,81 +162,105 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
     ->name('user.notifications.latest');
 
     Route::post('/presence/heartbeat', [SocialPresenceController::class, 'heartbeat'])
+        ->middleware('throttle:90,1')
         ->name('presence.heartbeat');
 
     Route::post('/forum/konu/{topic}/aktif-kullanicilar', [SocialPresenceController::class, 'touchTopic'])
+        ->middleware('throttle:90,1')
         ->name('forum.topics.presence.touch');
 
     Route::post('/canli-sohbet/typing', [SocialPresenceController::class, 'liveChatTyping'])
+        ->middleware('throttle:60,1')
         ->name('live-chat.typing.store');
 
     Route::get('/mesajlar', [PrivateMessageController::class, 'index'])
         ->name('messages.index');
 
     Route::get('/mesajlar/count', [PrivateMessageController::class, 'count'])
+        ->middleware('throttle:120,1')
         ->name('messages.count');
 
     Route::get('/mesajlar/{conversation}', [PrivateMessageController::class, 'show'])
         ->name('messages.show');
 
     Route::get('/mesajlar/{conversation}/latest', [PrivateMessageController::class, 'latest'])
+        ->middleware('throttle:120,1')
         ->name('messages.latest');
 
     Route::get('/mesajlar/{conversation}/typing', [PrivateMessageController::class, 'typingUsers'])
+        ->middleware('throttle:120,1')
         ->name('messages.typing');
 
     Route::post('/mesajlar/{conversation}/mesaj', [PrivateMessageController::class, 'store'])
+        ->middleware('throttle:20,1')
         ->name('messages.store');
 
     Route::post('/mesajlar/{conversation}/typing', [PrivateMessageController::class, 'typing'])
+        ->middleware('throttle:60,1')
         ->name('messages.typing.store');
 
     Route::patch('/mesajlar/{conversation}/mesaj/{message}', [PrivateMessageController::class, 'edit'])
+        ->middleware('throttle:30,1')
         ->name('messages.edit');
 
     Route::delete('/mesajlar/{conversation}/mesaj/{message}', [PrivateMessageController::class, 'destroy'])
+        ->middleware('throttle:30,1')
         ->name('messages.destroy');
 
     Route::post('/mesajlar/{conversation}/mesaj/{message}/reaction', [PrivateMessageController::class, 'react'])
+        ->middleware('throttle:60,1')
         ->name('messages.reactions.toggle');
 
     Route::post('/mesajlar/{conversation}/kabul', [PrivateMessageController::class, 'accept'])
+        ->middleware('throttle:20,1')
         ->name('messages.accept');
 
     Route::post('/mesajlar/{conversation}/reddet', [PrivateMessageController::class, 'reject'])
+        ->middleware('throttle:20,1')
         ->name('messages.reject');
 
     Route::post('/mesajlar/{conversation}/okundu', [PrivateMessageController::class, 'markRead'])
+        ->middleware('throttle:120,1')
         ->name('messages.read');
 
     Route::post('/mesajlar/{conversation}/sessiz', [PrivateMessageController::class, 'toggleMute'])
+        ->middleware('throttle:30,1')
         ->name('messages.mute');
 
     Route::post('/mesajlar/{conversation}/sabitle', [PrivateMessageController::class, 'togglePin'])
+        ->middleware('throttle:30,1')
         ->name('messages.pin');
 
     Route::post('/profil/{user}/mesaj', [PrivateMessageController::class, 'start'])
+        ->middleware('throttle:10,1')
         ->name('messages.start');
 
     Route::post('/profil/{user}/mesaj-engelle', [PrivateMessageController::class, 'block'])
+        ->middleware('throttle:20,1')
         ->name('messages.block');
 
     Route::delete('/profil/{user}/mesaj-engelle', [PrivateMessageController::class, 'unblock'])
+        ->middleware('throttle:20,1')
         ->name('messages.unblock');
 
     Route::patch('/mesaj-ayarlar', [PrivateMessageController::class, 'updateSettings'])
+        ->middleware('throttle:10,1')
         ->name('messages.settings.update');
 
     Route::get('/push/config', [PushSubscriptionController::class, 'config'])
+        ->middleware('throttle:60,1')
         ->name('push.config');
 
     Route::post('/push/subscriptions', [PushSubscriptionController::class, 'store'])
+        ->middleware('throttle:10,1')
         ->name('push.subscriptions.store');
 
     Route::patch('/push/subscriptions/preferences', [PushSubscriptionController::class, 'updatePreferences'])
+        ->middleware('throttle:20,1')
         ->name('push.subscriptions.preferences');
 
     Route::delete('/push/subscriptions', [PushSubscriptionController::class, 'destroy'])
+        ->middleware('throttle:20,1')
         ->name('push.subscriptions.destroy');
     /*
     |--------------------------------------------------------------------------
@@ -241,12 +272,15 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
         ->name('profile.edit');
 
     Route::patch('/profile', [ProfileController::class, 'update'])
+        ->middleware('throttle:10,1')
         ->name('profile.update');
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
+        ->middleware('throttle:5,1')
         ->name('profile.destroy');
 
     Route::post('/profil/{user}/takip', [UserFollowController::class, 'toggle'])
+        ->middleware('throttle:30,1')
         ->name('users.follow.toggle');
 
     /*
@@ -256,42 +290,54 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
     */
 
     Route::post('/yorum/haber/{news}', [CommentController::class, 'storeNews'])
+        ->middleware('throttle:6,1')
         ->name('comments.news.store');
 
     Route::post('/yorum/ilan/{announcement}', [CommentController::class, 'storeAnnouncement'])
+        ->middleware('throttle:6,1')
         ->name('comments.announcement.store');
 
     Route::post('/forum/konu', [ForumController::class, 'storeTopic'])
+        ->middleware('throttle:6,1')
         ->name('forum.topics.store');
 
     Route::post('/forum/ai-assistant', [ForumController::class, 'assistant'])
+        ->middleware('throttle:12,1')
         ->name('forum.assistant');
 
     Route::post('/forum/gorsel', [ForumController::class, 'uploadImage'])
+        ->middleware('throttle:20,1')
         ->name('forum.images.store');
 
     Route::post('/forum/konu/{topic}/cevap', [ForumController::class, 'storePost'])
+        ->middleware('throttle:10,1')
         ->name('forum.posts.store');
 
     Route::post('/forum/konu/{topic}/begeni', [ForumController::class, 'toggleLike'])
+        ->middleware('throttle:60,1')
         ->name('forum.topics.like');
 
     Route::post('/forum/konu/{topic}/favori', [ForumController::class, 'toggleBookmark'])
+        ->middleware('throttle:60,1')
         ->name('forum.topics.bookmark');
 
     Route::post('/rapor/forum-konu/{topic}', [CommunityReportController::class, 'reportTopic'])
+        ->middleware('throttle:5,1')
         ->name('reports.forum-topics.store');
 
     Route::post('/rapor/forum-cevap/{post}', [CommunityReportController::class, 'reportPost'])
+        ->middleware('throttle:5,1')
         ->name('reports.forum-posts.store');
 
     Route::get('/forum/panelim', [ForumDashboardController::class, 'index'])
         ->name('forum.dashboard');
 
     Route::post('/canli-sohbet/mesaj', [LiveChatController::class, 'store'])
+        ->middleware('throttle:20,1')
         ->name('live-chat.messages.store');
 
     Route::post('/rapor/canli-sohbet/{message}', [CommunityReportController::class, 'reportLiveChatMessage'])
+        ->middleware('throttle:5,1')
         ->name('reports.live-chat-messages.store');
 
 });
