@@ -20,11 +20,11 @@
 
 @section('content')
 
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-3 py-5 md:px-4 md:py-8">
 
-    <div class="mb-8">
+    <div class="mb-5 rounded-2xl bg-white p-5 shadow-sm md:mb-8 md:bg-transparent md:p-0 md:shadow-none">
 
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
             🖼️ Galeriler
         </h1>
 
@@ -36,12 +36,12 @@
 
     @if($galleries->count())
 
-        <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
 
             @foreach($galleries as $gallery)
 
                 <a href="{{ route('galleries.show', $gallery->slug) }}"
-                   class="group overflow-hidden rounded-2xl bg-white shadow transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-900">
+                   class="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-900 md:shadow">
 
                     <div class="relative overflow-hidden">
 
@@ -50,12 +50,12 @@
                             <img
                                 src="{{ asset('storage/' . $gallery->cover_image) }}"
                                 alt="{{ $gallery->title }}"
-                                class="h-64 w-full object-cover transition duration-300 group-hover:scale-105"
+                                class="h-36 w-full object-cover transition duration-300 group-hover:scale-105 md:h-64"
                             >
 
                         @else
 
-                            <div class="flex h-64 items-center justify-center bg-gray-200 text-5xl dark:bg-gray-800">
+                            <div class="flex h-36 items-center justify-center bg-gray-200 text-4xl dark:bg-gray-800 md:h-64 md:text-5xl">
                                 🖼️
                             </div>
 
@@ -67,13 +67,13 @@
 
                     </div>
 
-                    <div class="p-5">
+                    <div class="p-3 md:p-5">
 
-                        <h2 class="line-clamp-2 text-lg font-bold text-gray-900 dark:text-white">
+                        <h2 class="line-clamp-2 text-sm font-bold text-gray-900 dark:text-white md:text-lg">
                             {{ $gallery->title }}
                         </h2>
 
-                        <div class="mt-3 flex items-center justify-between text-sm text-gray-500">
+                        <div class="mt-3 flex flex-col gap-1 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between md:text-sm">
 
                             <span>
                                 👁 {{ number_format($gallery->views) }}

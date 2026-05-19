@@ -98,22 +98,22 @@
 @endsection
 @section('content')
 
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="mx-auto max-w-7xl px-3 py-5 md:px-4 md:py-8">
 
     {{-- GALERİ CARD --}}
-    <div class="overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-900">
+    <div class="overflow-hidden rounded-2xl bg-white shadow-lg dark:bg-gray-900 md:rounded-3xl md:shadow-2xl">
 
-        <div class="p-8">
+        <div class="p-4 md:p-8">
 
             <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
 
                 <div>
 
-                    <h1 class="text-4xl font-black text-gray-900 dark:text-white">
+                    <h1 class="text-3xl font-black text-gray-900 dark:text-white md:text-4xl">
                         {{ $gallery->title }}
                     </h1>
 
-                    <div class="mt-3 flex flex-wrap items-center gap-5 text-sm text-gray-500">
+                    <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 md:gap-5 md:text-sm">
 
                         <span>
                             🖼️ {{ $gallery->images->count() }} Fotoğraf
@@ -135,7 +135,7 @@
 
             @if($gallery->description)
 
-                <div class="prose mb-8 max-w-none dark:prose-invert">
+                <div class="prose mb-6 max-w-none text-[17px] leading-8 dark:prose-invert md:mb-8">
 
                     {!! $gallery->description !!}
 
@@ -146,21 +146,21 @@
             {{-- FOTOĞRAF GRID --}}
             @if($gallery->images->count())
 
-                <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div class="grid gap-3 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
 
                     @foreach($gallery->images as $image)
 
                         <a
                             href="{{ asset('storage/' . $image->image) }}"
                             target="_blank"
-                            class="group overflow-hidden rounded-2xl bg-gray-100 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-800">
+                            class="group overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-800 md:shadow-xl">
 
                             <div class="overflow-hidden">
 
                                 <img
                                     src="{{ asset('storage/' . $image->image) }}"
                                     alt="{{ $image->title }}"
-                                    class="h-72 w-full object-cover transition duration-500 group-hover:scale-110"
+                                    class="h-56 w-full object-cover transition duration-500 group-hover:scale-110 md:h-72"
                                 >
 
                             </div>
@@ -190,7 +190,7 @@
     </div>
 
     {{-- YORUMLAR --}}
-    <div class="mt-8 rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+    <div class="mt-5 rounded-2xl bg-white p-4 shadow-lg dark:bg-gray-900 md:mt-8 md:p-6 md:shadow-2xl">
 
         <h2 class="mb-6 text-2xl font-black text-gray-900 dark:text-white">
             💬 Yorumlar
@@ -209,7 +209,7 @@
                     rows="4"
                     required
                     placeholder="Yorumunuzu yazın..."
-                    class="w-full rounded-2xl border border-gray-300 p-4 dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
+                    class="w-full rounded-2xl border border-gray-300 p-4 text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
 
                 <button
                     type="submit"
@@ -274,26 +274,26 @@
                 🖼️ İlgili Galeriler
             </h2>
 
-            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
 
                 @foreach($relatedGalleries as $related)
 
                     <a href="{{ route('galleries.show', $related->slug) }}"
-                       class="group overflow-hidden rounded-2xl bg-white shadow-xl transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-900">
+                       class="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-900 md:shadow-xl">
 
                         @if($related->cover_image)
 
                             <img
                                 src="{{ asset('storage/' . $related->cover_image) }}"
                                 alt="{{ $related->title }}"
-                                class="h-56 w-full object-cover transition duration-300 group-hover:scale-105"
+                                class="h-32 w-full object-cover transition duration-300 group-hover:scale-105 md:h-56"
                             >
 
                         @endif
 
                         <div class="p-5">
 
-                            <h3 class="line-clamp-2 text-lg font-bold text-gray-900 transition group-hover:text-blue-600 dark:text-white">
+                            <h3 class="line-clamp-2 text-sm font-bold text-gray-900 transition group-hover:text-blue-600 dark:text-white md:text-lg">
                                 {{ $related->title }}
                             </h3>
 

@@ -44,7 +44,7 @@
     $listAnnouncements = $announcements;
 @endphp
 
-<section class="max-w-7xl mx-auto px-4 mt-6">
+<section class="max-w-7xl mx-auto px-3 mt-4 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6 items-start">
 
@@ -69,7 +69,7 @@
         <div class="col-span-12 2xl:col-span-8">
 
             {{-- BAŞLIK --}}
-            <div class="bg-white border border-slate-200 shadow-sm p-7 mb-6">
+            <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:mb-6 md:rounded-none md:p-7">
 
                 <div class="flex items-center gap-3 mb-3">
 
@@ -83,11 +83,11 @@
 
                 </div>
 
-                <h1 class="text-4xl font-black text-slate-950">
+                <h1 class="text-3xl font-black text-slate-950 md:text-4xl">
                     İlanlar
                 </h1>
 
-                <p class="text-slate-500 mt-2">
+                <p class="mt-2 text-sm text-slate-500 md:text-base">
                     Güncel kamu ilanları, personel alımları ve duyurular
                 </p>
 
@@ -97,11 +97,11 @@
             @if($featuredAnnouncement)
 
                 <a href="/ilan/{{ $featuredAnnouncement->slug }}"
-                   class="block bg-white border border-slate-200 shadow-sm hover:shadow-xl transition mb-8 overflow-hidden">
+                   class="mb-6 block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:mb-8 md:rounded-none">
 
                     <div class="h-2 bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700"></div>
 
-                    <div class="p-8">
+                    <div class="p-5 md:p-8">
 
                         <div class="flex flex-wrap items-center gap-3 mb-5">
 
@@ -115,21 +115,21 @@
 
                         </div>
 
-                        <h2 class="text-4xl font-black leading-tight text-slate-950 hover:text-blue-700 transition">
+                        <h2 class="text-2xl font-black leading-tight text-slate-950 transition hover:text-blue-700 md:text-4xl">
                             {{ $featuredAnnouncement->title }}
                         </h2>
 
                         @if($featuredAnnouncement->summary ?? false)
 
-                            <p class="text-slate-600 mt-5 leading-8 text-lg">
+                            <p class="mt-4 text-base leading-7 text-slate-600 md:mt-5 md:text-lg md:leading-8">
                                 {{ Str::limit($featuredAnnouncement->summary, 220) }}
                             </p>
 
                         @endif
 
-                        <div class="mt-7 grid md:grid-cols-3 gap-4">
+                        <div class="mt-5 grid gap-3 sm:grid-cols-3 md:mt-7 md:gap-4">
 
-                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
 
                                 <div class="text-xs text-slate-500 mb-2">
                                     Yayın Tarihi
@@ -141,7 +141,7 @@
 
                             </div>
 
-                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
 
                                 <div class="text-xs text-slate-500 mb-2">
                                     Görüntülenme
@@ -153,7 +153,7 @@
 
                             </div>
 
-                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
 
                                 <div class="text-xs text-slate-500 mb-2">
                                     Durum
@@ -183,18 +183,18 @@
             @endif
 
             {{-- ÜST REKLAM --}}
-            <div class="bg-white border border-dashed border-slate-300 shadow-sm mb-8">
+            <div class="mb-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mb-8 md:rounded-none">
 
-                <div class="h-24 flex items-center justify-center text-slate-400 text-sm">
+                <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-24">
                     İlan Liste Üst Reklam Alanı
                 </div>
 
             </div>
 
             {{-- BAŞLIK --}}
-            <div class="flex items-center justify-between mb-5">
+            <div class="mb-4 flex items-center justify-between md:mb-5">
 
-                <h2 class="text-3xl font-black text-slate-950">
+                <h2 class="text-2xl font-black text-slate-950 md:text-3xl">
                     Son İlanlar
                 </h2>
 
@@ -205,17 +205,17 @@
             </div>
 
             {{-- GRID --}}
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid gap-4 md:grid-cols-2 md:gap-6">
 
                 @foreach ($listAnnouncements as $item)
 
                     <a href="/ilan/{{ $item->slug }}"
-                       class="group relative bg-white border border-slate-200 shadow-sm hover:shadow-xl transition overflow-hidden">
+                       class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:rounded-none">
 
                         {{-- ÜST ŞERİT --}}
                         <div class="h-1.5 bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700"></div>
 
-                        <div class="p-5">
+                        <div class="p-4 md:p-5">
 
                             {{-- BADGE --}}
                             <div class="flex items-center justify-between mb-4">
@@ -239,7 +239,7 @@
                             </div>
 
                             {{-- BAŞLIK --}}
-                            <h3 class="text-2xl font-black leading-8 text-slate-950 group-hover:text-blue-700 transition">
+                            <h3 class="text-xl font-black leading-7 text-slate-950 transition group-hover:text-blue-700 md:text-2xl md:leading-8">
                                 {{ $item->title }}
                             </h3>
 
@@ -259,9 +259,9 @@
                             @endif
 
                             {{-- BİLGİLER --}}
-                            <div class="mt-5 grid grid-cols-2 gap-3">
+                            <div class="mt-4 grid grid-cols-2 gap-2 md:mt-5 md:gap-3">
 
-                                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:p-4">
 
                                     <div class="text-xs text-slate-500 mb-1">
                                         Yayın Tarihi
@@ -273,7 +273,7 @@
 
                                 </div>
 
-                                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:p-4">
 
                                     <div class="text-xs text-slate-500 mb-1">
                                         Görüntülenme
@@ -310,9 +310,9 @@
             </div>
 
             {{-- ALT REKLAM --}}
-            <div class="bg-white border border-dashed border-slate-300 shadow-sm mt-8">
+            <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mt-8 md:rounded-none">
 
-                <div class="h-28 flex items-center justify-center text-slate-400 text-sm">
+                <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-28">
                     İlan Liste Alt Reklam Alanı
                 </div>
 

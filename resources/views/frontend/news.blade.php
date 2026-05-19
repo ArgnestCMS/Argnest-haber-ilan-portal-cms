@@ -52,7 +52,7 @@
     $listNews = $news->skip(1);
 @endphp
 
-<section class="max-w-7xl mx-auto px-4 mt-6">
+<section class="max-w-7xl mx-auto px-3 mt-4 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6 items-start">
 
@@ -73,47 +73,57 @@
         <div class="col-span-12 xl:col-span-8 2xl:col-span-8">
 
 {{-- KATEGORİ BAR --}}
-<div class="bg-white border border-slate-200 shadow-sm p-4 mb-6 overflow-x-auto">
+<div class="mb-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:mb-6 md:rounded-none md:p-4">
 
-    <div class="flex flex-wrap items-center gap-3">
+    <form action="{{ route('search') }}" method="GET" class="mb-3 flex md:hidden">
+        <input
+            type="search"
+            name="q"
+            placeholder="Haberlerde ara"
+            class="min-w-0 flex-1 rounded-l-xl border border-slate-200 px-4 py-3 text-base font-bold outline-none focus:border-blue-500"
+        >
+        <button class="rounded-r-xl bg-blue-700 px-4 text-sm font-black text-white">Ara</button>
+    </form>
+
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
 
         <a href="/haberler"
-           class="bg-slate-950 text-white px-5 py-2 rounded-full text-sm font-black hover:bg-slate-800 transition">
+           class="shrink-0 bg-slate-950 text-white px-5 py-2 rounded-full text-sm font-black hover:bg-slate-800 transition">
             Tümü
         </a>
 
         <a href="/kategori/gundem"
-           class="bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
             Gündem
         </a>
 
         <a href="/kategori/ekonomi"
-           class="bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
             Ekonomi
         </a>
 
         <a href="/kategori/teknoloji"
-           class="bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
             Teknoloji
         </a>
 
         <a href="/kategori/spor"
-           class="bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
             Spor
         </a>
 
         <a href="/kategori/dunya"
-           class="bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
             Dünya
         </a>
 
         <a href="/kategori/kamu"
-           class="bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
             Kamu
         </a>
 
         <a href="/kategori/son-dakika"
-           class="bg-red-600 text-white px-5 py-2 rounded-full text-sm font-black hover:bg-red-700 transition">
+           class="shrink-0 bg-red-600 text-white px-5 py-2 rounded-full text-sm font-black hover:bg-red-700 transition">
             Son Dakika
         </a>
 
@@ -121,7 +131,7 @@
 
 </div>
 {{-- FLASH HABERLER --}}
-<div class="bg-slate-950 text-white border border-slate-800 shadow-sm mb-6 overflow-hidden">
+<div class="mb-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-white shadow-sm md:mb-6 md:rounded-none">
 
     <div class="flex items-center h-12">
 
@@ -153,11 +163,11 @@
                 @endphp
 
                 <a href="/haber/{{ $featuredNews->slug }}"
-                   class="block bg-white border border-slate-200 shadow-sm hover:shadow-xl transition mb-8 overflow-hidden">
+                   class="mb-6 block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:mb-8 md:rounded-none">
 
                     <div class="grid lg:grid-cols-2">
 
-                        <div class="relative h-72 bg-slate-200 overflow-hidden">
+                        <div class="relative h-56 overflow-hidden bg-slate-200 md:h-72">
                             @if($featuredImage)
                                 <img src="{{ asset('storage/' . $featuredImage) }}"
                                      class="w-full h-full object-cover hover:scale-105 transition duration-700">
@@ -168,14 +178,14 @@
                             </div>
                         </div>
 
-                        <div class="p-7 flex flex-col justify-center">
+                        <div class="flex flex-col justify-center p-5 md:p-7">
 
                             <div class="text-sm text-slate-500 flex gap-4 mb-4">
                                 <span>📅 {{ $featuredNews->created_at->format('d.m.Y') }}</span>
                                 <span>👁️ {{ $featuredNews->views }} okunma</span>
                             </div>
 
-                            <h2 class="text-3xl font-black leading-tight text-slate-950 hover:text-blue-700 transition">
+                            <h2 class="text-2xl font-black leading-tight text-slate-950 transition hover:text-blue-700 md:text-3xl">
                                 {{ $featuredNews->title }}
                             </h2>
 
@@ -200,8 +210,8 @@
             @endif
 
             {{-- ÜST/ARA REKLAM --}}
-            <div class="bg-white border border-dashed border-slate-300 shadow-sm mb-8">
-                <div class="h-24 flex items-center justify-center text-slate-400 text-sm">
+            <div class="mb-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mb-8 md:rounded-none">
+                <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-24">
                     Haber Liste Üst Reklam Alanı
                 </div>
             </div>
@@ -218,7 +228,7 @@
             </div>
 
             {{-- HABER GRID --}}
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid gap-4 md:grid-cols-2 md:gap-6">
 
                 @foreach ($listNews as $item)
 
@@ -229,9 +239,9 @@
                     @endphp
 
                     <a href="/haber/{{ $item->slug }}"
-                       class="group bg-white border border-slate-200 shadow-sm hover:shadow-xl transition overflow-hidden">
+                       class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:rounded-none">
 
-                        <div class="relative h-52 bg-slate-200 overflow-hidden">
+                        <div class="relative h-48 overflow-hidden bg-slate-200 md:h-52">
                             @if($imagePath)
                                 <img src="{{ asset('storage/' . $imagePath) }}"
                                      class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
@@ -246,9 +256,9 @@
                             </div>
                         </div>
 
-                        <div class="p-5">
+                        <div class="p-4 md:p-5">
 
-                            <h3 class="text-xl font-black leading-7 text-slate-950 group-hover:text-blue-700 transition">
+                            <h3 class="text-lg font-black leading-7 text-slate-950 transition group-hover:text-blue-700 md:text-xl">
                                 {{ $item->title }}
                             </h3>
 
@@ -272,8 +282,8 @@
             </div>
 
             {{-- ALT REKLAM --}}
-            <div class="bg-white border border-dashed border-slate-300 shadow-sm mt-8">
-                <div class="h-28 flex items-center justify-center text-slate-400 text-sm">
+            <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mt-8 md:rounded-none">
+                <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-28">
                     Haber Liste Alt Reklam Alanı
                 </div>
             </div>

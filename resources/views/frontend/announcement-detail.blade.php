@@ -118,7 +118,7 @@
 
 @section('content')
 
-<section class="max-w-[1600px] mx-auto px-4 mt-6">
+<section class="max-w-[1600px] mx-auto px-3 mt-4 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6">
 
@@ -136,7 +136,7 @@
         {{-- ORTA DETAY ALANI --}}
 <div class="col-span-12 2xl:col-span-8">
 
-<section class="max-w-7xl mx-auto px-4 mt-6">
+<section class="max-w-7xl mx-auto px-0 mt-0 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6 items-start">
 
@@ -145,7 +145,7 @@
             {{-- ÜST REKLAM --}}
             @if(isset($topAd) && $topAd?->image)
 
-                <div class="bg-white p-3 shadow mb-6 flex justify-center">
+                <div class="mb-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mb-6 md:rounded-none md:p-3 md:shadow">
                     <a href="{{ $topAd->url }}" target="_blank">
                         <img
                             src="{{ asset('storage/' . $topAd->image) }}"
@@ -156,9 +156,9 @@
 
             @endif
 
-            <article class="bg-white shadow overflow-hidden">
+            <article class="overflow-hidden rounded-2xl bg-white shadow md:rounded-none">
 
-                <div class="bg-gradient-to-r from-blue-700 to-slate-900 text-white p-8">
+                <div class="bg-gradient-to-r from-blue-700 to-slate-900 p-5 text-white md:p-8">
 
                     <div class="text-sm text-white/80 mb-4">
                         <a href="/" class="hover:underline">Anasayfa</a> /
@@ -169,7 +169,7 @@
                         İLAN
                     </span>
 
-                    <h1 class="text-5xl font-extrabold leading-tight mt-5">
+                    <h1 class="mt-4 text-3xl font-extrabold leading-tight md:mt-5 md:text-5xl">
                         {{ $announcement->title }}
                     </h1>
 
@@ -180,44 +180,44 @@
 
                 </div>
 
-                <div class="p-8">
+                <div class="p-5 md:p-8">
 
                     @if($announcement->summary)
 
-                        <div class="bg-blue-50 border-l-4 border-blue-600 p-5 mb-8 text-xl font-semibold">
+                        <div class="mb-6 border-l-4 border-blue-600 bg-blue-50 p-4 text-lg font-semibold md:mb-8 md:p-5 md:text-xl">
                             {{ $announcement->summary }}
                         </div>
 
                     @endif
 
-                    <div class="prose prose-lg max-w-none leading-relaxed text-slate-800">
+                    <div class="prose max-w-none text-[17px] leading-8 text-slate-800 md:prose-lg">
                         {!! $announcement->content !!}
                     </div>
 
-                    <div class="border-t mt-8 pt-6 flex flex-wrap justify-between gap-4">
+                    <div class="mt-8 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:justify-between">
 
                         <a href="/ilanlar"
                            class="bg-slate-800 text-white px-5 py-3 rounded font-semibold hover:bg-slate-700">
                             ← Tüm İlanlara Dön
                         </a>
 
-                        <div class="flex gap-3">
+                        <div class="flex gap-2 overflow-x-auto pb-1 md:gap-3 md:overflow-visible md:pb-0">
 
                             <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}"
                                target="_blank"
-                               class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-semibold">
+                               class="shrink-0 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
                                 Facebook
                             </a>
 
                             <a href="https://twitter.com/intent/tweet?url={{ url()->current() }}&text={{ $announcement->title }}"
                                target="_blank"
-                               class="bg-slate-900 text-white px-4 py-2 rounded text-sm font-semibold">
+                               class="shrink-0 rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
                                 X
                             </a>
 
                             <a href="https://api.whatsapp.com/send?text={{ $announcement->title }} {{ url()->current() }}"
                                target="_blank"
-                               class="bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold">
+                               class="shrink-0 rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white">
                                 WhatsApp
                             </a>
 
@@ -231,13 +231,13 @@
 {{-- YORUM SİSTEMİ --}}
 @if($announcement->comments_enabled)
 
-    <div class="bg-white shadow mt-6 p-8">
+    <div class="mt-4 rounded-2xl bg-white p-5 shadow md:mt-6 md:rounded-none md:p-8">
 
         <div class="flex items-center justify-between mb-8">
 
             <div>
 
-                <h2 class="text-3xl font-black text-slate-900">
+                <h2 class="text-2xl font-black text-slate-900 md:text-3xl">
                     Yorumlar
                 </h2>
 
@@ -304,11 +304,11 @@
                 <form
                     method="POST"
                     action="{{ route('comments.announcement.store', $announcement) }}"
-                    class="bg-slate-50 border border-slate-200 rounded-3xl p-6 mb-10"
+                    class="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:mb-10 md:rounded-3xl md:p-6"
                 >
                     @csrf
 
-                    <div class="flex items-start gap-4">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
 
                         <div class="w-14 h-14 rounded-2xl bg-blue-700 text-white flex items-center justify-center text-xl font-black shrink-0">
 
@@ -454,14 +454,14 @@
 
 @endif
             {{-- İLAN ALTI REKLAM --}}
-            <div class="bg-white p-3 shadow mt-6 flex justify-center">
+            <div class="mt-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mt-6 md:rounded-none md:p-3 md:shadow">
 
                 @if(isset($topAd) && $topAd?->image)
 
                     <a href="{{ $topAd->url }}" target="_blank">
                         <img
                             src="{{ asset('storage/' . $topAd->image) }}"
-                            class="w-full max-w-[970px]"
+                            class="max-h-[120px] w-full max-w-[970px] object-cover md:max-h-none"
                         >
                     </a>
 
@@ -469,7 +469,7 @@
 
                     <img
                         src="https://dummyimage.com/970x90/cccccc/000000&text=ILAN+ALTI+REKLAM"
-                        class="w-full max-w-[970px]"
+                        class="max-h-[120px] w-full max-w-[970px] object-cover md:max-h-none"
                     >
 
                 @endif
@@ -483,7 +483,7 @@
             <div class="sticky top-32 space-y-6">
 
                 {{-- ÇOK GÖRÜNTÜLENEN İLANLAR --}}
-                <div class="bg-white shadow">
+                <div class="rounded-2xl bg-white shadow md:rounded-none">
 
                     <div class="border-b px-5 py-4">
                         <h2 class="text-2xl font-bold">Çok Görüntülenen İlanlar</h2>
@@ -535,7 +535,7 @@
                 @endif
 
                 {{-- SON İLANLAR --}}
-                <div class="bg-white shadow">
+                <div class="rounded-2xl bg-white shadow md:rounded-none">
 
                     <div class="border-b px-5 py-4">
                         <h2 class="text-2xl font-bold">Son İlanlar</h2>

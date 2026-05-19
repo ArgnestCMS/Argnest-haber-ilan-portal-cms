@@ -102,7 +102,7 @@
         : null;
 @endphp
 
-<section class="max-w-[1600px] mx-auto px-4 mt-6">
+<section class="max-w-[1600px] mx-auto px-3 mt-4 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6">
 
@@ -127,7 +127,7 @@
 
                     {{-- ÜST REKLAM --}}
                     @if(isset($topAd) && $topAd?->image)
-                        <div class="bg-white p-3 shadow mb-6 flex justify-center">
+                        <div class="mb-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mb-6 md:rounded-none md:p-3 md:shadow">
                             <a href="{{ $topAd->url }}" target="_blank">
                                 <img src="{{ asset('storage/' . $topAd->image) }}" class="w-full max-w-[970px]">
                             </a>
@@ -135,17 +135,17 @@
                     @endif
 
                     {{-- HABER --}}
-                    <article class="bg-white shadow overflow-hidden">
+                    <article class="overflow-hidden rounded-2xl bg-white shadow md:rounded-none">
 
                         @if($imagePath)
 
                             <div class="relative">
 
-                                <img src="{{ asset('storage/' . $imagePath) }}" class="w-full h-[480px] object-cover">
+                                <img src="{{ asset('storage/' . $imagePath) }}" class="h-[300px] w-full object-cover md:h-[480px]">
 
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
-                                <div class="absolute bottom-8 left-8 right-8">
+                                <div class="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
 
                                     <div class="text-sm text-white/80 mb-3">
                                         <a href="/" class="hover:underline">Anasayfa</a>
@@ -153,7 +153,7 @@
                                         <a href="/haberler" class="hover:underline">Haberler</a>
                                     </div>
 
-                                    <h1 class="text-5xl font-extrabold text-white leading-tight">
+                                    <h1 class="text-3xl font-extrabold leading-tight text-white md:text-5xl">
                                         {{ $news->title }}
                                     </h1>
 
@@ -163,71 +163,71 @@
 
                         @else
 
-                            <div class="p-8 border-b">
+                            <div class="border-b p-5 md:p-8">
                                 <div class="text-sm text-slate-500 mb-3">
                                     <a href="/" class="hover:underline">Anasayfa</a>
                                     /
                                     <a href="/haberler" class="hover:underline">Haberler</a>
                                 </div>
 
-                                <h1 class="text-5xl font-extrabold leading-tight">
+                                <h1 class="text-3xl font-extrabold leading-tight md:text-5xl">
                                     {{ $news->title }}
                                 </h1>
                             </div>
 
                         @endif
 
-                        <div class="p-8">
+                        <div class="p-5 md:p-8">
 
                             {{-- META --}}
-                            <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 border-b pb-5 mb-6">
+                            <div class="mb-5 flex flex-wrap items-center gap-3 border-b pb-5 text-xs text-slate-500 md:mb-6 md:gap-4 md:text-sm">
                                 <span>📅 {{ $news->created_at->format('d.m.Y H:i') }}</span>
                                 <span>👁️ {{ $news->views }} okunma</span>
                                 <span>✍️ Editör</span>
                             </div>
 
                             {{-- SOSYAL --}}
-                            <div class="flex flex-wrap gap-3 mb-6">
+                            <div class="mb-6 flex gap-2 overflow-x-auto pb-1 text-sm md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
                                 <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}"
                                    target="_blank"
-                                   class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-semibold">
+                                   class="shrink-0 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
                                     Facebook
                                 </a>
 
                                 <a href="https://twitter.com/intent/tweet?url={{ url()->current() }}&text={{ $news->title }}"
                                    target="_blank"
-                                   class="bg-slate-900 text-white px-4 py-2 rounded text-sm font-semibold">
+                                   class="shrink-0 rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
                                     X
                                 </a>
 
                                 <a href="https://api.whatsapp.com/send?text={{ $news->title }} {{ url()->current() }}"
                                    target="_blank"
-                                   class="bg-green-600 text-white px-4 py-2 rounded text-sm font-semibold">
+                                   class="shrink-0 rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white">
                                     WhatsApp
                                 </a>
                             </div>
 
                             {{-- ÖZET --}}
                             @if($news->summary)
-                                <div class="bg-blue-50 border-l-4 border-blue-600 p-5 mb-8 text-xl font-semibold text-slate-800">
+                                <div class="mb-6 border-l-4 border-blue-600 bg-blue-50 p-4 text-lg font-semibold text-slate-800 md:mb-8 md:p-5 md:text-xl">
                                     {{ $news->summary }}
                                 </div>
                             @endif
 
                             {{-- İÇERİK --}}
-                            <div class="prose prose-lg max-w-none leading-relaxed text-slate-800">
+                            <div class="prose max-w-none text-[17px] leading-8 text-slate-800 md:prose-lg">
                                 {!! $news->content !!}
                             </div>
 
                             {{-- ALT BUTONLAR --}}
-                            <div class="border-t mt-8 pt-6 flex flex-wrap items-center justify-between gap-4">
+                            <div class="mt-8 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
 
                                 <a href="/haberler"
                                    class="bg-slate-800 text-white px-5 py-3 rounded font-semibold hover:bg-slate-700">
                                     ← Tüm Haberlere Dön
                                 </a>
 
-                                <div class="flex gap-3">
+                                <div class="flex gap-2 overflow-x-auto pb-1 md:gap-3 md:overflow-visible md:pb-0">
 
                                     <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}"
                                        target="_blank"
@@ -465,7 +465,7 @@
                 <aside class="col-span-12 lg:col-span-3 space-y-6">
 
                     {{-- SON HABERLER --}}
-                    <div class="bg-white shadow">
+                    <div class="rounded-2xl bg-white shadow md:rounded-none">
 
                         <div class="bg-slate-900 text-white px-5 py-4 font-black text-lg">
                             Son Haberler
@@ -513,7 +513,7 @@
                     </div>
 
                     {{-- TREND HABERLER --}}
-                    <div class="bg-white shadow">
+                    <div class="rounded-2xl bg-white shadow md:rounded-none">
 
                         <div class="bg-red-600 text-white px-5 py-4 font-black text-lg">
                             Trend Haberler
@@ -547,7 +547,7 @@
 
                     </div>
 {{-- SON YORUMLAR --}}
-<div class="bg-white shadow">
+<div class="rounded-2xl bg-white shadow md:rounded-none">
 
     <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
         Son Yorumlar
@@ -620,8 +620,8 @@
 
 </div>
                     {{-- REKLAM --}}
-                    <div class="bg-white shadow p-3">
-                        <img src="https://dummyimage.com/336x280/cccccc/000000&text=REKLAM+ALANI" class="w-full">
+                    <div class="rounded-2xl bg-white p-2 shadow md:rounded-none md:p-3">
+                        <img src="https://dummyimage.com/336x280/cccccc/000000&text=REKLAM+ALANI" class="max-h-[160px] w-full object-cover md:max-h-none">
                     </div>
 
                 </aside>

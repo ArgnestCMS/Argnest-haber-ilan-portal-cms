@@ -111,15 +111,15 @@
 
 @section('content')
 
-<div class="max-w-7xl mx-auto px-4 py-8">
+<div class="mx-auto max-w-7xl px-3 py-5 md:px-4 md:py-8">
 
-    <div class="grid gap-8 lg:grid-cols-3">
+    <div class="grid gap-5 lg:grid-cols-3 lg:gap-8">
 
         {{-- SOL ALAN --}}
         <div class="lg:col-span-2">
 
             {{-- VIDEO CARD --}}
-            <div class="overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-gray-900">
+            <div class="overflow-hidden rounded-2xl bg-white shadow-lg dark:bg-gray-900 md:shadow-xl">
 
                 <div class="aspect-video bg-black">
 
@@ -157,13 +157,13 @@
 
                 </div>
 
-                <div class="p-6">
+                <div class="p-4 md:p-6">
 
-                    <h1 class="text-3xl font-black text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-black text-gray-900 dark:text-white md:text-3xl">
                         {{ $video->title }}
                     </h1>
 
-                    <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-gray-500">
+                    <div class="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-500 md:gap-5 md:text-sm">
 
                         <span>
                             👁 {{ number_format($video->views) }} görüntülenme
@@ -177,7 +177,7 @@
 
                     @if($video->description)
 
-                        <div class="prose mt-6 max-w-none dark:prose-invert">
+                        <div class="prose mt-5 max-w-none text-[17px] leading-8 dark:prose-invert md:mt-6">
 
                             {!! $video->description !!}
 
@@ -190,7 +190,7 @@
             </div>
 
             {{-- YORUMLAR --}}
-            <div class="mt-8 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
+            <div class="mt-5 rounded-2xl bg-white p-4 shadow-lg dark:bg-gray-900 md:mt-8 md:p-6 md:shadow-xl">
 
                 <h2 class="mb-6 text-2xl font-black text-gray-900 dark:text-white">
                     💬 Yorumlar
@@ -200,7 +200,7 @@
 
                     <form action="{{ route('comments.video.store', $video) }}"
                           method="POST"
-                          class="mb-8">
+                          class="mb-6 md:mb-8">
 
                         @csrf
 
@@ -209,7 +209,7 @@
                             rows="4"
                             required
                             placeholder="Yorumunuzu yazın..."
-                            class="w-full rounded-2xl border border-gray-300 p-4 dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
+                            class="w-full rounded-2xl border border-gray-300 p-4 text-base dark:border-gray-700 dark:bg-gray-800 dark:text-white"></textarea>
 
                         <button
                             type="submit"
@@ -274,25 +274,25 @@
                         🎬 İlgili Videolar
                     </h2>
 
-                    <div class="grid gap-6 md:grid-cols-2">
+                    <div class="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-6">
 
                         @foreach($relatedVideos as $related)
 
                             <a href="{{ route('videos.show', $related->slug) }}"
-                               class="overflow-hidden rounded-2xl bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-900">
+                               class="overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl dark:bg-gray-900 md:shadow-lg">
 
                                 @if($related->thumbnail)
 
                                     <img
                                         src="{{ asset('storage/' . $related->thumbnail) }}"
-                                        class="h-44 w-full object-cover"
+                                        class="h-28 w-full object-cover md:h-44"
                                         alt="{{ $related->title }}">
 
                                 @endif
 
                                 <div class="p-4">
 
-                                    <h3 class="line-clamp-2 font-bold text-gray-900 dark:text-white">
+                                    <h3 class="line-clamp-2 text-sm font-bold text-gray-900 dark:text-white md:text-base">
                                         {{ $related->title }}
                                     </h3>
 
@@ -313,7 +313,7 @@
         {{-- SAĞ SIDEBAR --}}
         <div>
 
-            <div class="sticky top-24 rounded-2xl bg-white p-5 shadow-xl dark:bg-gray-900">
+            <div class="rounded-2xl bg-white p-4 shadow-lg dark:bg-gray-900 lg:sticky lg:top-24 md:p-5 md:shadow-xl">
 
                 <h3 class="mb-5 text-xl font-black text-gray-900 dark:text-white">
                     📺 Son Videolar
