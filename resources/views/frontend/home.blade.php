@@ -43,19 +43,25 @@
             <div class="sticky top-32 space-y-4">
 
                 @if(isset($ads['left_sidebar'][0]))
-                    <a href="{{ $ads['left_sidebar'][0]->url }}" target="_blank">
-                        <img src="{{ asset('storage/' . $ads['left_sidebar'][0]->image) }}" class="w-full shadow">
+                    <a href="{{ $ads['left_sidebar'][0]->url }}" target="_blank" class="premium-ad-slot block p-2">
+                        <img src="{{ asset('storage/' . $ads['left_sidebar'][0]->image) }}" class="w-full rounded-2xl">
                     </a>
                 @else
-                    <img src="https://dummyimage.com/300x600/cccccc/000000&text=SOL+REKLAM" class="w-full shadow">
+                    <div class="premium-ad-slot">
+                        <div class="premium-ad-label">REKLAM</div>
+                        <img src="https://dummyimage.com/300x600/cccccc/000000&text=SOL+REKLAM" class="w-full">
+                    </div>
                 @endif
 
                 @if(isset($ads['left_sidebar'][1]))
-                    <a href="{{ $ads['left_sidebar'][1]->url }}" target="_blank">
-                        <img src="{{ asset('storage/' . $ads['left_sidebar'][1]->image) }}" class="w-full shadow">
+                    <a href="{{ $ads['left_sidebar'][1]->url }}" target="_blank" class="premium-ad-slot block p-2">
+                        <img src="{{ asset('storage/' . $ads['left_sidebar'][1]->image) }}" class="w-full rounded-2xl">
                     </a>
                 @else
-                    <img src="https://dummyimage.com/300x250/cccccc/000000&text=REKLAM" class="w-full shadow">
+                    <div class="premium-ad-slot">
+                        <div class="premium-ad-label">SPONSORLU</div>
+                        <img src="https://dummyimage.com/300x250/cccccc/000000&text=REKLAM" class="w-full">
+                    </div>
                 @endif
 
             </div>
@@ -64,7 +70,7 @@
         {{-- ORTA İÇERİK --}}
         <div class="col-span-12 2xl:col-span-8">
 
-            <div class="mb-4 rounded-2xl bg-white p-3 shadow-sm md:hidden">
+            <div class="premium-page-shell mb-4 p-3 md:hidden">
                 <form action="{{ route('search') }}" method="GET" class="flex">
                     <input
                         type="search"
@@ -79,10 +85,10 @@
                 </form>
 
                 <div class="mt-3 flex gap-2 overflow-x-auto pb-1 text-xs font-black">
-                    <a href="/haberler" class="shrink-0 rounded-full bg-slate-950 px-4 py-2 text-white">Haberler</a>
-                    <a href="/ilanlar" class="shrink-0 rounded-full bg-blue-50 px-4 py-2 text-blue-700">İlanlar</a>
-                    <a href="{{ route('videos.index') }}" class="shrink-0 rounded-full bg-red-50 px-4 py-2 text-red-700">Videolar</a>
-                    <a href="{{ route('galleries.index') }}" class="shrink-0 rounded-full bg-slate-100 px-4 py-2 text-slate-700">Galeriler</a>
+                    <a href="/haberler" class="premium-chip premium-chip-active">Haberler</a>
+                    <a href="/ilanlar" class="premium-chip border-blue-100 bg-blue-50 text-blue-700 hover:border-blue-200 hover:bg-blue-100 hover:text-blue-800">İlanlar</a>
+                    <a href="{{ route('videos.index') }}" class="premium-chip border-red-100 bg-red-50 text-red-700 hover:border-red-200 hover:bg-red-100 hover:text-red-800">Videolar</a>
+                    <a href="{{ route('galleries.index') }}" class="premium-chip">Galeriler</a>
                 </div>
             </div>
 
@@ -92,7 +98,7 @@
                 <div
                     x-data="{ active: 0, total: {{ $headlineNews->count() }} }"
                     x-init="setInterval(() => active = (active + 1) % total, 5000)"
-                    class="home-mobile-section relative overflow-hidden rounded bg-white shadow md:rounded-none"
+                    class="premium-card relative overflow-hidden"
                 >
 
                     @foreach($headlineNews as $index => $news)
@@ -111,11 +117,11 @@
                             <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
 
                             <div class="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
-                                <span class="rounded bg-red-600 px-3 py-1 text-xs font-bold text-white md:px-4 md:text-sm">
+                                <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg md:px-4 md:text-sm">
                                     MANŞET
                                 </span>
 
-                                <h1 class="mt-3 text-2xl font-extrabold leading-tight text-white md:mt-4 md:text-5xl">
+                                <h1 class="mt-3 text-2xl font-black leading-tight text-white md:mt-4 md:text-5xl">
                                     {{ $news->title }}
                                 </h1>
                             </div>
@@ -139,7 +145,7 @@
             @endif
 
             {{-- ÜST REKLAM --}}
-            <div class="home-mobile-ad mt-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mt-6 md:rounded-none md:p-3 md:shadow">
+            <div class="home-mobile-ad premium-ad-slot mt-4 flex justify-center p-2 md:mt-6 md:p-3">
                 @if(isset($ads['top_banner'][0]))
                     <a href="{{ $ads['top_banner'][0]->url }}" target="_blank">
                         <img src="{{ asset('storage/' . $ads['top_banner'][0]->image) }}" class="w-full max-w-[970px]">
@@ -152,10 +158,10 @@
             {{-- TREND + ÇOK OKUNAN --}}
             <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 md:mt-6">
 
-                <div class="home-mobile-section bg-white shadow">
+                <div class="premium-card overflow-hidden">
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold">🔥 Trend Haberler</h2>
-                        <span class="text-xs bg-red-600 text-white px-3 py-1 rounded-full font-bold">
+                        <h2 class="premium-section-heading">🔥 Trend Haberler</h2>
+                        <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">
                             SON 24 SAAT
                         </span>
                     </div>
@@ -166,7 +172,7 @@
                                 @if($news->image)
                                     <img
                                         src="{{ asset('storage/' . (str_contains($news->image, '/') ? $news->image : 'news/' . $news->image)) }}"
-                                        class="h-20 w-24 rounded-xl object-cover md:w-32 md:rounded-none"
+                                        class="h-20 w-24 rounded-2xl object-cover md:w-32"
                                     >
                                 @endif
 
@@ -188,10 +194,10 @@
                     </div>
                 </div>
 
-                <div class="home-mobile-section bg-white shadow">
+                <div class="premium-card overflow-hidden">
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold">👁 Çok Okunanlar</h2>
-                        <span class="text-xs bg-slate-900 text-white px-3 py-1 rounded-full font-bold">
+                        <h2 class="premium-section-heading">👁 Çok Okunanlar</h2>
+                        <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-black text-white">
                             POPÜLER
                         </span>
                     </div>
@@ -227,10 +233,10 @@
             <div class="mt-4 grid gap-4 lg:grid-cols-3 lg:gap-6 md:mt-6">
 
                 {{-- SON HABERLER --}}
-                <div class="home-mobile-section bg-white shadow lg:col-span-2">
+                <div class="premium-card overflow-hidden lg:col-span-2">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold">Son Haberler</h2>
+                        <h2 class="premium-section-heading">Son Haberler</h2>
                         <a href="/haberler" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
@@ -243,7 +249,7 @@
                                 @if($news->image)
                                     <img
                                         src="{{ asset('storage/' . (str_contains($news->image, '/') ? $news->image : 'news/' . $news->image)) }}"
-                                        class="h-44 w-full rounded-xl object-cover sm:h-28 sm:w-44 md:rounded-none"
+                                        class="h-44 w-full rounded-2xl object-cover sm:h-28 sm:w-44"
                                     >
                                 @endif
 
@@ -266,10 +272,10 @@
                 </div>
 
                 {{-- SON İLANLAR --}}
-                <div class="home-mobile-section bg-white shadow">
+                <div class="premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold">Son İlanlar</h2>
+                        <h2 class="premium-section-heading">Son İlanlar</h2>
                         <a href="/ilanlar" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
@@ -277,7 +283,7 @@
 
                         @foreach($latestAnnouncements->take(8) as $announcement)
 
-                            <a href="/ilan/{{ $announcement->slug }}" class="home-mobile-card m-3 block border border-slate-100 bg-slate-50 p-4 transition hover:bg-slate-50 md:m-0 md:border-0 md:bg-white">
+                            <a href="/ilan/{{ $announcement->slug }}" class="home-mobile-card m-3 block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-blue-100 hover:bg-blue-50/60 md:m-0 md:border-0 md:bg-white">
                                 <h3 class="font-bold hover:text-blue-600">
                                     {{ $announcement->title }}
                                 </h3>
@@ -297,17 +303,17 @@
 
             {{-- VİDEOLAR --}}
             @if(isset($latestVideos) && $latestVideos->count())
-                <div class="home-mobile-section mt-4 bg-white shadow md:mt-6">
+                <div class="premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold">🎥 Son Videolar</h2>
+                        <h2 class="premium-section-heading">🎥 Son Videolar</h2>
                         <a href="{{ route('videos.index') }}" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 p-3 md:grid-cols-3 md:gap-5 md:p-5">
                         @foreach($latestVideos->take(6) as $video)
                             <a href="{{ route('videos.show', $video->slug) }}" class="group">
-                                <div class="relative overflow-hidden rounded bg-slate-200">
+                                <div class="premium-media relative rounded-2xl">
                                     @if($video->thumbnail)
                                         <img
                                             src="{{ asset('storage/' . $video->thumbnail) }}"
@@ -319,7 +325,7 @@
                                         </div>
                                     @endif
 
-                                    <span class="absolute bottom-2 left-2 bg-red-600 text-white px-2 py-1 text-xs font-bold rounded">
+                                    <span class="absolute bottom-2 left-2 rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow">
                                         VIDEO
                                     </span>
                                 </div>
@@ -340,17 +346,17 @@
 
             {{-- GALERİLER --}}
             @if(isset($latestGalleries) && $latestGalleries->count())
-                <div class="home-mobile-section mt-4 bg-white shadow md:mt-6">
+                <div class="premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="text-2xl font-bold">🖼️ Son Galeriler</h2>
+                        <h2 class="premium-section-heading">🖼️ Son Galeriler</h2>
                         <a href="{{ route('galleries.index') }}" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3 p-3 md:grid-cols-3 md:gap-5 md:p-5">
                         @foreach($latestGalleries->take(6) as $gallery)
                             <a href="{{ route('galleries.show', $gallery->slug) }}" class="group">
-                                <div class="relative overflow-hidden rounded bg-slate-200">
+                                <div class="premium-media relative rounded-2xl">
                                     @if($gallery->cover_image)
                                         <img
                                             src="{{ asset('storage/' . $gallery->cover_image) }}"
@@ -362,7 +368,7 @@
                                         </div>
                                     @endif
 
-                                    <span class="absolute bottom-2 left-2 bg-black/75 text-white px-2 py-1 text-xs font-bold rounded">
+                                    <span class="absolute bottom-2 left-2 rounded-full bg-black/75 px-3 py-1 text-xs font-black text-white shadow">
                                         GALERİ
                                     </span>
                                 </div>
@@ -382,10 +388,10 @@
             @endif
 
             {{-- İLAN KATEGORİLERİ --}}
-            <div class="home-mobile-section mt-4 bg-white shadow md:mt-6">
+            <div class="premium-card mt-4 overflow-hidden md:mt-6">
 
                 <div class="border-b px-5 py-4">
-                    <h2 class="text-2xl font-bold">İlan Kategorileri</h2>
+                    <h2 class="premium-section-heading">İlan Kategorileri</h2>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 p-3 md:grid-cols-4 md:gap-4 md:p-5">
@@ -393,7 +399,7 @@
                     @foreach($announcementCategories as $category)
 
                         <a href="/kategori/{{ $category->slug }}"
-                           class="rounded-xl border p-4 transition hover:border-blue-500 hover:bg-blue-50">
+                           class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
                             <h3 class="font-bold text-blue-700">
                                 {{ $category->name }}
                             </h3>
@@ -410,7 +416,7 @@
             </div>
 
             {{-- ALT REKLAM --}}
-            <div class="home-mobile-ad mt-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mt-6 md:rounded-none md:p-3 md:shadow">
+            <div class="home-mobile-ad premium-ad-slot mt-4 flex justify-center p-2 md:mt-6 md:p-3">
                 @if(isset($ads['bottom_banner'][0]))
                     <a href="{{ $ads['bottom_banner'][0]->url }}" target="_blank">
                         <img src="{{ asset('storage/' . $ads['bottom_banner'][0]->image) }}" class="w-full max-w-[970px]">
@@ -427,19 +433,25 @@
             <div class="sticky top-32 space-y-4">
 
                 @if(isset($ads['right_sidebar'][0]))
-                    <a href="{{ $ads['right_sidebar'][0]->url }}" target="_blank">
-                        <img src="{{ asset('storage/' . $ads['right_sidebar'][0]->image) }}" class="w-full shadow">
+                    <a href="{{ $ads['right_sidebar'][0]->url }}" target="_blank" class="premium-ad-slot block p-2">
+                        <img src="{{ asset('storage/' . $ads['right_sidebar'][0]->image) }}" class="w-full rounded-2xl">
                     </a>
                 @else
-                    <img src="https://dummyimage.com/300x600/cccccc/000000&text=SAĞ+REKLAM" class="w-full shadow">
+                    <div class="premium-ad-slot">
+                        <div class="premium-ad-label">REKLAM</div>
+                        <img src="https://dummyimage.com/300x600/cccccc/000000&text=SAĞ+REKLAM" class="w-full">
+                    </div>
                 @endif
 
                 @if(isset($ads['right_sidebar'][1]))
-                    <a href="{{ $ads['right_sidebar'][1]->url }}" target="_blank">
-                        <img src="{{ asset('storage/' . $ads['right_sidebar'][1]->image) }}" class="w-full shadow">
+                    <a href="{{ $ads['right_sidebar'][1]->url }}" target="_blank" class="premium-ad-slot block p-2">
+                        <img src="{{ asset('storage/' . $ads['right_sidebar'][1]->image) }}" class="w-full rounded-2xl">
                     </a>
                 @else
-                    <img src="https://dummyimage.com/300x250/cccccc/000000&text=REKLAM" class="w-full shadow">
+                    <div class="premium-ad-slot">
+                        <div class="premium-ad-label">SPONSORLU</div>
+                        <img src="https://dummyimage.com/300x250/cccccc/000000&text=REKLAM" class="w-full">
+                    </div>
                 @endif
 
             </div>
