@@ -12,10 +12,26 @@ class PushSubscriptionController extends Controller
 {
     public function config(): JsonResponse
     {
+        $subscription = request()->user()
+            ? request()->user()->pushSubscriptions()->where('is_enabled', true)->latest()->first()
+            : null;
+
+        $publicKey = config('services.webpush.vapid.public_key');
+
         return response()->json([
             'enabled' => (bool) config('services.webpush.enabled'),
-            'public_key' => config('services.webpush.vapid.public_key'),
+            'send_enabled' => (bool) config('services.webpush.enabled'),
+            'can_subscribe' => filled($publicKey),
+            'public_key' => $publicKey,
+            'vapidPublicKey' => $publicKey,
             'types' => Notification::TYPE_LABELS,
+            'subscription_count' => request()->user()
+                ? request()->user()->pushSubscriptions()->where('is_enabled', true)->count()
+                : 0,
+            'preferences' => $subscription?->preferences ?? [
+                'enabled' => true,
+                'types' => [],
+            ],
         ]);
     }
 
@@ -47,6 +63,10 @@ class PushSubscriptionController extends Controller
                 'deleted_at' => null,
             ]
         );
+
+        if ($subscription->trashed()) {
+            $subscription->restore();
+        }
 
         return response()->json([
             'ok' => true,

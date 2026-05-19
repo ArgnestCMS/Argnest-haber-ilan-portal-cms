@@ -954,9 +954,18 @@
     }
 
     const urlBase64ToUint8Array = (base64String) => {
+        if (!/^[A-Za-z0-9_-]+$/.test(base64String || '')) {
+            throw new Error('VAPID public key base64url formatinda degil.');
+        }
+
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
         const rawData = window.atob(base64);
+
+        if (rawData.length !== 65) {
+            throw new Error(`VAPID public key decode uzunlugu hatali: ${rawData.length} byte. Beklenen: 65 byte.`);
+        }
+
         const outputArray = new Uint8Array(rawData.length);
 
         for (let i = 0; i < rawData.length; ++i) {
@@ -971,6 +980,12 @@
             return false;
         }
 
+        if (!window.isSecureContext) {
+            console.warn('Push subscription secure context gerektirir. Local test icin localhost/127.0.0.1 veya HTTPS/ngrok kullanin.');
+
+            return false;
+        }
+
         const permission = await Notification.requestPermission().catch(() => 'denied');
 
         if (permission !== 'granted') {
@@ -982,21 +997,40 @@
                 'Accept': 'application/json',
             },
         });
-        const config = await configResponse.json();
 
-        if (!config.enabled || !config.public_key) {
+        if (!configResponse.ok) {
             return false;
         }
 
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
+        const config = await configResponse.json();
+
+        const publicKey = config.public_key || config.vapidPublicKey;
+
+        if (!config.can_subscribe || !publicKey) {
+            return false;
+        }
+
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(() => navigator.serviceWorker.ready);
+
+        if (!registration.scope.endsWith('/')) {
+            console.warn('Service worker scope beklenenden farkli:', registration.scope);
+
+            return false;
+        }
+
+        const applicationServerKey = urlBase64ToUint8Array(publicKey);
+        let subscription = await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(config.public_key),
-        });
+                applicationServerKey,
+            });
+        }
 
         const payload = subscription.toJSON();
 
-        await fetch('{{ route('push.subscriptions.store') }}', {
+        const storeResponse = await fetch('{{ route('push.subscriptions.store') }}', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -1014,11 +1048,26 @@
             }),
         });
 
+        if (!storeResponse.ok) {
+            return false;
+        }
+
+        window.dispatchEvent(new CustomEvent('push-subscription:updated', {
+            detail: {
+                subscribed: true,
+                sendEnabled: Boolean(config.send_enabled),
+            },
+        }));
+
         return true;
     };
 
     notificationEnable?.addEventListener('click', async () => {
-        await subscribeToPush().catch(() => false);
+        await subscribeToPush().catch((error) => {
+            console.warn('Push subscription failed:', error);
+
+            return false;
+        });
         notificationBanner?.classList.add('hidden');
     });
 
