@@ -16,6 +16,8 @@ class ConversationParticipant extends Model
         'last_read_at',
         'is_muted',
         'muted_until',
+        'is_pinned',
+        'pinned_at',
     ];
 
     protected function casts(): array
@@ -24,6 +26,8 @@ class ConversationParticipant extends Model
             'last_read_at' => 'datetime',
             'is_muted' => 'boolean',
             'muted_until' => 'datetime',
+            'is_pinned' => 'boolean',
+            'pinned_at' => 'datetime',
         ];
     }
 

@@ -6,12 +6,14 @@ use App\Events\PrivateMessageSent;
 use App\Helpers\NotificationHelper;
 use App\Models\Conversation;
 use App\Models\PrivateMessage;
+use App\Models\PrivateMessageReaction;
 use App\Models\User;
 use App\Models\UserMessageBlock;
 use App\Support\CommunitySafety;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -21,19 +23,37 @@ class PrivateMessageController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $search = trim((string) request('q'));
 
         $conversations = Conversation::query()
-            ->whereHas('participants', fn ($query) => $query->where('user_id', $user->id))
+            ->select('conversations.*')
+            ->join('conversation_participants as current_participant', function ($join) use ($user) {
+                $join->on('current_participant.conversation_id', '=', 'conversations.id')
+                    ->where('current_participant.user_id', $user->id);
+            })
+            ->when($search !== '', function ($query) use ($search, $user) {
+                $query->where(function ($nested) use ($search, $user) {
+                    $nested->whereHas('participants.user', function ($participants) use ($search, $user) {
+                        $participants->where('users.id', '!=', $user->id)
+                            ->where('users.name', 'like', '%' . $search . '%');
+                    })->orWhereHas('messages', function ($messages) use ($search) {
+                        $messages->withTrashed()
+                            ->where('body', 'like', '%' . $search . '%');
+                    });
+                });
+            })
             ->with([
                 'participants.user:id,name,avatar,last_seen_at,message_privacy',
                 'latestMessage.sender:id,name',
             ])
-            ->latest('updated_at')
+            ->orderByDesc('current_participant.is_pinned')
+            ->orderByDesc('current_participant.pinned_at')
+            ->orderByDesc('conversations.updated_at')
             ->paginate(15);
 
         $unreadCounts = $this->unreadCounts($conversations->pluck('id')->all(), $user->id);
 
-        return view('frontend.messages.index', compact('conversations', 'unreadCounts'));
+        return view('frontend.messages.index', compact('conversations', 'unreadCounts', 'search'));
     }
 
     public function count(Request $request): JsonResponse
@@ -51,6 +71,7 @@ class PrivateMessageController extends Controller
         $conversation->load([
             'participants.user:id,name,avatar,last_seen_at,message_privacy',
             'messages.sender:id,name,avatar,last_seen_at',
+            'messages.reactions.user:id,name',
             'requester:id,name',
         ]);
 
@@ -62,7 +83,10 @@ class PrivateMessageController extends Controller
 
         $conversation->markReadFor($user);
 
-        return view('frontend.messages.show', compact('conversation', 'participant', 'otherUser', 'isBlocked'));
+        $sidebarConversations = $this->sidebarConversations($user);
+        $unreadCounts = $this->unreadCounts($sidebarConversations->pluck('id')->all(), $user->id);
+
+        return view('frontend.messages.show', compact('conversation', 'participant', 'otherUser', 'isBlocked', 'sidebarConversations', 'unreadCounts'));
     }
 
     public function start(Request $request, User $user): RedirectResponse
@@ -269,19 +293,21 @@ class PrivateMessageController extends Controller
         $afterId = (int) $request->integer('after_id');
 
         $messages = $conversation->messages()
-            ->with('sender:id,name,avatar,last_seen_at')
+            ->with(['sender:id,name,avatar,last_seen_at', 'reactions.user:id,name'])
             ->when($afterId > 0, fn ($query) => $query->where('id', '>', $afterId))
             ->oldest()
             ->take(50)
             ->get()
-            ->map(fn (PrivateMessage $message) => [
-                'id' => $message->id,
-                'sender_id' => $message->sender_id,
-                'sender' => e($message->sender?->name ?? 'Uye'),
-                'body' => e($message->body),
-                'time' => $message->created_at?->format('H:i'),
-                'created_at' => $message->created_at?->toISOString(),
-            ]);
+            ->map(fn (PrivateMessage $message) => $this->messagePayload($message, $user));
+
+        $changedMessages = $conversation->messages()
+            ->with(['sender:id,name,avatar,last_seen_at', 'reactions.user:id,name'])
+            ->where('updated_at', '>=', now()->subSeconds(40))
+            ->when($afterId > 0, fn ($query) => $query->where('id', '<=', $afterId))
+            ->oldest()
+            ->take(50)
+            ->get()
+            ->map(fn (PrivateMessage $message) => $this->messagePayload($message, $user));
 
         if ($messages->isNotEmpty()) {
             $conversation->markReadFor($user);
@@ -289,8 +315,94 @@ class PrivateMessageController extends Controller
 
         return response()->json([
             'messages' => $messages,
+            'changed_messages' => $changedMessages,
+            'typing_users' => $this->typingUsersFor($conversation, $user),
             'status' => $conversation->status,
         ]);
+    }
+
+    public function edit(Request $request, Conversation $conversation, PrivateMessage $message): RedirectResponse
+    {
+        $user = $request->user();
+        $this->abortUnlessParticipant($conversation, $user);
+        $this->abortUnlessMessageBelongsToConversation($conversation, $message);
+
+        if (! $message->canBeEditedBy($user)) {
+            return back()->with('error', 'Mesaj duzenleme suresi dolmus.');
+        }
+
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'min:1', 'max:2000'],
+        ]);
+
+        $body = trim(strip_tags($validated['body']));
+        $safety = CommunitySafety::assess($body, $user, 'private_message');
+
+        if ($safety->shouldReject()) {
+            return back()->with('error', 'Mesaj guvenlik filtresine takildi.');
+        }
+
+        $message->update([
+            'body' => Str::limit($body, 2000, ''),
+            'status' => $safety->requiresReview() ? 'flagged' : 'sent',
+            'edited_at' => now(),
+            ...$safety->attributes(),
+        ]);
+
+        $conversation->touch();
+
+        return back()->with('success', 'Mesaj duzenlendi.');
+    }
+
+    public function destroy(Conversation $conversation, PrivateMessage $message): RedirectResponse
+    {
+        $user = auth()->user();
+        $this->abortUnlessParticipant($conversation, $user);
+        $this->abortUnlessMessageBelongsToConversation($conversation, $message);
+
+        if (! $message->canBeDeletedBy($user)) {
+            return back()->with('error', 'Bu mesaj silinemez.');
+        }
+
+        $message->delete();
+        $conversation->touch();
+
+        return back()->with('success', 'Mesaj silindi.');
+    }
+
+    public function react(Request $request, Conversation $conversation, PrivateMessage $message): RedirectResponse
+    {
+        $user = $request->user();
+        $this->abortUnlessParticipant($conversation, $user);
+        $this->abortUnlessMessageBelongsToConversation($conversation, $message);
+
+        if ($message->trashed()) {
+            return back()->with('error', 'Silinmis mesaja tepki verilemez.');
+        }
+
+        $validated = $request->validate([
+            'reaction' => ['required', Rule::in(['like', 'heart', 'laugh'])],
+        ]);
+
+        $existing = PrivateMessageReaction::query()
+            ->where('private_message_id', $message->id)
+            ->where('user_id', $user->id)
+            ->where('reaction', $validated['reaction'])
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+        } else {
+            PrivateMessageReaction::create([
+                'private_message_id' => $message->id,
+                'user_id' => $user->id,
+                'reaction' => $validated['reaction'],
+            ]);
+        }
+
+        $message->touch();
+
+        return back();
     }
 
     public function updateSettings(Request $request): RedirectResponse
@@ -313,6 +425,45 @@ class PrivateMessageController extends Controller
         $participant->update(['is_muted' => ! $participant->is_muted]);
 
         return back()->with('success', $participant->is_muted ? 'Konusma sessize alindi.' : 'Konusma sesi acildi.');
+    }
+
+    public function togglePin(Conversation $conversation): RedirectResponse
+    {
+        $user = auth()->user();
+        $this->abortUnlessParticipant($conversation, $user);
+
+        $participant = $conversation->participants()->where('user_id', $user->id)->firstOrFail();
+        $isPinned = ! $participant->is_pinned;
+
+        $participant->update([
+            'is_pinned' => $isPinned,
+            'pinned_at' => $isPinned ? now() : null,
+        ]);
+
+        return back()->with('success', $isPinned ? 'Konusma sabitlendi.' : 'Konusma sabitten cikarildi.');
+    }
+
+    public function typing(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = $request->user();
+        $this->abortUnlessParticipant($conversation, $user);
+
+        Cache::put($this->typingCacheKey($conversation->id, $user->id), [
+            'id' => $user->id,
+            'name' => $user->name,
+        ], now()->addSeconds(8));
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function typingUsers(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = $request->user();
+        $this->abortUnlessParticipant($conversation, $user);
+
+        return response()->json([
+            'users' => $this->typingUsersFor($conversation, $user),
+        ]);
     }
 
     public function block(User $user): RedirectResponse
@@ -409,6 +560,7 @@ class PrivateMessageController extends Controller
 
                 $count = $conversation->messages()
                     ->where('sender_id', '!=', $userId)
+                    ->whereNull('deleted_at')
                     ->when($lastReadAt, fn ($query) => $query->where('created_at', '>', $lastReadAt))
                     ->count();
 
@@ -426,12 +578,66 @@ class PrivateMessageController extends Controller
                     ->from('private_messages as pm')
                     ->whereColumn('pm.conversation_id', 'cp.conversation_id')
                     ->where('pm.sender_id', '!=', $userId)
+                    ->whereNull('pm.deleted_at')
                     ->where(function ($nested) {
                         $nested->whereNull('cp.last_read_at')
                             ->orWhereColumn('pm.created_at', '>', 'cp.last_read_at');
                     });
             })
             ->count();
+    }
+
+    private function sidebarConversations(User $user)
+    {
+        return Conversation::query()
+            ->select('conversations.*')
+            ->join('conversation_participants as current_participant', function ($join) use ($user) {
+                $join->on('current_participant.conversation_id', '=', 'conversations.id')
+                    ->where('current_participant.user_id', $user->id);
+            })
+            ->with([
+                'participants.user:id,name,avatar,last_seen_at,message_privacy',
+                'latestMessage.sender:id,name',
+            ])
+            ->orderByDesc('current_participant.is_pinned')
+            ->orderByDesc('current_participant.pinned_at')
+            ->orderByDesc('conversations.updated_at')
+            ->take(12)
+            ->get();
+    }
+
+    private function messagePayload(PrivateMessage $message, User $viewer): array
+    {
+        return [
+            'id' => $message->id,
+            'sender_id' => $message->sender_id,
+            'sender' => e($message->sender?->name ?? 'Uye'),
+            'body' => $message->trashed() ? 'Bu mesaj silindi.' : e($message->body),
+            'is_deleted' => $message->trashed(),
+            'is_edited' => (bool) $message->edited_at,
+            'can_edit' => $message->canBeEditedBy($viewer),
+            'time' => $message->created_at?->format('H:i'),
+            'created_at' => $message->created_at?->toISOString(),
+            'updated_at' => $message->updated_at?->toISOString(),
+            'reactions' => $message->reactionSummary(),
+        ];
+    }
+
+    private function typingUsersFor(Conversation $conversation, User $viewer): array
+    {
+        $conversation->loadMissing('participants.user:id,name');
+
+        return $conversation->participants
+            ->reject(fn ($participant) => (int) $participant->user_id === (int) $viewer->id)
+            ->map(fn ($participant) => Cache::get($this->typingCacheKey($conversation->id, $participant->user_id)))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function typingCacheKey(int $conversationId, int $userId): string
+    {
+        return 'dm_typing:' . $conversationId . ':' . $userId;
     }
 
     private function hasFloodRisk(User $user): bool
@@ -452,5 +658,10 @@ class PrivateMessageController extends Controller
     private function abortUnlessParticipant(Conversation $conversation, User $user): void
     {
         abort_unless($conversation->isParticipant($user), 403);
+    }
+
+    private function abortUnlessMessageBelongsToConversation(Conversation $conversation, PrivateMessage $message): void
+    {
+        abort_unless((int) $message->conversation_id === (int) $conversation->id, 404);
     }
 }

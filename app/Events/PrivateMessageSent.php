@@ -50,16 +50,20 @@ class PrivateMessageSent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        $this->message->loadMissing('sender:id,name,avatar,last_seen_at');
+        $this->message->loadMissing(['sender:id,name,avatar,last_seen_at', 'reactions']);
 
         return [
             'id' => $this->message->id,
             'conversation_id' => $this->message->conversation_id,
             'sender_id' => $this->message->sender_id,
             'sender' => e($this->message->sender?->name ?? 'Uye'),
-            'body' => e($this->message->body),
+            'body' => $this->message->trashed() ? 'Bu mesaj silindi.' : e($this->message->body),
+            'is_deleted' => $this->message->trashed(),
+            'is_edited' => (bool) $this->message->edited_at,
             'time' => $this->message->created_at?->format('H:i'),
             'created_at' => $this->message->created_at?->toISOString(),
+            'updated_at' => $this->message->updated_at?->toISOString(),
+            'reactions' => $this->message->reactionSummary(),
         ];
     }
 }

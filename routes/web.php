@@ -170,8 +170,23 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
     Route::get('/mesajlar/{conversation}/latest', [PrivateMessageController::class, 'latest'])
         ->name('messages.latest');
 
+    Route::get('/mesajlar/{conversation}/typing', [PrivateMessageController::class, 'typingUsers'])
+        ->name('messages.typing');
+
     Route::post('/mesajlar/{conversation}/mesaj', [PrivateMessageController::class, 'store'])
         ->name('messages.store');
+
+    Route::post('/mesajlar/{conversation}/typing', [PrivateMessageController::class, 'typing'])
+        ->name('messages.typing.store');
+
+    Route::patch('/mesajlar/{conversation}/mesaj/{message}', [PrivateMessageController::class, 'edit'])
+        ->name('messages.edit');
+
+    Route::delete('/mesajlar/{conversation}/mesaj/{message}', [PrivateMessageController::class, 'destroy'])
+        ->name('messages.destroy');
+
+    Route::post('/mesajlar/{conversation}/mesaj/{message}/reaction', [PrivateMessageController::class, 'react'])
+        ->name('messages.reactions.toggle');
 
     Route::post('/mesajlar/{conversation}/kabul', [PrivateMessageController::class, 'accept'])
         ->name('messages.accept');
@@ -184,6 +199,9 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
 
     Route::post('/mesajlar/{conversation}/sessiz', [PrivateMessageController::class, 'toggleMute'])
         ->name('messages.mute');
+
+    Route::post('/mesajlar/{conversation}/sabitle', [PrivateMessageController::class, 'togglePin'])
+        ->name('messages.pin');
 
     Route::post('/profil/{user}/mesaj', [PrivateMessageController::class, 'start'])
         ->name('messages.start');

@@ -29,6 +29,19 @@
         </a>
     </div>
 
+    <form method="GET" action="{{ route('messages.index') }}" class="mb-5 flex gap-2">
+        <input
+            type="search"
+            name="q"
+            value="{{ $search }}"
+            class="min-w-0 flex-1 rounded-xl border-slate-300 text-sm focus:border-red-500 focus:ring-red-500"
+            placeholder="Mesajlarda veya kullanici adinda ara..."
+        >
+        <button class="rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
+            Ara
+        </button>
+    </form>
+
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="divide-y divide-slate-100">
             @forelse($conversations as $conversation)
@@ -36,6 +49,7 @@
                     $otherUser = $conversation->participants
                         ->firstWhere('user_id', '!=', auth()->id())
                         ?->user;
+                    $currentParticipant = $conversation->participants->firstWhere('user_id', auth()->id());
                     $latestMessage = $conversation->latestMessage;
                     $unread = $unreadCounts[$conversation->id] ?? 0;
                     $statusLabel = match($conversation->status) {
@@ -64,11 +78,23 @@
                                 @if($unread > 0)
                                     <span class="rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-black text-white">{{ $unread }} yeni</span>
                                 @endif
+                                @if($currentParticipant?->is_pinned)
+                                    <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-black text-blue-700">Sabit</span>
+                                @endif
+                                @if($currentParticipant?->is_muted)
+                                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-black text-slate-500">Sessiz</span>
+                                @endif
+                                @if($otherUser?->isOnline())
+                                    <span class="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-black text-green-700">Online</span>
+                                @endif
                             </div>
 
                             <p class="mt-1 truncate text-sm font-bold text-slate-500">
                                 @if($latestMessage)
-                                    {{ $latestMessage->sender_id === auth()->id() ? 'Siz: ' : '' }}{{ \Illuminate\Support\Str::limit($latestMessage->body, 120) }}
+                                    {{ $latestMessage->sender_id === auth()->id() ? 'Siz: ' : '' }}{{ $latestMessage->trashed() ? 'Bu mesaj silindi.' : \Illuminate\Support\Str::limit($latestMessage->body, 120) }}
+                                    @if($latestMessage->edited_at && ! $latestMessage->trashed())
+                                        <span class="text-xs text-slate-400">(duzenlendi)</span>
+                                    @endif
                                 @else
                                     Henuz mesaj yok.
                                 @endif

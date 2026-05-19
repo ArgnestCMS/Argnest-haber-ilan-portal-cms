@@ -9,12 +9,14 @@
     x-data="privateConversation({
         latestUrl: '{{ route('messages.latest', $conversation) }}',
         readUrl: '{{ route('messages.read', $conversation) }}',
+        typingUrl: '{{ route('messages.typing', $conversation) }}',
+        typingStoreUrl: '{{ route('messages.typing.store', $conversation) }}',
         conversationId: {{ $conversation->id }},
         currentUserId: {{ auth()->id() }},
         lastMessageId: {{ $conversation->messages->max('id') ?? 0 }},
     })"
     x-init="init()"
-    class="mx-auto max-w-5xl px-4 py-8"
+    class="mx-auto max-w-7xl px-4 py-8"
 >
     @if(session('success'))
         <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800">
@@ -28,6 +30,63 @@
         </div>
     @endif
 
+    <div class="grid gap-5 lg:grid-cols-[320px_1fr]">
+        <aside class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-100 p-4">
+                <div class="text-lg font-black text-slate-950">Konusmalar</div>
+                <a href="{{ route('messages.index') }}" class="mt-1 inline-block text-xs font-black text-red-700">Tum mesajlar</a>
+            </div>
+
+            <div class="max-h-[680px] divide-y divide-slate-100 overflow-y-auto">
+                @foreach($sidebarConversations as $sidebarConversation)
+                    @php
+                        $sidebarOther = $sidebarConversation->participants
+                            ->firstWhere('user_id', '!=', auth()->id())
+                            ?->user;
+                        $sidebarParticipant = $sidebarConversation->participants->firstWhere('user_id', auth()->id());
+                        $sidebarLatest = $sidebarConversation->latestMessage;
+                        $sidebarUnread = $unreadCounts[$sidebarConversation->id] ?? 0;
+                    @endphp
+
+                    <a href="{{ route('messages.show', $sidebarConversation) }}" class="block p-4 transition {{ $sidebarConversation->id === $conversation->id ? 'bg-red-50' : 'hover:bg-slate-50' }}">
+                        <div class="flex items-center gap-3">
+                            <div class="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-950 text-sm font-black text-white">
+                                @if($sidebarOther?->avatar)
+                                    <img src="{{ asset('storage/' . $sidebarOther->avatar) }}" class="h-full w-full object-cover" alt="{{ $sidebarOther->name }}">
+                                @else
+                                    {{ str($sidebarOther?->name ?? 'U')->substr(0, 1)->upper() }}
+                                @endif
+                                @if($sidebarOther?->isOnline())
+                                    <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>
+                                @endif
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <div class="truncate text-sm font-black text-slate-950">{{ $sidebarOther?->name ?? 'Silinmis uye' }}</div>
+                                    @if($sidebarParticipant?->is_pinned)
+                                        <span class="text-[11px] font-black text-blue-700">Sabit</span>
+                                    @endif
+                                    @if($sidebarUnread > 0)
+                                        <span class="ml-auto rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-black text-white">{{ $sidebarUnread }}</span>
+                                    @endif
+                                </div>
+                                <div class="mt-1 truncate text-xs font-bold text-slate-500">
+                                    @if($sidebarLatest)
+                                        {{ $sidebarLatest->sender_id === auth()->id() ? 'Siz: ' : '' }}{{ $sidebarLatest->trashed() ? 'Bu mesaj silindi.' : \Illuminate\Support\Str::limit($sidebarLatest->body, 60) }}
+                                    @else
+                                        Henuz mesaj yok.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </aside>
+
+        <div>
+
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('messages.index') }}" class="text-sm font-black text-red-700">Mesajlara Don</a>
 
@@ -36,6 +95,13 @@
                 @csrf
                 <button class="rounded-lg bg-slate-200 px-4 py-2 text-xs font-black text-slate-800 transition hover:bg-slate-300">
                     {{ $participant?->is_muted ? 'Sesi Ac' : 'Sessize Al' }}
+                </button>
+            </form>
+
+            <form method="POST" action="{{ route('messages.pin', $conversation) }}">
+                @csrf
+                <button class="rounded-lg bg-slate-200 px-4 py-2 text-xs font-black text-slate-800 transition hover:bg-slate-300">
+                    {{ $participant?->is_pinned ? 'Sabitten Cikar' : 'Sabitle' }}
                 </button>
             </form>
 
@@ -76,6 +142,9 @@
                     {{ $conversation->status === 'accepted' ? 'Aktif konusma' : ($conversation->status === 'rejected' ? 'Reddedilmis istek' : 'Mesaj istegi') }}
                     @if($otherUser)
                         · {{ $otherUser->isOnline() ? 'Online' : 'Offline' }}
+                        @if($otherUser->last_seen_at)
+                            · Son gorulme {{ $otherUser->last_seen_at->diffForHumans() }}
+                        @endif
                     @endif
                 </p>
             </div>
@@ -127,12 +196,56 @@
                             @if($message->ai_review_required)
                                 · riskli
                             @endif
+                            @if($message->edited_at && ! $message->trashed())
+                                · duzenlendi
+                            @endif
                         </div>
-                        <div class="mt-1 whitespace-pre-line text-sm leading-6">{{ $message->body }}</div>
+                        <div class="mt-1 whitespace-pre-line text-sm leading-6" data-message-body>{{ $message->trashed() ? 'Bu mesaj silindi.' : $message->body }}</div>
+
+                        @if(! $message->trashed())
+                            @php($reactionSummary = $message->reactionSummary())
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                                @foreach(['like' => 'Like', 'heart' => 'Kalp', 'laugh' => 'Gul'] as $reaction => $label)
+                                    <form method="POST" action="{{ route('messages.reactions.toggle', [$conversation, $message]) }}">
+                                        @csrf
+                                        <input type="hidden" name="reaction" value="{{ $reaction }}">
+                                        <button class="rounded-full bg-white/10 px-2 py-1 text-[11px] font-black {{ $message->sender_id === auth()->id() ? 'text-white ring-1 ring-white/20' : 'text-slate-600 ring-1 ring-slate-200' }}">
+                                            {{ $label }} {{ $reactionSummary[$reaction] ?? 0 }}
+                                        </button>
+                                    </form>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if($message->canBeEditedBy(auth()->user()) || $message->canBeDeletedBy(auth()->user()))
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                @if($message->canBeEditedBy(auth()->user()))
+                                    <details class="w-full">
+                                        <summary class="cursor-pointer text-xs font-black {{ $message->sender_id === auth()->id() ? 'text-slate-300' : 'text-red-700' }}">Duzenle</summary>
+                                        <form method="POST" action="{{ route('messages.edit', [$conversation, $message]) }}" class="mt-2 space-y-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <textarea name="body" rows="2" class="w-full rounded-lg border-slate-300 text-sm text-slate-900">{{ $message->body }}</textarea>
+                                            <button class="rounded-lg bg-red-600 px-3 py-2 text-xs font-black text-white">Kaydet</button>
+                                        </form>
+                                    </details>
+                                @endif
+
+                                @if($message->canBeDeletedBy(auth()->user()))
+                                    <form method="POST" action="{{ route('messages.destroy', [$conversation, $message]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="text-xs font-black {{ $message->sender_id === auth()->id() ? 'text-slate-300' : 'text-red-700' }}">Sil</button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach
         </div>
+
+        <div class="border-t border-slate-100 bg-white px-5 py-2 text-xs font-bold text-slate-500" x-show="typingText" x-text="typingText" style="display:none;"></div>
 
         <div class="border-t border-slate-100 p-5">
             @if($conversation->status === 'accepted' && ! $isBlocked)
@@ -143,9 +256,19 @@
                         rows="3"
                         required
                         maxlength="2000"
+                        x-ref="messageInput"
+                        @input="sendTyping()"
                         class="w-full rounded-xl border-slate-300 text-sm focus:border-red-500 focus:ring-red-500"
                         placeholder="Mesajinizi yazin..."
                     >{{ old('body') }}</textarea>
+
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(['👍', '❤️', '😂', '👏', '🔥', '🙏'] as $emoji)
+                            <button type="button" @click="insertEmoji('{{ $emoji }}')" class="rounded-lg bg-slate-100 px-3 py-2 text-sm font-black transition hover:bg-slate-200">
+                                {{ $emoji }}
+                            </button>
+                        @endforeach
+                    </div>
 
                     @error('body')
                         <p class="text-sm font-bold text-red-700">{{ $message }}</p>
@@ -164,12 +287,16 @@
             @endif
         </div>
     </div>
+        </div>
+    </div>
 </section>
 
 <script>
 function privateConversation(config) {
     return {
         lastMessageId: Number(config.lastMessageId || 0),
+        typingText: '',
+        lastTypingAt: 0,
         init() {
             this.scrollBottom();
             this.listenRealtime();
@@ -181,6 +308,8 @@ function privateConversation(config) {
                 .then(response => response.json())
                 .then(data => {
                     (data.messages || []).forEach(message => this.appendMessage(message));
+                    (data.changed_messages || []).forEach(message => this.updateMessage(message));
+                    this.setTypingUsers(data.typing_users || []);
                 })
                 .catch(() => {});
         },
@@ -220,6 +349,61 @@ function privateConversation(config) {
             list.appendChild(wrapper);
             this.lastMessageId = Number(message.id);
             this.scrollBottom();
+        },
+        updateMessage(message) {
+            if (!message) {
+                return;
+            }
+
+            const wrapper = document.querySelector(`[data-message-id="${message.id}"]`);
+            if (!wrapper) {
+                if (Number(message.id) > this.lastMessageId) {
+                    this.appendMessage(message);
+                }
+
+                return;
+            }
+
+            const body = wrapper.querySelector('[data-message-body]') || wrapper.querySelector('.leading-6');
+            if (body) {
+                body.textContent = message.body || '';
+                body.classList.toggle('italic', Boolean(message.is_deleted));
+                body.classList.toggle('opacity-70', Boolean(message.is_deleted));
+            }
+        },
+        sendTyping() {
+            const now = Date.now();
+
+            if (now - this.lastTypingAt < 3000) {
+                return;
+            }
+
+            this.lastTypingAt = now;
+            fetch(config.typingStoreUrl, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            }).catch(() => {});
+        },
+        setTypingUsers(users) {
+            const names = (users || []).map(user => user.name).filter(Boolean);
+            this.typingText = names.length ? names.join(', ') + ' yaziyor...' : '';
+        },
+        insertEmoji(emoji) {
+            const input = this.$refs.messageInput;
+
+            if (!input) {
+                return;
+            }
+
+            const start = input.selectionStart || input.value.length;
+            const end = input.selectionEnd || input.value.length;
+            input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+            input.focus();
+            input.selectionStart = input.selectionEnd = start + emoji.length;
+            this.sendTyping();
         },
         scrollBottom() {
             requestAnimationFrame(() => {

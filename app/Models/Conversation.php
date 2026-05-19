@@ -40,18 +40,18 @@ class Conversation extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_participants')
-            ->withPivot(['last_read_at', 'is_muted', 'muted_until'])
+            ->withPivot(['last_read_at', 'is_muted', 'muted_until', 'is_pinned', 'pinned_at'])
             ->withTimestamps();
     }
 
     public function messages(): HasMany
     {
-        return $this->hasMany(PrivateMessage::class)->oldest();
+        return $this->hasMany(PrivateMessage::class)->withTrashed()->oldest();
     }
 
     public function latestMessage(): HasOne
     {
-        return $this->hasOne(PrivateMessage::class)->latestOfMany();
+        return $this->hasOne(PrivateMessage::class)->withTrashed()->latestOfMany();
     }
 
     public function participantFor(User $user): ?ConversationParticipant
