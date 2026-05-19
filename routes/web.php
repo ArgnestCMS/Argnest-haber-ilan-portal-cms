@@ -18,6 +18,7 @@ use App\Http\Controllers\SocialPresenceController;
 use App\Http\Controllers\PrivateMessageController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\HealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,10 @@ use App\Http\Controllers\SearchController;
 */
 
 Route::get('/', [FrontendController::class, 'home']);
+
+Route::get('/health', HealthCheckController::class)
+    ->middleware('throttle:30,1')
+    ->name('health');
 
 Route::get('/haberler', [FrontendController::class, 'news']);
 

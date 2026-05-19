@@ -86,6 +86,34 @@ php artisan queue:work redis --queue=broadcasts,realtime,notifications,media,saf
 
 Run workers under Supervisor, systemd, or the hosting platform process manager. Use `php artisan queue:failed` and `php artisan queue:monitor broadcasts,realtime,notifications,media,safety,default --max=100` during health checks.
 
+## Health Checks
+
+Use `/up` for basic Laravel liveness.
+
+Use `/health` for lightweight readiness checks:
+
+- Database connectivity.
+- Queue sizes for `broadcasts`, `realtime`, `notifications`, `media`, `safety`, and `default`.
+- Failed job count.
+- Public storage disk write probe.
+- `public/storage` symlink presence.
+- Disk usage under `storage_path()`.
+- Reverb configuration readiness.
+
+Recommended monitoring behavior:
+
+- Treat HTTP `200` as healthy.
+- Treat HTTP `503` as degraded and alert.
+- Do not expose sensitive secrets in health responses.
+- Keep websocket process checks in Supervisor/systemd/platform monitoring; `/health` only confirms Reverb configuration.
+
+Failed jobs checks:
+
+```bash
+php artisan queue:failed
+php artisan queue:monitor broadcasts,realtime,notifications,media,safety,default --max=100
+```
+
 ## Reverb
 
 Production command:
@@ -125,6 +153,42 @@ php artisan optimize:clear
 - Test restore flow periodically, not only backup creation.
 - Include `.env` values in secret management, not in normal file backups.
 
+Suggested baseline schedule:
+
+- Database: daily full backup, plus pre-deploy backup.
+- Public media: daily incremental or object-storage lifecycle backup.
+- Private media: daily backup with restricted restore access.
+- Retention: 7 daily, 4 weekly, 3 monthly snapshots, adjusted to storage budget and legal requirements.
+- Restore drill: at least monthly in staging.
+
+## Scheduler And Cron
+
+If scheduled tasks are added, production should run exactly one scheduler process:
+
+```bash
+* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Checklist:
+
+- Confirm only one server runs scheduler in multi-server setups, unless tasks are protected by locks.
+- Monitor scheduler logs or process-manager output.
+- Keep backup jobs, queue monitoring, and cleanup tasks idempotent.
+- Use `php artisan schedule:list` during deploy verification.
+
+## Monitoring Checklist
+
+- `/up` liveness check.
+- `/health` readiness check.
+- Queue size and failed jobs.
+- Reverb process status.
+- Queue worker process status.
+- Disk usage below 90%.
+- Error log volume and critical log alerts.
+- Storage symlink and upload smoke test.
+- Database backup age and latest restore test date.
+- SSL certificate expiry and websocket endpoint availability.
+
 ## Deployment Order
 
 1. Pull/release code.
@@ -135,5 +199,5 @@ php artisan optimize:clear
 6. Run `php artisan config:cache`, `route:cache`, and `view:cache`.
 7. Restart queue workers.
 8. Restart Reverb if used.
-9. Check `/up`, public home page, login, forum page, DM page, notification count, and upload endpoint.
-10. Check logs and failed jobs.
+9. Check `/up`, `/health`, public home page, login, forum page, DM page, notification count, and upload endpoint.
+10. Check logs, queue sizes, failed jobs, disk usage, and latest backup status.
