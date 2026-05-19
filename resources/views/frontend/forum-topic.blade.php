@@ -209,10 +209,30 @@
     [x-cloak] {
         display: none !important;
     }
+
+    @media (max-width: 767px) {
+        .forum-mobile-composer {
+            margin-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .forum-mobile-card {
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+
+        .forum-media-masonry {
+            columns: 1;
+        }
+
+        .forum-media-viewer-controls {
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+        }
+    }
 </style>
 
 <section class="bg-slate-950 text-white">
-    <div class="mx-auto max-w-7xl px-4 py-10">
+    <div class="mx-auto max-w-7xl px-4 py-7 md:py-10">
         <a href="{{ route('forum.index') }}" class="text-sm font-bold text-red-200 hover:text-white">
             Forum
         </a>
@@ -259,7 +279,7 @@
             @endif
         </div>
 
-        <h1 class="mt-4 max-w-4xl text-3xl font-black leading-tight md:text-5xl">
+        <h1 class="mt-4 max-w-4xl text-2xl font-black leading-tight md:text-5xl">
             {{ $topic->title }}
         </h1>
 
@@ -351,7 +371,7 @@
     </div>
 </section>
 
-<section class="mx-auto max-w-7xl px-4 py-10">
+<section class="mx-auto max-w-7xl px-3 py-6 md:px-4 md:py-10">
     @if(session('success'))
         <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800">
             {{ session('success') }}
@@ -364,7 +384,7 @@
         </div>
     @endif
 
-    <article class="grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:grid-cols-[220px_1fr]">
+    <article class="forum-mobile-card grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:grid-cols-[220px_1fr]">
         <aside class="rounded-xl bg-slate-50 p-4">
             <div class="flex items-center gap-3 lg:block">
                 <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-lg font-black text-white">
@@ -451,7 +471,7 @@
 
         <div class="space-y-4">
             @forelse($topic->approvedPosts as $post)
-                <article class="grid gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[200px_1fr]">
+                <article class="forum-mobile-card grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[200px_1fr]">
                     <aside class="rounded-xl bg-slate-50 p-4">
                         <div class="flex items-center gap-3 lg:block">
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-sm font-black text-white">
@@ -592,7 +612,7 @@
         </div>
     </div>
 
-    <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="forum-mobile-composer mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         @if($siteSetting?->forum_enabled && $topic->acceptsReplies())
             @auth
                 <div class="mb-5">
@@ -682,13 +702,13 @@
         @touchstart.passive="touchStart($event)"
         @touchend.passive="touchEnd($event)"
     >
-        <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 bg-gradient-to-b from-slate-950/90 to-transparent px-4 py-4">
+        <div class="absolute inset-x-0 top-0 z-10 flex flex-col gap-3 bg-gradient-to-b from-slate-950/90 to-transparent px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="min-w-0">
                 <div class="truncate text-sm font-black" x-text="current.label"></div>
                 <div class="mt-1 truncate text-xs font-bold text-slate-300" x-text="current.meta"></div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="forum-media-viewer-controls flex items-center gap-2">
                 <button type="button" @click="zoomOut()" class="rounded-lg bg-white/10 px-3 py-2 text-sm font-black transition hover:bg-white/20">-</button>
                 <button type="button" @click="resetZoom()" class="rounded-lg bg-white/10 px-3 py-2 text-xs font-black transition hover:bg-white/20" x-text="Math.round(zoom * 100) + '%'"></button>
                 <button type="button" @click="zoomIn()" class="rounded-lg bg-white/10 px-3 py-2 text-sm font-black transition hover:bg-white/20">+</button>
@@ -710,7 +730,7 @@
             x-show="items.length > 1"
         >›</button>
 
-        <div class="flex h-full items-center justify-center px-4 py-20">
+        <div class="flex h-full items-center justify-center px-2 py-24 md:px-4 md:py-20">
             <div class="forum-media-skeleton max-h-full max-w-full overflow-hidden rounded-xl bg-slate-900">
                 <img
                     :src="current.src"

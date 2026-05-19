@@ -5,6 +5,24 @@
 @section('robots', 'noindex, nofollow')
 
 @section('content')
+<style>
+    @media (max-width: 767px) {
+        .mobile-dm-shell {
+            padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .mobile-dm-list {
+            max-height: 58vh;
+        }
+
+        .mobile-dm-composer {
+            position: sticky;
+            bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+            z-index: 20;
+        }
+    }
+</style>
+
 <section
     x-data="privateConversation({
         latestUrl: '{{ route('messages.latest', $conversation) }}',
@@ -16,7 +34,7 @@
         lastMessageId: {{ $conversation->messages->max('id') ?? 0 }},
     })"
     x-init="init()"
-    class="mx-auto max-w-7xl px-4 py-8"
+    class="mobile-dm-shell mx-auto max-w-7xl px-3 py-6 md:px-4 md:py-8"
 >
     @if(session('success'))
         <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800">
@@ -31,7 +49,7 @@
     @endif
 
     <div class="grid gap-5 lg:grid-cols-[320px_1fr]">
-        <aside class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <aside class="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
             <div class="border-b border-slate-100 p-4">
                 <div class="text-lg font-black text-slate-950">Konusmalar</div>
                 <a href="{{ route('messages.index') }}" class="mt-1 inline-block text-xs font-black text-red-700">Tum mesajlar</a>
@@ -87,10 +105,10 @@
 
         <div>
 
-    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <a href="{{ route('messages.index') }}" class="text-sm font-black text-red-700">Mesajlara Don</a>
 
-        <div class="flex flex-wrap gap-2">
+        <div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
             <form method="POST" action="{{ route('messages.mute', $conversation) }}">
                 @csrf
                 <button class="rounded-lg bg-slate-200 px-4 py-2 text-xs font-black text-slate-800 transition hover:bg-slate-300">
@@ -127,7 +145,7 @@
     </div>
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex items-center gap-4 border-b border-slate-100 p-5">
+        <div class="flex items-center gap-3 border-b border-slate-100 p-4 md:gap-4 md:p-5">
             <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-slate-950 text-xl font-black text-white">
                 @if($otherUser?->avatar)
                     <img src="{{ asset('storage/' . $otherUser->avatar) }}" class="h-full w-full object-cover" alt="{{ $otherUser->name }}">
@@ -137,7 +155,7 @@
             </div>
 
             <div class="min-w-0">
-                <h1 class="truncate text-2xl font-black text-slate-950">{{ $otherUser?->name ?? 'Silinmis uye' }}</h1>
+                <h1 class="truncate text-xl font-black text-slate-950 md:text-2xl">{{ $otherUser?->name ?? 'Silinmis uye' }}</h1>
                 <p class="mt-1 text-xs font-bold text-slate-500">
                     {{ $conversation->status === 'accepted' ? 'Aktif konusma' : ($conversation->status === 'rejected' ? 'Reddedilmis istek' : 'Mesaj istegi') }}
                     @if($otherUser)
@@ -187,10 +205,10 @@
             </div>
         @endif
 
-        <div id="message-list" class="max-h-[560px] space-y-4 overflow-y-auto bg-slate-50 p-5">
+        <div id="message-list" class="mobile-dm-list max-h-[560px] space-y-3 overflow-y-auto bg-slate-50 p-3 md:space-y-4 md:p-5">
             @foreach($conversation->messages as $message)
                 <div class="flex {{ $message->sender_id === auth()->id() ? 'justify-end' : 'justify-start' }}" data-message-id="{{ $message->id }}">
-                    <div class="max-w-[82%] rounded-2xl {{ $message->sender_id === auth()->id() ? 'bg-slate-950 text-white' : 'bg-white text-slate-900 ring-1 ring-slate-200' }} px-4 py-3 shadow-sm">
+                    <div class="max-w-[88%] rounded-2xl {{ $message->sender_id === auth()->id() ? 'bg-slate-950 text-white' : 'bg-white text-slate-900 ring-1 ring-slate-200' }} px-4 py-3 shadow-sm md:max-w-[82%]">
                         <div class="text-xs font-black {{ $message->sender_id === auth()->id() ? 'text-slate-300' : 'text-slate-500' }}">
                             {{ $message->sender?->name ?? 'Uye' }} · {{ $message->created_at?->format('H:i') }}
                             @if($message->ai_review_required)
@@ -245,9 +263,9 @@
             @endforeach
         </div>
 
-        <div class="border-t border-slate-100 bg-white px-5 py-2 text-xs font-bold text-slate-500" x-show="typingText" x-text="typingText" style="display:none;"></div>
+        <div class="border-t border-slate-100 bg-white px-4 py-2 text-xs font-bold text-slate-500 md:px-5" x-show="typingText" x-text="typingText" style="display:none;"></div>
 
-        <div class="border-t border-slate-100 p-5">
+        <div class="mobile-dm-composer border-t border-slate-100 bg-white p-3 md:p-5">
             @if($conversation->status === 'accepted' && ! $isBlocked)
                 <form method="POST" action="{{ route('messages.store', $conversation) }}" class="space-y-3">
                     @csrf
@@ -258,11 +276,11 @@
                         maxlength="2000"
                         x-ref="messageInput"
                         @input="sendTyping()"
-                        class="w-full rounded-xl border-slate-300 text-sm focus:border-red-500 focus:ring-red-500"
+                        class="w-full rounded-xl border-slate-300 text-base focus:border-red-500 focus:ring-red-500 md:text-sm"
                         placeholder="Mesajinizi yazin..."
                     >{{ old('body') }}</textarea>
 
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
                         @foreach(['👍', '❤️', '😂', '👏', '🔥', '🙏'] as $emoji)
                             <button type="button" @click="insertEmoji('{{ $emoji }}')" class="rounded-lg bg-slate-100 px-3 py-2 text-sm font-black transition hover:bg-slate-200">
                                 {{ $emoji }}
@@ -275,7 +293,7 @@
                     @enderror
 
                     <div class="flex justify-end">
-                        <button class="rounded-lg bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
+                        <button class="w-full rounded-lg bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700 sm:w-auto">
                             Gonder
                         </button>
                     </div>

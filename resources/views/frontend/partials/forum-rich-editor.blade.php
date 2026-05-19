@@ -22,20 +22,20 @@
     data-max-image-bytes="{{ $mediaLimitMb * 1024 * 1024 }}"
     data-max-image-label="{{ $mediaLimitMb }} MB"
 >
-    <div class="flex flex-wrap gap-1 border-b border-slate-200 bg-slate-50 p-2">
-        <button type="button" data-command="bold" class="rounded px-3 py-1.5 text-sm font-black text-slate-700 hover:bg-white">B</button>
-        <button type="button" data-command="italic" class="rounded px-3 py-1.5 text-sm italic text-slate-700 hover:bg-white">I</button>
-        <button type="button" data-command="insertUnorderedList" class="rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">Liste</button>
-        <button type="button" data-command="formatBlock" data-value="blockquote" class="rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">Alinti</button>
-        <button type="button" data-action="link" class="rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">Link</button>
-        <button type="button" data-action="video" class="rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">Video</button>
-        <label class="cursor-pointer rounded px-3 py-1.5 text-sm font-bold text-slate-700 hover:bg-white">
+    <div class="forum-editor-toolbar flex gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50 p-2 md:flex-wrap">
+        <button type="button" data-command="bold" class="shrink-0 rounded px-3 py-2 text-sm font-black text-slate-700 hover:bg-white">B</button>
+        <button type="button" data-command="italic" class="shrink-0 rounded px-3 py-2 text-sm italic text-slate-700 hover:bg-white">I</button>
+        <button type="button" data-command="insertUnorderedList" class="shrink-0 rounded px-3 py-2 text-sm font-bold text-slate-700 hover:bg-white">Liste</button>
+        <button type="button" data-command="formatBlock" data-value="blockquote" class="shrink-0 rounded px-3 py-2 text-sm font-bold text-slate-700 hover:bg-white">Alinti</button>
+        <button type="button" data-action="link" class="shrink-0 rounded px-3 py-2 text-sm font-bold text-slate-700 hover:bg-white">Link</button>
+        <button type="button" data-action="video" class="shrink-0 rounded px-3 py-2 text-sm font-bold text-slate-700 hover:bg-white">Video</button>
+        <label class="shrink-0 cursor-pointer rounded px-3 py-2 text-sm font-bold text-slate-700 hover:bg-white">
             Resim
             <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-action="image" class="hidden" multiple>
         </label>
     </div>
 
-    <div class="forum-media-drop-zone m-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500 transition">
+    <div class="forum-media-drop-zone m-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-xs font-bold leading-5 text-slate-500 transition md:text-sm">
         Gorselleri buraya surukleyin veya Resim dugmesiyle secin. JPG, PNG, WEBP, GIF; dosya basina {{ $mediaLimitMb }} MB, en fazla 8 gorsel.
     </div>
 
@@ -46,7 +46,7 @@
     <div
         id="{{ $editorId }}"
         contenteditable="true"
-        class="forum-editor-surface prose min-h-44 max-w-none p-4 text-sm leading-7 text-slate-800 outline-none"
+        class="forum-editor-surface prose min-h-52 max-w-none p-4 text-base leading-7 text-slate-800 outline-none md:min-h-44 md:text-sm"
         data-placeholder="{{ $placeholder ?? 'Iceriginizi yazin...' }}"
     >{!! $initialValue !!}</div>
 
@@ -86,6 +86,17 @@
             background: #fff1f2;
             border-color: #ef4444;
             color: #b91c1c;
+        }
+
+        .forum-editor-toolbar {
+            scrollbar-width: thin;
+        }
+
+        @media (max-width: 767px) {
+            .forum-editor-toolbar button,
+            .forum-editor-toolbar label {
+                min-height: 40px;
+            }
         }
     </style>
 

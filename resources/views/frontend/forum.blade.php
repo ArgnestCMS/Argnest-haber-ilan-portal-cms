@@ -99,13 +99,13 @@
 @section('content')
 
 <section class="bg-slate-950 text-white">
-    <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-[1.4fr_0.8fr] lg:items-center">
+    <div class="mx-auto grid max-w-7xl gap-6 px-4 py-8 md:py-12 lg:grid-cols-[1.4fr_0.8fr] lg:items-center">
         <div>
             <div class="mb-4 inline-flex items-center rounded-full border border-red-400/40 bg-red-500/10 px-4 py-2 text-xs font-black uppercase tracking-wide text-red-200">
                 Topluluk Merkezi
             </div>
 
-            <h1 class="max-w-3xl text-4xl font-black leading-tight md:text-5xl">
+            <h1 class="max-w-3xl text-3xl font-black leading-tight md:text-5xl">
                 {{ $forumBaseTitle }}
             </h1>
 
@@ -133,18 +133,18 @@
                 </a>
             </div>
 
-            <div class="mt-8 grid max-w-2xl grid-cols-3 gap-3">
-                <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div class="mt-6 grid max-w-2xl grid-cols-3 gap-2 md:mt-8 md:gap-3">
+                <div class="rounded-xl border border-white/10 bg-white/5 p-3 md:p-4">
                     <div class="text-2xl font-black">{{ $forumCategories->sum('topics_count') }}</div>
                     <div class="mt-1 text-xs font-bold text-slate-300">Konu</div>
                 </div>
 
-                <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="rounded-xl border border-white/10 bg-white/5 p-3 md:p-4">
                     <div class="text-2xl font-black">{{ $forumCategories->sum('solved_topics_count') }}</div>
                     <div class="mt-1 text-xs font-bold text-slate-300">Çözüldü</div>
                 </div>
 
-                <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="rounded-xl border border-white/10 bg-white/5 p-3 md:p-4">
                     <div class="text-2xl font-black">{{ $onlineForumUsersCount }}</div>
                     <div class="mt-1 text-xs font-bold text-slate-300">Online Üye</div>
                 </div>
@@ -169,8 +169,8 @@
     </div>
 </section>
 
-<section class="mx-auto max-w-7xl px-4 pt-10">
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+<section class="mx-auto max-w-7xl px-3 pt-6 md:px-4 md:pt-10">
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h2 class="text-2xl font-black text-slate-950">Forum Kesfi</h2>
@@ -182,11 +182,11 @@
                     type="search"
                     name="q"
                     value="{{ request('q') }}"
-                    class="rounded-lg border-slate-300 text-sm"
+                    class="rounded-lg border-slate-300 py-3 text-base md:text-sm"
                     placeholder="Forumda ara..."
                 >
 
-                <select name="category" class="rounded-lg border-slate-300 text-sm">
+                <select name="category" class="rounded-lg border-slate-300 py-3 text-base md:text-sm">
                     <option value="">Tum kategoriler</option>
                     @foreach($forumCategories as $category)
                         <option value="{{ $category->id }}" @selected((string) ($selectedCategory?->id ?? request('category')) === (string) $category->id)>
@@ -195,7 +195,7 @@
                     @endforeach
                 </select>
 
-                <select name="filter" class="rounded-lg border-slate-300 text-sm">
+                <select name="filter" class="rounded-lg border-slate-300 py-3 text-base md:text-sm">
                     <option value="">Yeni ve sabit</option>
                     <option value="trend" @selected(request('filter') === 'trend')>Trend</option>
                     <option value="solved" @selected(request('filter') === 'solved')>Cozulmus</option>
@@ -233,7 +233,7 @@
 
         <div class="mt-6 overflow-hidden rounded-xl border border-slate-200">
             @forelse($discoveryTopics as $topic)
-                <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block border-b border-slate-100 p-5 transition last:border-b-0 hover:bg-slate-50">
+                <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block border-b border-slate-100 p-4 transition last:border-b-0 hover:bg-slate-50 md:p-5">
                     <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
@@ -262,7 +262,7 @@
                             @endif
                         </div>
 
-                        <div class="flex flex-wrap gap-4 text-sm font-bold text-slate-500 lg:justify-end">
+                        <div class="grid grid-cols-2 gap-2 text-xs font-bold text-slate-500 sm:flex sm:flex-wrap sm:gap-4 sm:text-sm lg:justify-end">
                             <span>{{ $topic->posts_count }} cevap</span>
                             <span>{{ $topic->likes_count }} begeni</span>
                             <span>{{ number_format($topic->views) }} goruntulenme</span>
@@ -283,7 +283,7 @@
     </div>
 </section>
 
-<section class="mx-auto grid max-w-7xl gap-6 px-4 pt-10 lg:grid-cols-[1fr_380px]">
+<section class="mx-auto grid max-w-7xl gap-6 px-3 pt-6 md:px-4 md:pt-10 lg:grid-cols-[1fr_380px]">
     <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="mb-5 flex items-center justify-between gap-4">
             <div>
@@ -424,7 +424,7 @@
     </aside>
 </section>
 
-<section class="mx-auto max-w-7xl px-4 pt-10">
+<section class="mx-auto max-w-7xl px-3 pt-6 md:px-4 md:pt-10">
     @if(session('success'))
         <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800">
             {{ session('success') }}
@@ -439,7 +439,7 @@
 
     @if($siteSetting?->forum_enabled)
         @auth
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
                 <div class="mb-5">
                     <h2 class="text-2xl font-black text-slate-950">Yeni Konu Aç</h2>
                     <p class="mt-1 text-sm text-slate-600">Konular moderatör onayından sonra forumda yayınlanır.</p>
@@ -531,7 +531,7 @@
     @endif
 </section>
 
-<section id="forum-kategorileri" class="mx-auto max-w-7xl px-4 py-10">
+<section id="forum-kategorileri" class="mx-auto max-w-7xl px-3 py-8 md:px-4 md:py-10">
     <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         @forelse($forumCategories as $category)
             <a href="{{ route('forum.categories.show', $category->slug) }}" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
@@ -552,7 +552,7 @@
     </div>
 </section>
 
-<section class="mx-auto max-w-7xl px-4 pb-12">
+<section class="mx-auto max-w-7xl px-3 pb-12 md:px-4">
     <div class="mb-5 flex items-center justify-between gap-4">
         <div>
             <h2 class="text-2xl font-black text-slate-950">Son Forum Konulari</h2>
@@ -562,7 +562,7 @@
 
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         @forelse($latestForumTopics as $topic)
-            <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block border-b border-slate-100 p-5 transition last:border-b-0 hover:bg-slate-50">
+            <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block border-b border-slate-100 p-4 transition last:border-b-0 hover:bg-slate-50 md:p-5">
                 <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
@@ -592,7 +592,7 @@
                     </p>
                 </div>
 
-                <div class="flex gap-4 text-sm font-bold text-slate-500">
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold text-slate-500 sm:flex sm:flex-wrap sm:gap-4 sm:text-sm">
                     <span>{{ $topic->likes_count }} beğeni</span>
                     <span>{{ $topic->bookmarks_count }} favori</span>
                     <span>{{ $topic->posts_count }} cevap</span>

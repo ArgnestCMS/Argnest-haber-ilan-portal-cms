@@ -29,6 +29,22 @@
     [x-cloak] {
         display: none !important;
     }
+
+    @media (max-width: 767px) {
+        .mobile-chat-shell {
+            padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .mobile-chat-list {
+            height: min(58vh, 520px);
+        }
+
+        .mobile-chat-composer {
+            position: sticky;
+            bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+            z-index: 20;
+        }
+    }
 </style>
 
 <section
@@ -60,10 +76,10 @@
         authUserId: @js(auth()->id()),
     })"
     x-init="init()"
-    class="mx-auto grid max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[1fr_340px]"
+    class="mobile-chat-shell mx-auto grid max-w-7xl gap-5 px-3 py-6 md:px-4 md:py-10 lg:grid-cols-[1fr_340px]"
 >
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-950 px-6 py-5 text-white">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-950 px-4 py-4 text-white md:px-6 md:py-5">
             <div>
                 <h1 class="text-2xl font-black">Canlı Sohbet</h1>
                 <p class="mt-1 text-sm text-slate-300">Polling tabanlı topluluk sohbeti</p>
@@ -74,7 +90,7 @@
             </span>
         </div>
 
-        <div class="h-[520px] overflow-y-auto bg-slate-50 p-6">
+        <div class="mobile-chat-list h-[520px] overflow-y-auto bg-slate-50 p-3 md:p-6">
             <template x-if="messages.length === 0">
                 <div class="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white text-center">
                     <div>
@@ -121,22 +137,22 @@
             </div>
         </div>
 
-        <div class="border-t border-slate-200 bg-white p-4">
+        <div class="mobile-chat-composer border-t border-slate-200 bg-white p-3 md:p-4">
             @if($siteSetting?->live_chat_enabled)
                 @auth
                     <form @submit.prevent="send()" class="space-y-3">
-                        <div class="flex gap-3">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:gap-3">
                             <input
                                 type="text"
                                 x-model="draft"
                                 @input="notifyTyping()"
                                 maxlength="500"
                                 placeholder="Mesajınızı yazın..."
-                                class="min-w-0 flex-1 rounded-lg border-slate-300 text-sm"
+                                class="min-w-0 flex-1 rounded-lg border-slate-300 py-3 text-base md:text-sm"
                             >
                             <button
                                 type="submit"
-                                class="rounded-lg bg-red-600 px-5 py-2 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-60"
+                                class="rounded-lg bg-red-600 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-60 sm:py-2"
                                 :disabled="sending || draft.trim().length < 2"
                             >
                                 Gönder
@@ -158,7 +174,7 @@
         </div>
     </div>
 
-    <aside class="space-y-5">
+    <aside class="space-y-5 lg:order-none">
         <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex items-center justify-between gap-3">
                 <h2 class="text-lg font-black text-slate-950">Online Kullanıcılar</h2>

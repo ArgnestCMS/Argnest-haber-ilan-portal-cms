@@ -5,7 +5,7 @@
 @section('robots', 'noindex, nofollow')
 
 @section('content')
-<section class="mx-auto max-w-5xl px-4 py-8">
+<section class="mx-auto max-w-5xl px-3 py-6 md:px-4 md:py-8">
     @if(session('success'))
         <div class="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-800">
             {{ session('success') }}
@@ -29,12 +29,12 @@
         </a>
     </div>
 
-    <form method="GET" action="{{ route('messages.index') }}" class="mb-5 flex gap-2">
+    <form method="GET" action="{{ route('messages.index') }}" class="mb-5 flex flex-col gap-2 sm:flex-row">
         <input
             type="search"
             name="q"
             value="{{ $search }}"
-            class="min-w-0 flex-1 rounded-xl border-slate-300 text-sm focus:border-red-500 focus:ring-red-500"
+            class="min-w-0 flex-1 rounded-xl border-slate-300 py-3 text-base focus:border-red-500 focus:ring-red-500 md:text-sm"
             placeholder="Mesajlarda veya kullanici adinda ara..."
         >
         <button class="rounded-xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-red-700">
@@ -59,7 +59,7 @@
                     };
                 @endphp
 
-                <a href="{{ route('messages.show', $conversation) }}" class="flex flex-col gap-4 p-5 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                <a href="{{ route('messages.show', $conversation) }}" class="flex flex-col gap-4 p-4 transition hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between md:p-5">
                     <div class="flex min-w-0 items-center gap-4">
                         <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950 text-xl font-black text-white">
                             @if($otherUser?->avatar)
