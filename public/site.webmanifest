@@ -1,0 +1,42 @@
+{
+    "name": "ilanhaber.net",
+    "short_name": "Ilan Haber",
+    "description": "Guncel haberler, kamu ilanlari ve topluluk forumu.",
+    "start_url": "/?source=pwa",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#0f172a",
+    "theme_color": "#0878c9",
+    "lang": "tr",
+    "dir": "ltr",
+    "categories": ["news", "productivity", "social"],
+    "icons": [
+        {
+            "src": "/pwa/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/pwa/maskable-icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Forum",
+            "short_name": "Forum",
+            "url": "/forum",
+            "description": "Topluluk konularini ac"
+        },
+        {
+            "name": "Bildirimler",
+            "short_name": "Bildirimler",
+            "url": "/bildirimler",
+            "description": "Bildirim merkezini ac"
+        }
+    ]
+}

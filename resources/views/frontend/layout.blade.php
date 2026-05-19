@@ -52,6 +52,11 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#0878c9">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ $siteSetting?->site_name ?? 'ilanhaber.net' }}">
 
     <title>{{ $metaTitle }}</title>
 
@@ -76,6 +81,8 @@
 
     <link rel="icon" type="image/png"
           href="{{ $siteSetting?->favicon ? asset('storage/' . $siteSetting->favicon) : asset('favicon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/icon.svg') }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -812,6 +819,40 @@
     @yield('content')
 </main>
 
+<div
+    id="pwa-install-banner"
+    class="fixed inset-x-4 bottom-4 z-[9998] hidden rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl md:left-auto md:w-96"
+>
+    <div class="text-sm font-black">Uygulama olarak yukle</div>
+    <p class="mt-1 text-xs font-bold leading-5 text-slate-500">ilanhaber.net'i mobil cihazinizda daha hizli acabilirsiniz.</p>
+    <div class="mt-3 flex gap-2">
+        <button type="button" data-pwa-install class="rounded-lg bg-red-600 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700">
+            Yukle
+        </button>
+        <button type="button" data-pwa-dismiss class="rounded-lg bg-slate-100 px-4 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-200">
+            Daha sonra
+        </button>
+    </div>
+</div>
+
+@auth
+    <div
+        id="pwa-notification-banner"
+        class="fixed inset-x-4 bottom-4 z-[9997] hidden rounded-2xl border border-blue-100 bg-blue-50 p-4 text-blue-950 shadow-2xl md:left-auto md:w-96"
+    >
+        <div class="text-sm font-black">Bildirimlere hazir olun</div>
+        <p class="mt-1 text-xs font-bold leading-5 text-blue-800/80">Anlik bildirim altyapisi hazirlandiginda tarayici izniniz kullanilabilecek.</p>
+        <div class="mt-3 flex gap-2">
+            <button type="button" data-pwa-notification-enable class="rounded-lg bg-blue-700 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-800">
+                Izin ver
+            </button>
+            <button type="button" data-pwa-notification-dismiss class="rounded-lg bg-white px-4 py-2 text-xs font-black text-blue-800 transition hover:bg-blue-100">
+                Kapat
+            </button>
+        </div>
+    </div>
+@endauth
+
 <footer class="bg-slate-900 text-white mt-12">
     <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
 
@@ -860,6 +901,69 @@
 @if($siteSetting?->footer_scripts)
     {!! $siteSetting->footer_scripts !!}
 @endif
+<script>
+(() => {
+    if ('serviceWorker' in navigator && !window.location.pathname.startsWith('/admin')) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+        });
+    }
+
+    let deferredInstallPrompt = null;
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installButton = installBanner?.querySelector('[data-pwa-install]');
+    const installDismiss = installBanner?.querySelector('[data-pwa-dismiss]');
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        if (localStorage.getItem('pwa-install-dismissed') === '1') {
+            return;
+        }
+
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installBanner?.classList.remove('hidden');
+    });
+
+    installButton?.addEventListener('click', async () => {
+        if (!deferredInstallPrompt) {
+            return;
+        }
+
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice.catch(() => null);
+        deferredInstallPrompt = null;
+        installBanner?.classList.add('hidden');
+    });
+
+    installDismiss?.addEventListener('click', () => {
+        localStorage.setItem('pwa-install-dismissed', '1');
+        installBanner?.classList.add('hidden');
+    });
+
+    const notificationBanner = document.getElementById('pwa-notification-banner');
+    const notificationEnable = notificationBanner?.querySelector('[data-pwa-notification-enable]');
+    const notificationDismiss = notificationBanner?.querySelector('[data-pwa-notification-dismiss]');
+
+    if (
+        notificationBanner
+        && 'Notification' in window
+        && Notification.permission === 'default'
+        && localStorage.getItem('pwa-notification-dismissed') !== '1'
+    ) {
+        setTimeout(() => notificationBanner.classList.remove('hidden'), 2500);
+    }
+
+    notificationEnable?.addEventListener('click', async () => {
+        await Notification.requestPermission().catch(() => null);
+        notificationBanner?.classList.add('hidden');
+    });
+
+    notificationDismiss?.addEventListener('click', () => {
+        localStorage.setItem('pwa-notification-dismissed', '1');
+        notificationBanner?.classList.add('hidden');
+    });
+})();
+</script>
 <script>
 function notificationSystem(initialCount = 0) {
     return {
