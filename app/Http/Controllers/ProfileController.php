@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\LiveChatMessage;
 use App\Support\ForumGamification;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
@@ -96,6 +97,7 @@ class ProfileController extends Controller
     public function show(User $user)
     {
         $user->load('forumBadges');
+        $user->loadCount(['followers', 'following']);
 
         $forumStats = [
             'topics' => $user->forumTopics()->where('status', 'published')->count(),
@@ -110,8 +112,92 @@ class ProfileController extends Controller
             ->take(5)
             ->get();
 
+        $latestForumPosts = $user->forumPosts()
+            ->with('topic')
+            ->where('status', 'approved')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $activityFeed = $this->activityFeedForUser($user);
+
+        $followersPreview = $user->followers()
+            ->with('forumBadges')
+            ->latest('user_follows.created_at')
+            ->take(6)
+            ->get();
+
+        $followingPreview = $user->following()
+            ->with('forumBadges')
+            ->latest('user_follows.created_at')
+            ->take(6)
+            ->get();
+
+        $isFollowing = auth()->check()
+            ? auth()->user()->isFollowing($user)
+            : false;
+
         $levelProgress = ForumGamification::progressToNextLevel($user);
 
-        return view('frontend.profile', compact('user', 'forumStats', 'latestForumTopics', 'levelProgress'));
+        return view('frontend.profile', compact(
+            'user',
+            'forumStats',
+            'latestForumTopics',
+            'latestForumPosts',
+            'activityFeed',
+            'followersPreview',
+            'followingPreview',
+            'isFollowing',
+            'levelProgress'
+        ));
+    }
+
+    private function activityFeedForUser(User $user)
+    {
+        return collect()
+            ->merge($user->forumTopics()
+                ->where('status', 'published')
+                ->latest()
+                ->take(6)
+                ->get()
+                ->map(fn ($topic) => [
+                    'title' => 'Forum konusu acti',
+                    'message' => $topic->title,
+                    'source' => 'forum',
+                    'relative_time' => $topic->created_at?->diffForHumans(),
+                    'time' => $topic->created_at,
+                    'url' => route('forum.topics.show', $topic->slug),
+                ]))
+            ->merge($user->forumPosts()
+                ->with('topic')
+                ->where('status', 'approved')
+                ->whereHas('topic', fn ($query) => $query->where('status', 'published'))
+                ->latest()
+                ->take(6)
+                ->get()
+                ->map(fn ($post) => [
+                    'title' => 'Forum cevabi yazdi',
+                    'message' => $post->topic?->title ?? 'Forum konusu',
+                    'source' => 'forum',
+                    'relative_time' => $post->created_at?->diffForHumans(),
+                    'time' => $post->created_at,
+                    'url' => $post->topic ? route('forum.topics.show', $post->topic->slug) : '#',
+                ]))
+            ->merge(LiveChatMessage::approved()
+                ->where('user_id', $user->id)
+                ->latest()
+                ->take(6)
+                ->get()
+                ->map(fn ($message) => [
+                    'title' => 'Canli sohbete katildi',
+                    'message' => str($message->message)->limit(120)->toString(),
+                    'source' => 'chat',
+                    'relative_time' => $message->created_at?->diffForHumans(),
+                    'time' => $message->created_at,
+                    'url' => route('live-chat.index'),
+                ]))
+            ->sortByDesc('time')
+            ->take(12)
+            ->values();
     }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommunityReportController;
+use App\Http\Controllers\UserFollowController;
 
 /*
 |--------------------------------------------------------------------------
@@ -147,6 +148,9 @@ Route::get('/bildirimler/latest', [UserNotificationController::class, 'latest'])
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+
+    Route::post('/profil/{user}/takip', [UserFollowController::class, 'toggle'])
+        ->name('users.follow.toggle');
 
     /*
     |--------------------------------------------------------------------------

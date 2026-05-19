@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ForumPost;
 use App\Models\ForumQuest;
 use App\Models\ForumTopic;
+use App\Models\LiveChatMessage;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Support\ForumGamification;
@@ -16,6 +17,7 @@ class ForumDashboardController extends Controller
     {
         $user = auth()->user();
         $user->load('forumBadges');
+        $user->loadCount(['followers', 'following']);
         ForumGamification::ensureDefaultQuests();
 
         $topicRelations = ['category', 'tags'];
@@ -133,6 +135,16 @@ class ForumDashboardController extends Controller
             ->take(10)
             ->get(['id', 'name', 'forum_reputation', 'forum_xp', 'forum_level']);
 
+        $followingUsers = $user->following()
+            ->with('forumBadges')
+            ->withCount(['followers', 'following'])
+            ->latest('user_follows.created_at')
+            ->take(8)
+            ->get();
+
+        $followingIds = $followingUsers->pluck('id');
+        $followingActivities = $this->followingActivityFeed($followingIds);
+
         return view('frontend.forum-dashboard', [
             'siteSetting' => SiteSetting::query()->first(),
             'user' => $user,
@@ -149,6 +161,67 @@ class ForumDashboardController extends Controller
             'todayQuests' => $todayQuests,
             'recentReputationEvents' => $recentReputationEvents,
             'leaderboard' => $leaderboard,
+            'followingUsers' => $followingUsers,
+            'followingActivities' => $followingActivities,
         ]);
+    }
+
+    private function followingActivityFeed($followingIds)
+    {
+        if ($followingIds->isEmpty()) {
+            return collect();
+        }
+
+        return collect()
+            ->merge(ForumTopic::published()
+                ->with('user:id,name,avatar,forum_reputation,forum_level')
+                ->whereIn('user_id', $followingIds)
+                ->latest()
+                ->take(8)
+                ->get()
+                ->map(fn (ForumTopic $topic) => [
+                    'user' => $topic->user?->name ?? 'Sistem',
+                    'title' => 'Forum konusu acti',
+                    'message' => $topic->title,
+                    'source' => 'forum',
+                    'relative_time' => $topic->created_at?->diffForHumans(),
+                    'time' => $topic->created_at,
+                    'url' => route('forum.topics.show', $topic->slug),
+                ]))
+            ->merge(ForumPost::query()
+                ->with(['user:id,name,avatar,forum_reputation,forum_level', 'topic'])
+                ->whereIn('user_id', $followingIds)
+                ->where('status', 'approved')
+                ->whereHas('topic', fn ($query) => $query->where('status', 'published'))
+                ->latest()
+                ->take(8)
+                ->get()
+                ->map(fn (ForumPost $post) => [
+                    'user' => $post->user?->name ?? 'Sistem',
+                    'title' => 'Forum cevabi yazdi',
+                    'message' => $post->topic?->title ?? 'Forum konusu',
+                    'source' => 'forum',
+                    'relative_time' => $post->created_at?->diffForHumans(),
+                    'time' => $post->created_at,
+                    'url' => $post->topic ? route('forum.topics.show', $post->topic->slug) : '#',
+                ]))
+            ->merge(LiveChatMessage::approved()
+                ->with('user:id,name,avatar,forum_reputation,forum_level')
+                ->whereIn('user_id', $followingIds)
+                ->latest()
+                ->take(8)
+                ->get()
+                ->map(fn (LiveChatMessage $message) => [
+                    'user' => $message->user?->name ?? 'Sistem',
+                    'title' => 'Canli sohbete katildi',
+                    'message' => str($message->message)->limit(120)->toString(),
+                    'source' => 'chat',
+                    'relative_time' => $message->created_at?->diffForHumans(),
+                    'time' => $message->created_at,
+                    'url' => route('live-chat.index'),
+                ]))
+            ->sortByDesc('time')
+            ->take(12)
+            ->values();
     }
 }

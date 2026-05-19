@@ -67,6 +67,16 @@
                 <div class="text-xs font-bold uppercase text-slate-300">Begendiklerim</div>
                 <div class="mt-2 text-3xl font-black">{{ $stats['likes'] }}</div>
             </div>
+
+            <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="text-xs font-bold uppercase text-slate-300">Takipciler</div>
+                <div class="mt-2 text-3xl font-black">{{ $user->followers_count }}</div>
+            </div>
+
+            <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="text-xs font-bold uppercase text-slate-300">Takip</div>
+                <div class="mt-2 text-3xl font-black">{{ $user->following_count }}</div>
+            </div>
         </div>
 
         <div class="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
@@ -239,6 +249,59 @@
                             <span class="text-sm font-bold text-slate-500">Henuz rozet kazanilmadi.</span>
                         @endforelse
                     </div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-black text-slate-950">Takip Akisi</h2>
+                <p class="mt-1 text-sm text-slate-600">Takip ettiginiz kullanicilarin public aktiviteleri.</p>
+
+                <div class="mt-4 divide-y divide-slate-100">
+                    @forelse($followingActivities as $activity)
+                        <a href="{{ $activity['url'] ?: '#' }}" class="block py-3">
+                            <div class="text-sm font-black text-slate-900">{{ $activity['title'] }}</div>
+                            @if($activity['message'])
+                                <div class="mt-1 text-sm text-slate-600">{{ $activity['message'] }}</div>
+                            @endif
+                            <div class="mt-1 text-xs font-bold text-slate-500">
+                                {{ $activity['user'] }} · {{ $activity['source'] }} · {{ $activity['relative_time'] }}
+                            </div>
+                        </a>
+                    @empty
+                        <div class="py-4 text-sm font-bold text-slate-500">
+                            Takip ettiginiz kullanicilardan henuz public aktivite yok.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h2 class="text-xl font-black text-slate-950">Takip Ettiklerim</h2>
+
+                <div class="mt-4 space-y-3">
+                    @forelse($followingUsers as $followed)
+                        <a href="{{ url('/profil/' . $followed->id) }}" class="block rounded-xl bg-slate-50 p-4 transition hover:bg-red-50">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-slate-950 text-sm font-black text-white">
+                                    @if($followed->avatar)
+                                        <img src="{{ asset('storage/' . $followed->avatar) }}" class="h-full w-full object-cover" alt="{{ $followed->name }}">
+                                    @else
+                                        {{ str($followed->name)->substr(0, 1)->upper() }}
+                                    @endif
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="truncate text-sm font-black text-slate-900">{{ $followed->name }}</div>
+                                    <div class="text-xs font-bold text-slate-500">
+                                        Seviye {{ $followed->forum_level ?? 1 }} · {{ $followed->forum_reputation ?? 0 }} rep
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="text-sm font-bold text-slate-500">
+                            Henuz kimseyi takip etmiyorsunuz.
+                        </div>
+                    @endforelse
                 </div>
             </div>
 

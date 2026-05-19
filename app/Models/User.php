@@ -199,6 +199,29 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(CommunityReport::class);
     }
 
+    public function following(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'follower_id', 'followed_id')
+            ->withTimestamps();
+    }
+
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_follows', 'followed_id', 'follower_id')
+            ->withTimestamps();
+    }
+
+    public function isFollowing(User $user): bool
+    {
+        if ($this->id === $user->id) {
+            return false;
+        }
+
+        return $this->following()
+            ->whereKey($user->id)
+            ->exists();
+    }
+
     public function forumQuests(): BelongsToMany
     {
         return $this->belongsToMany(ForumQuest::class, 'forum_quest_user')

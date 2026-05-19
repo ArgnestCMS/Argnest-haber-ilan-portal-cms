@@ -262,7 +262,11 @@
                 </div>
 
                 <div class="lg:mt-3">
-                    <div class="font-black text-slate-950">{{ $topic->user?->name ?? 'Sistem' }}</div>
+                    @if($topic->user)
+                        <a href="{{ url('/profil/' . $topic->user->id) }}" class="font-black text-slate-950 transition hover:text-red-700">{{ $topic->user->name }}</a>
+                    @else
+                        <div class="font-black text-slate-950">Sistem</div>
+                    @endif
                     <div class="text-xs font-bold text-slate-500">Konu sahibi</div>
                 </div>
             </div>
@@ -272,6 +276,10 @@
                     {{ $topic->user?->isOnline() ? 'Online' : 'Offline' }}
                 </div>
                 <div>İtibar: {{ $topic->user?->forum_reputation ?? 0 }}</div>
+                <div>Seviye: {{ $topic->user?->forum_level ?? 1 }} / {{ number_format($topic->user?->forum_xp ?? 0) }} XP</div>
+                @if($topic->user)
+                    <div>Takipci: {{ $topic->user->followers()->count() }}</div>
+                @endif
                 <div>Katılım: {{ $topic->user?->created_at?->format('d.m.Y') ?? '-' }}</div>
                 <div>Konu tarihi: {{ $topic->created_at?->format('d.m.Y H:i') }}</div>
             </div>
@@ -307,7 +315,11 @@
                             </div>
 
                             <div class="lg:mt-3">
-                                <div class="font-black text-slate-950">{{ $post->user?->name ?? 'Sistem' }}</div>
+                                @if($post->user)
+                                    <a href="{{ url('/profil/' . $post->user->id) }}" class="font-black text-slate-950 transition hover:text-red-700">{{ $post->user->name }}</a>
+                                @else
+                                    <div class="font-black text-slate-950">Sistem</div>
+                                @endif
                                 <div class="text-xs font-bold text-slate-500">Yanıtlayan</div>
                             </div>
                         </div>
@@ -317,6 +329,7 @@
                                 {{ $post->user?->isOnline() ? 'Online' : 'Offline' }}
                             </div>
                             <div class="mt-1">İtibar: {{ $post->user?->forum_reputation ?? 0 }}</div>
+                            <div class="mt-1">Seviye {{ $post->user?->forum_level ?? 1 }} · {{ number_format($post->user?->forum_xp ?? 0) }} XP</div>
                             {{ $post->created_at?->diffForHumans() }}
                         </div>
                     </aside>
