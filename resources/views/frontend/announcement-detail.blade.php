@@ -145,7 +145,7 @@
             {{-- ÜST REKLAM --}}
             @if(isset($topAd) && $topAd?->image)
 
-                <div class="mb-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mb-6 md:rounded-none md:p-3 md:shadow">
+                <div class="premium-ad-slot mb-4 flex justify-center p-2 md:mb-6 md:p-3">
                     <a href="{{ $topAd->url }}" target="_blank">
                         <img
                             src="{{ asset('storage/' . $topAd->image) }}"
@@ -156,24 +156,24 @@
 
             @endif
 
-            <article class="overflow-hidden rounded-2xl bg-white shadow md:rounded-none">
+            <article class="premium-article">
 
-                <div class="bg-gradient-to-r from-blue-700 to-slate-900 p-5 text-white md:p-8">
+                <div class="bg-gradient-to-r from-blue-700 via-slate-900 to-slate-950 p-5 text-white md:p-8">
 
                     <div class="text-sm text-white/80 mb-4">
                         <a href="/" class="hover:underline">Anasayfa</a> /
                         <a href="/ilanlar" class="hover:underline">İlanlar</a>
                     </div>
 
-                    <span class="bg-white text-blue-700 px-4 py-1 rounded text-sm font-bold">
+                    <span class="rounded-full bg-white px-4 py-1 text-sm font-black text-blue-700 shadow-sm">
                         İLAN
                     </span>
 
-                    <h1 class="mt-4 text-3xl font-extrabold leading-tight md:mt-5 md:text-5xl">
+                    <h1 class="mt-4 text-3xl font-black leading-tight md:mt-5 md:text-5xl">
                         {{ $announcement->title }}
                     </h1>
 
-                    <div class="flex flex-wrap gap-4 text-sm text-white/80 mt-5">
+                    <div class="mt-5 flex flex-wrap gap-4 text-sm font-bold text-white/80">
                         <span>📅 {{ $announcement->created_at->format('d.m.Y H:i') }}</span>
                         <span>👁️ {{ $announcement->views }} görüntülenme</span>
                     </div>
@@ -184,20 +184,20 @@
 
                     @if($announcement->summary)
 
-                        <div class="mb-6 border-l-4 border-blue-600 bg-blue-50 p-4 text-lg font-semibold md:mb-8 md:p-5 md:text-xl">
+                        <div class="mb-6 rounded-2xl border border-blue-100 border-l-4 border-l-blue-600 bg-blue-50 p-4 text-lg font-semibold md:mb-8 md:p-5 md:text-xl">
                             {{ $announcement->summary }}
                         </div>
 
                     @endif
 
-                    <div class="prose max-w-none text-[17px] leading-8 text-slate-800 md:prose-lg">
+                    <div class="premium-reading prose max-w-none md:prose-lg">
                         {!! $announcement->content !!}
                     </div>
 
                     <div class="mt-8 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:justify-between">
 
                         <a href="/ilanlar"
-                           class="bg-slate-800 text-white px-5 py-3 rounded font-semibold hover:bg-slate-700">
+                           class="rounded-full bg-slate-800 px-5 py-3 font-black text-white hover:bg-slate-700">
                             ← Tüm İlanlara Dön
                         </a>
 
@@ -231,7 +231,7 @@
 {{-- YORUM SİSTEMİ --}}
 @if($announcement->comments_enabled)
 
-    <div class="mt-4 rounded-2xl bg-white p-5 shadow md:mt-6 md:rounded-none md:p-8">
+    <div class="premium-card mt-4 p-5 md:mt-6 md:p-8">
 
         <div class="flex items-center justify-between mb-8">
 
@@ -454,7 +454,7 @@
 
 @endif
             {{-- İLAN ALTI REKLAM --}}
-            <div class="mt-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mt-6 md:rounded-none md:p-3 md:shadow">
+            <div class="premium-ad-slot mt-4 flex justify-center p-2 md:mt-6 md:p-3">
 
                 @if(isset($topAd) && $topAd?->image)
 
@@ -483,7 +483,7 @@
             <div class="sticky top-32 space-y-6">
 
                 {{-- ÇOK GÖRÜNTÜLENEN İLANLAR --}}
-                <div class="rounded-2xl bg-white shadow md:rounded-none">
+                <div class="premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4">
                         <h2 class="text-2xl font-bold">Çok Görüntülenen İlanlar</h2>
@@ -535,7 +535,7 @@
                 @endif
 
                 {{-- SON İLANLAR --}}
-                <div class="rounded-2xl bg-white shadow md:rounded-none">
+                <div class="premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4">
                         <h2 class="text-2xl font-bold">Son İlanlar</h2>

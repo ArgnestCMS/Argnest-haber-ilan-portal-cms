@@ -31,6 +31,7 @@
 
 @section('meta_image', asset('default-og.jpg'))
 
+{{-- Category-aware meta sections above are the canonical SEO source for this listing page.
 @section(
     'meta_description',
     'Türkiye ve dünyadan güncel haberler, son dakika gelişmeleri, kamu gündemi ve en yeni haber başlıkları ilanhaber.net üzerinde.'
@@ -44,6 +45,7 @@
 @section('canonical', url('/haberler'))
 
 @section('meta_image', asset('default-og.jpg'))
+--}}
 
 @section('content')
 
@@ -58,8 +60,8 @@
 
         {{-- SOL REKLAM --}}
         <aside class="hidden 2xl:block 2xl:col-span-2">
-            <div class="sticky top-6 bg-white border border-slate-200 shadow-sm">
-                <div class="bg-slate-900 text-white text-xs font-bold px-3 py-2">
+            <div class="premium-ad-slot sticky top-6">
+                <div class="premium-ad-label">
                     REKLAM
                 </div>
 
@@ -73,7 +75,7 @@
         <div class="col-span-12 xl:col-span-8 2xl:col-span-8">
 
 {{-- KATEGORİ BAR --}}
-<div class="mb-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:mb-6 md:rounded-none md:p-4">
+<div class="premium-page-shell mb-4 p-3 md:mb-6 md:p-4">
 
     <form action="{{ route('search') }}" method="GET" class="mb-3 flex md:hidden">
         <input
@@ -88,42 +90,42 @@
     <div class="flex items-center gap-2 overflow-x-auto pb-1 md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
 
         <a href="/haberler"
-           class="shrink-0 bg-slate-950 text-white px-5 py-2 rounded-full text-sm font-black hover:bg-slate-800 transition">
+           class="premium-chip premium-chip-active">
             Tümü
         </a>
 
         <a href="/kategori/gundem"
-           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="premium-chip">
             Gündem
         </a>
 
         <a href="/kategori/ekonomi"
-           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="premium-chip">
             Ekonomi
         </a>
 
         <a href="/kategori/teknoloji"
-           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="premium-chip">
             Teknoloji
         </a>
 
         <a href="/kategori/spor"
-           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="premium-chip">
             Spor
         </a>
 
         <a href="/kategori/dunya"
-           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="premium-chip">
             Dünya
         </a>
 
         <a href="/kategori/kamu"
-           class="shrink-0 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-700 px-5 py-2 rounded-full text-sm font-bold transition">
+           class="premium-chip">
             Kamu
         </a>
 
         <a href="/kategori/son-dakika"
-           class="shrink-0 bg-red-600 text-white px-5 py-2 rounded-full text-sm font-black hover:bg-red-700 transition">
+           class="premium-chip border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 hover:text-white">
             Son Dakika
         </a>
 
@@ -163,17 +165,17 @@
                 @endphp
 
                 <a href="/haber/{{ $featuredNews->slug }}"
-                   class="mb-6 block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:mb-8 md:rounded-none">
+                   class="premium-card premium-card-hover mb-6 block overflow-hidden md:mb-8">
 
                     <div class="grid lg:grid-cols-2">
 
-                        <div class="relative h-56 overflow-hidden bg-slate-200 md:h-72">
+                        <div class="premium-media relative h-56 md:h-72">
                             @if($featuredImage)
                                 <img src="{{ asset('storage/' . $featuredImage) }}"
                                      class="w-full h-full object-cover hover:scale-105 transition duration-700">
                             @endif
 
-                            <div class="absolute top-4 left-4 bg-red-600 text-white text-xs font-black px-4 py-2 rounded">
+                            <div class="absolute top-4 left-4 rounded-full bg-red-600 px-4 py-2 text-xs font-black text-white shadow-lg">
                                 MANŞET
                             </div>
                         </div>
@@ -210,7 +212,7 @@
             @endif
 
             {{-- ÜST/ARA REKLAM --}}
-            <div class="mb-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mb-8 md:rounded-none">
+            <div class="premium-ad-slot mb-6 md:mb-8">
                 <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-24">
                     Haber Liste Üst Reklam Alanı
                 </div>
@@ -218,7 +220,7 @@
 
             {{-- HABER LİSTESİ BAŞLIK --}}
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-black text-slate-950">
+                <h2 class="premium-section-heading">
                     Son Haberler
                 </h2>
 
@@ -239,19 +241,19 @@
                     @endphp
 
                     <a href="/haber/{{ $item->slug }}"
-                       class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:rounded-none">
+                       class="premium-card premium-card-hover group overflow-hidden">
 
-                        <div class="relative h-48 overflow-hidden bg-slate-200 md:h-52">
+                        <div class="premium-media relative h-48 md:h-52">
                             @if($imagePath)
                                 <img src="{{ asset('storage/' . $imagePath) }}"
                                      class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                             @endif
 
-                            <div class="absolute top-3 left-3 bg-blue-700 text-white text-xs font-bold px-3 py-1 rounded">
+                            <div class="absolute top-3 left-3 rounded-full bg-blue-700 px-3 py-1 text-xs font-black text-white shadow">
                                 HABER
                             </div>
 
-                            <div class="absolute bottom-3 right-3 bg-white/90 text-slate-700 text-xs font-bold px-3 py-1 rounded">
+                            <div class="absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm backdrop-blur">
                                 👁️ {{ $item->views }}
                             </div>
                         </div>
@@ -282,14 +284,14 @@
             </div>
 
             {{-- ALT REKLAM --}}
-            <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mt-8 md:rounded-none">
+            <div class="premium-ad-slot mt-6 md:mt-8">
                 <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-28">
                     Haber Liste Alt Reklam Alanı
                 </div>
             </div>
 
             {{-- PAGINATION --}}
-            <div class="mt-8">
+            <div class="premium-pagination mt-8">
                 {{ $news->links() }}
             </div>
 
@@ -301,7 +303,7 @@
     <div class="sticky top-6 space-y-6">
 
         {{-- TREND HABERLER --}}
-        <div class="bg-white border border-slate-200 shadow-sm">
+        <div class="premium-card overflow-hidden">
 
             <div class="bg-slate-950 text-white px-5 py-4 font-black text-lg">
                 🔥 Trend Haberler
@@ -339,7 +341,7 @@
         </div>
 
         {{-- REKLAM --}}
-        <div class="bg-white border border-slate-200 shadow-sm">
+        <div class="premium-ad-slot">
 
             <div class="bg-slate-900 text-white text-xs font-bold px-3 py-2">
                 SPONSORLU
@@ -352,7 +354,7 @@
         </div>
 
         {{-- ÇOK OKUNAN --}}
-        <div class="bg-white border border-slate-200 shadow-sm">
+        <div class="premium-card overflow-hidden">
 
             <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
                 👁️ Çok Okunanlar

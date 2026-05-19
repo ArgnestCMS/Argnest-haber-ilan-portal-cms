@@ -127,7 +127,7 @@
 
                     {{-- ÜST REKLAM --}}
                     @if(isset($topAd) && $topAd?->image)
-                        <div class="mb-4 flex justify-center rounded-2xl bg-white p-2 shadow-sm md:mb-6 md:rounded-none md:p-3 md:shadow">
+                        <div class="premium-ad-slot mb-4 flex justify-center p-2 md:mb-6 md:p-3">
                             <a href="{{ $topAd->url }}" target="_blank">
                                 <img src="{{ asset('storage/' . $topAd->image) }}" class="w-full max-w-[970px]">
                             </a>
@@ -135,13 +135,13 @@
                     @endif
 
                     {{-- HABER --}}
-                    <article class="overflow-hidden rounded-2xl bg-white shadow md:rounded-none">
+                    <article class="premium-article">
 
                         @if($imagePath)
 
                             <div class="relative">
 
-                                <img src="{{ asset('storage/' . $imagePath) }}" class="h-[300px] w-full object-cover md:h-[480px]">
+                                <img src="{{ asset('storage/' . $imagePath) }}" class="h-[320px] w-full object-cover md:h-[520px]">
 
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
 
@@ -153,7 +153,7 @@
                                         <a href="/haberler" class="hover:underline">Haberler</a>
                                     </div>
 
-                                    <h1 class="text-3xl font-extrabold leading-tight text-white md:text-5xl">
+                                    <h1 class="text-3xl font-black leading-tight text-white md:text-5xl">
                                         {{ $news->title }}
                                     </h1>
 
@@ -170,7 +170,7 @@
                                     <a href="/haberler" class="hover:underline">Haberler</a>
                                 </div>
 
-                                <h1 class="text-3xl font-extrabold leading-tight md:text-5xl">
+                                <h1 class="text-3xl font-black leading-tight md:text-5xl">
                                     {{ $news->title }}
                                 </h1>
                             </div>
@@ -180,7 +180,7 @@
                         <div class="p-5 md:p-8">
 
                             {{-- META --}}
-                            <div class="mb-5 flex flex-wrap items-center gap-3 border-b pb-5 text-xs text-slate-500 md:mb-6 md:gap-4 md:text-sm">
+                            <div class="mb-5 flex flex-wrap items-center gap-3 border-b border-slate-100 pb-5 text-xs font-bold text-slate-500 md:mb-6 md:gap-4 md:text-sm">
                                 <span>📅 {{ $news->created_at->format('d.m.Y H:i') }}</span>
                                 <span>👁️ {{ $news->views }} okunma</span>
                                 <span>✍️ Editör</span>
@@ -209,13 +209,13 @@
 
                             {{-- ÖZET --}}
                             @if($news->summary)
-                                <div class="mb-6 border-l-4 border-blue-600 bg-blue-50 p-4 text-lg font-semibold text-slate-800 md:mb-8 md:p-5 md:text-xl">
+                                <div class="mb-6 rounded-2xl border border-blue-100 border-l-4 border-l-blue-600 bg-blue-50 p-4 text-lg font-semibold text-slate-800 md:mb-8 md:p-5 md:text-xl">
                                     {{ $news->summary }}
                                 </div>
                             @endif
 
                             {{-- İÇERİK --}}
-                            <div class="prose max-w-none text-[17px] leading-8 text-slate-800 md:prose-lg">
+                            <div class="premium-reading prose max-w-none md:prose-lg">
                                 {!! $news->content !!}
                             </div>
 
@@ -223,7 +223,7 @@
                             <div class="mt-8 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
 
                                 <a href="/haberler"
-                                   class="bg-slate-800 text-white px-5 py-3 rounded font-semibold hover:bg-slate-700">
+                                   class="rounded-full bg-slate-800 px-5 py-3 font-black text-white hover:bg-slate-700">
                                     ← Tüm Haberlere Dön
                                 </a>
 
@@ -465,7 +465,7 @@
                 <aside class="col-span-12 lg:col-span-3 space-y-6">
 
                     {{-- SON HABERLER --}}
-                    <div class="rounded-2xl bg-white shadow md:rounded-none">
+                    <div class="premium-card overflow-hidden">
 
                         <div class="bg-slate-900 text-white px-5 py-4 font-black text-lg">
                             Son Haberler
@@ -513,7 +513,7 @@
                     </div>
 
                     {{-- TREND HABERLER --}}
-                    <div class="rounded-2xl bg-white shadow md:rounded-none">
+                    <div class="premium-card overflow-hidden">
 
                         <div class="bg-red-600 text-white px-5 py-4 font-black text-lg">
                             Trend Haberler
@@ -547,7 +547,7 @@
 
                     </div>
 {{-- SON YORUMLAR --}}
-<div class="rounded-2xl bg-white shadow md:rounded-none">
+<div class="premium-card overflow-hidden">
 
     <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
         Son Yorumlar
@@ -620,7 +620,7 @@
 
 </div>
                     {{-- REKLAM --}}
-                    <div class="rounded-2xl bg-white p-2 shadow md:rounded-none md:p-3">
+                    <div class="premium-ad-slot p-2 md:p-3">
                         <img src="https://dummyimage.com/336x280/cccccc/000000&text=REKLAM+ALANI" class="max-h-[160px] w-full object-cover md:max-h-none">
                     </div>
 

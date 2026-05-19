@@ -51,9 +51,9 @@
         {{-- SOL REKLAM --}}
         <aside class="hidden 2xl:block 2xl:col-span-2">
 
-            <div class="sticky top-6 bg-white border border-slate-200 shadow-sm">
+            <div class="premium-ad-slot sticky top-6">
 
-                <div class="bg-slate-900 text-white text-xs font-bold px-3 py-2">
+                <div class="premium-ad-label">
                     REKLAM
                 </div>
 
@@ -69,11 +69,11 @@
         <div class="col-span-12 2xl:col-span-8">
 
             {{-- BAŞLIK --}}
-            <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:mb-6 md:rounded-none md:p-7">
+            <div class="premium-page-shell mb-4 p-5 md:mb-6 md:p-7">
 
                 <div class="flex items-center gap-3 mb-3">
 
-                    <span class="bg-blue-700 text-white text-xs font-bold px-3 py-1 rounded">
+                    <span class="premium-kicker border-blue-200 bg-blue-50 text-blue-700">
                         KAMU İLANLARI
                     </span>
 
@@ -97,7 +97,7 @@
             @if($featuredAnnouncement)
 
                 <a href="/ilan/{{ $featuredAnnouncement->slug }}"
-                   class="mb-6 block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:mb-8 md:rounded-none">
+                   class="premium-card premium-card-hover mb-6 block overflow-hidden md:mb-8">
 
                     <div class="h-2 bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700"></div>
 
@@ -129,7 +129,7 @@
 
                         <div class="mt-5 grid gap-3 sm:grid-cols-3 md:mt-7 md:gap-4">
 
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-inner md:p-5">
 
                                 <div class="text-xs text-slate-500 mb-2">
                                     Yayın Tarihi
@@ -141,7 +141,7 @@
 
                             </div>
 
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-inner md:p-5">
 
                                 <div class="text-xs text-slate-500 mb-2">
                                     Görüntülenme
@@ -153,7 +153,7 @@
 
                             </div>
 
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-inner md:p-5">
 
                                 <div class="text-xs text-slate-500 mb-2">
                                     Durum
@@ -169,7 +169,7 @@
 
                         <div class="mt-7">
 
-                            <span class="inline-flex items-center gap-2 bg-blue-700 text-white px-6 py-3 font-black text-sm rounded-xl">
+                            <span class="inline-flex items-center gap-2 rounded-full bg-blue-700 px-6 py-3 text-sm font-black text-white shadow-sm">
                                 İlan Detayını Gör
                                 <span>→</span>
                             </span>
@@ -183,7 +183,7 @@
             @endif
 
             {{-- ÜST REKLAM --}}
-            <div class="mb-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mb-8 md:rounded-none">
+            <div class="premium-ad-slot mb-6 md:mb-8">
 
                 <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-24">
                     İlan Liste Üst Reklam Alanı
@@ -194,7 +194,7 @@
             {{-- BAŞLIK --}}
             <div class="mb-4 flex items-center justify-between md:mb-5">
 
-                <h2 class="text-2xl font-black text-slate-950 md:text-3xl">
+                <h2 class="premium-section-heading">
                     Son İlanlar
                 </h2>
 
@@ -210,7 +210,7 @@
                 @foreach ($listAnnouncements as $item)
 
                     <a href="/ilan/{{ $item->slug }}"
-                       class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-xl md:rounded-none">
+                       class="premium-card premium-card-hover group relative overflow-hidden">
 
                         {{-- ÜST ŞERİT --}}
                         <div class="h-1.5 bg-gradient-to-r from-blue-700 via-sky-500 to-blue-700"></div>
@@ -222,11 +222,11 @@
 
                                 <div class="flex flex-wrap items-center gap-2">
 
-                                    <span class="bg-blue-700 text-white px-3 py-1 text-xs font-black rounded">
+                                    <span class="rounded-full bg-blue-700 px-3 py-1 text-xs font-black text-white shadow-sm">
                                         İLAN
                                     </span>
 
-                                    <span class="bg-green-50 text-green-700 px-3 py-1 text-xs font-bold rounded border border-green-100">
+                                    <span class="rounded-full border border-green-100 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">
                                         Güncel
                                     </span>
 
@@ -261,7 +261,7 @@
                             {{-- BİLGİLER --}}
                             <div class="mt-4 grid grid-cols-2 gap-2 md:mt-5 md:gap-3">
 
-                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:p-4">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 shadow-inner md:p-4">
 
                                     <div class="text-xs text-slate-500 mb-1">
                                         Yayın Tarihi
@@ -273,7 +273,7 @@
 
                                 </div>
 
-                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:p-4">
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 shadow-inner md:p-4">
 
                                     <div class="text-xs text-slate-500 mb-1">
                                         Görüntülenme
@@ -310,7 +310,7 @@
             </div>
 
             {{-- ALT REKLAM --}}
-            <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white shadow-sm md:mt-8 md:rounded-none">
+            <div class="premium-ad-slot mt-6 md:mt-8">
 
                 <div class="flex h-20 items-center justify-center px-4 text-center text-sm text-slate-400 md:h-28">
                     İlan Liste Alt Reklam Alanı
@@ -319,7 +319,7 @@
             </div>
 
             {{-- PAGINATION --}}
-            <div class="mt-8">
+            <div class="premium-pagination mt-8">
                 {{ $announcements->links() }}
             </div>
 
@@ -331,7 +331,7 @@
     <div class="sticky top-6 space-y-6">
 
         {{-- POPÜLER İLANLAR --}}
-        <div class="bg-white border border-slate-200 shadow-sm">
+        <div class="premium-card overflow-hidden">
 
             <div class="bg-slate-950 text-white px-5 py-4 font-black text-lg">
                 🚀 Popüler İlanlar
@@ -369,7 +369,7 @@
         </div>
 
         {{-- REKLAM --}}
-        <div class="bg-white border border-slate-200 shadow-sm">
+        <div class="premium-ad-slot">
 
             <div class="bg-slate-900 text-white text-xs font-bold px-3 py-2">
                 SPONSORLU
@@ -382,7 +382,7 @@
         </div>
 
         {{-- SON EKLENENLER --}}
-        <div class="bg-white border border-slate-200 shadow-sm">
+        <div class="premium-card overflow-hidden">
 
             <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
                 📌 Son Eklenenler
