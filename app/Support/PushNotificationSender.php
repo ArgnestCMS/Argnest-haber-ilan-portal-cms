@@ -24,6 +24,19 @@ class PushNotificationSender
             return;
         }
 
+        $subject = config('services.webpush.vapid.subject');
+        $publicKey = config('services.webpush.vapid.public_key');
+        $privateKey = config('services.webpush.vapid.private_key');
+
+        if (! $subject || ! $publicKey || ! $privateKey) {
+            Log::warning('Web push VAPID configuration is incomplete. Skipping push send.', [
+                'notification_id' => $notification->id,
+                'user_id' => $notification->user_id,
+            ]);
+
+            return;
+        }
+
         if (! class_exists(\Minishlink\WebPush\WebPush::class)) {
             Log::info('Web push dependency is not installed. Skipping push send.', [
                 'notification_id' => $notification->id,
@@ -35,9 +48,9 @@ class PushNotificationSender
 
         $webPush = new \Minishlink\WebPush\WebPush([
             'VAPID' => [
-                'subject' => config('services.webpush.vapid.subject'),
-                'publicKey' => config('services.webpush.vapid.public_key'),
-                'privateKey' => config('services.webpush.vapid.private_key'),
+                'subject' => $subject,
+                'publicKey' => $publicKey,
+                'privateKey' => $privateKey,
             ],
         ]);
 
