@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\News\Pages;
 
 use App\Filament\Resources\News\NewsResource;
+use App\Filament\Resources\Concerns\HandlesContentAttachments;
 use App\Helpers\ActivityLogger;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
@@ -10,6 +11,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditNews extends EditRecord
 {
+    use HandlesContentAttachments;
+
     protected static string $resource = NewsResource::class;
 
     protected function getHeaderActions(): array
@@ -38,6 +41,8 @@ class EditNews extends EditRecord
 
     protected function afterSave(): void
     {
+        $this->attachPendingContentUploads($this->record, 'news_attachment');
+
         ActivityLogger::log(
             action: 'edit_news',
 
@@ -51,5 +56,10 @@ class EditNews extends EditRecord
                 'category_id' => $this->record->category_id ?? null,
             ]
         );
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return $this->extractContentAttachments($data);
     }
 }

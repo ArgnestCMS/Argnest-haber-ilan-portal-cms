@@ -18,23 +18,93 @@ class AnnouncementsTable
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('Başlık')->searchable(),
-                TextColumn::make('slug')->label('URL')->searchable(),
-                TextColumn::make('institution')->label('Kurum')->searchable(),
-                TextColumn::make('city')->label('Şehir')->searchable(),
-                TextColumn::make('category')->label('Kategori')->searchable(),
-                TextColumn::make('publish_date')->label('Yayın Tarihi')->date()->sortable(),
-                TextColumn::make('deadline')->label('Son Başvuru')->date()->sortable(),
-                TextColumn::make('source')->label('Kaynak')->searchable(),
-                ImageColumn::make('image')->label('Görsel'),
-                TextColumn::make('document')->label('Döküman')->searchable(),
-                IconColumn::make('is_headline')->label('Manşet')->boolean(),
-                IconColumn::make('comments_enabled')->label('Yorum')->boolean(),
-                IconColumn::make('is_active')->label('Aktif')->boolean(),
-                TextColumn::make('views')->label('Okunma')->numeric()->sortable(),
-                TextColumn::make('created_at')->label('Oluşturma')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')->label('Güncelleme')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+                ImageColumn::make('image')
+                    ->label('Görsel')
+                    ->square()
+                    ->toggleable(),
+
+                TextColumn::make('title')
+                    ->label('Başlık')
+                    ->description(fn ($record) => $record->slug)
+                    ->searchable()
+                    ->sortable()
+                    ->limit(70)
+                    ->wrap(),
+
+                TextColumn::make('institution')
+                    ->label('Kurum')
+                    ->searchable()
+                    ->limit(28)
+                    ->toggleable(),
+
+                TextColumn::make('city')
+                    ->label('Şehir')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('category.name')
+                    ->label('Kategori')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(),
+
+                TextColumn::make('publish_date')
+                    ->label('Yayın')
+                    ->date('d.m.Y')
+                    ->sortable(),
+
+                TextColumn::make('deadline')
+                    ->label('Son Başvuru')
+                    ->date('d.m.Y')
+                    ->sortable()
+                    ->toggleable(),
+
+                IconColumn::make('is_headline')
+                    ->label('Manşet')
+                    ->boolean()
+                    ->sortable(),
+
+                IconColumn::make('comments_enabled')
+                    ->label('Yorum')
+                    ->boolean()
+                    ->toggleable(),
+
+                IconColumn::make('is_active')
+                    ->label('Aktif')
+                    ->boolean()
+                    ->sortable(),
+
+                TextColumn::make('views')
+                    ->label('Okunma')
+                    ->numeric()
+                    ->sortable(),
+
+                TextColumn::make('document')
+                    ->label('Doküman')
+                    ->searchable()
+                    ->limit(24)
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('source')
+                    ->label('Kaynak')
+                    ->searchable()
+                    ->limit(24)
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('created_at')
+                    ->label('Oluşturma')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('updated_at')
+                    ->label('Güncelleme')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

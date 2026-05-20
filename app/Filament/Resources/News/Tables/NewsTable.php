@@ -18,24 +18,34 @@ class NewsTable
     {
         return $table
             ->columns([
+                ImageColumn::make('image')
+                    ->label('Görsel')
+                    ->square()
+                    ->toggleable(),
+
                 TextColumn::make('title')
                     ->label('Başlık')
-                    ->searchable(),
+                    ->description(fn ($record) => $record->slug)
+                    ->searchable()
+                    ->sortable()
+                    ->limit(70)
+                    ->wrap(),
 
-                TextColumn::make('slug')
-                    ->label('URL')
-                    ->searchable(),
-
-                ImageColumn::make('image')
-                    ->label('Görsel'),
+                TextColumn::make('category.name')
+                    ->label('Kategori')
+                    ->badge()
+                    ->searchable()
+                    ->toggleable(),
 
                 IconColumn::make('is_headline')
                     ->label('Manşet')
-                    ->boolean(),
+                    ->boolean()
+                    ->sortable(),
 
                 IconColumn::make('comments_enabled')
                     ->label('Yorum')
-                    ->boolean(),
+                    ->boolean()
+                    ->toggleable(),
 
                 TextColumn::make('views')
                     ->label('Okunma')
@@ -44,16 +54,17 @@ class NewsTable
 
                 TextColumn::make('created_at')
                     ->label('Oluşturma')
-                    ->dateTime()
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('updated_at')
                     ->label('Güncelleme')
-                    ->dateTime()
+                    ->dateTime('d.m.Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
@@ -61,8 +72,8 @@ class NewsTable
                 ViewAction::make()->label('Görüntüle'),
                 EditAction::make()->label('Düzenle'),
                 DeleteAction::make()
-             ->label('Sil')
-             ->visible(fn () => auth()->user()?->role === 'admin'),
+                    ->label('Sil')
+                    ->visible(fn () => auth()->user()?->role === 'admin'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

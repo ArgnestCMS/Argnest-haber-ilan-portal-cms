@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\News\Schemas;
 
-use Filament\Schemas\Components\View;
+use App\Models\Category;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
@@ -10,7 +10,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
@@ -20,124 +22,182 @@ class NewsForm
     {
         return $schema
             ->components([
-
-                Tabs::make('Haber Sekmeleri')
+                Tabs::make('Haber editörü')
                     ->tabs([
-
-                        Tabs\Tab::make('Genel')
+                        Tabs\Tab::make('İçerik')
                             ->schema([
+                                Section::make('Temel bilgiler')
+                                    ->description('Başlık, URL, kategori ve yayın tarihini buradan yönetin.')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Başlık')
+                                            ->helperText('Liste, manşet ve SEO başlığı için ana metin. Net ve aranabilir tutun.')
+                                            ->maxLength(255)
+                                            ->live(onBlur: true)
+                                            ->afterStateUpdated(function ($state, callable $set) {
+                                                $set('slug', Str::slug($state));
+                                            })
+                                            ->required(),
 
-                                TextInput::make('title')
-                                    ->label('Başlık')
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, callable $set) {
-                                        $set('slug', Str::slug($state));
-                                    })
-                                    ->required(),
+                                        TextInput::make('slug')
+                                            ->label('URL (Slug)')
+                                            ->helperText('Başlıktan otomatik oluşur. Gerekirse kısa ve kalıcı bir URL olacak şekilde düzenleyin.')
+                                            ->maxLength(255)
+                                            ->required(),
 
-                                TextInput::make('slug')
-                                    ->label('URL (Slug)')
-                                    ->required(),
+                                        Select::make('category_id')
+                                            ->label('Kategori')
+                                            ->helperText('Haberin listeleneceği aktif haber kategorisi.')
+                                            ->options(fn () => Category::where('type', 'news')
+                                                ->where('is_active', true)
+                                                ->orderBy('sort_order')
+                                                ->pluck('name', 'id'))
+                                            ->searchable()
+                                            ->preload()
+                                            ->required(),
 
-                                TextInput::make('source')
-                                    ->label('Kaynak'),
+                                        TextInput::make('source')
+                                            ->label('Kaynak')
+                                            ->helperText('Varsa haber kaynağını veya kurum adını yazın.')
+                                            ->maxLength(255),
 
-Select::make('category_id')
-    ->label('Kategori')
-    ->options(fn () => \App\Models\Category::where('type', 'news')
-        ->where('is_active', true)
-        ->orderBy('sort_order')
-        ->pluck('name', 'id'))
-    ->searchable()
-    ->preload()
-    ->required(),
+                                        DateTimePicker::make('publish_date')
+                                            ->label('Yayın Tarihi')
+                                            ->helperText('Boş bırakılırsa içerik mevcut yayın akışına göre değerlendirilir.')
+                                            ->seconds(false),
 
-                                DateTimePicker::make('publish_date')
-                                    ->label('Yayın Tarihi')
-                                    ->seconds(false),
-
-                                DateTimePicker::make('end_date')
-                                    ->label('Bitiş Tarihi')
-                                    ->seconds(false)
-                                    ->nullable(),
-
-                                Select::make('news_type')
-                                    ->label('Haber Türü')
-                                    ->options([
-                                        'normal' => 'Normal',
-                                        'manset' => 'Manşet',
-                                        'son_dakika' => 'Son Dakika',
+                                        DateTimePicker::make('end_date')
+                                            ->label('Bitiş Tarihi')
+                                            ->helperText('Zamana bağlı içerikler için opsiyonel bitiş tarihi.')
+                                            ->seconds(false)
+                                            ->nullable(),
                                     ])
-                                    ->default('normal'),
+                                    ->columns(2),
 
-                                Toggle::make('is_headline')
-                                    ->label('Manşete Göster'),
+                                Section::make('Özet ve haber metni')
+                                    ->description('Kartlarda görünen kısa özet ve ana haber içeriği.')
+                                    ->schema([
+                                        Textarea::make('summary')
+                                            ->label('Kısa Açıklama')
+                                            ->helperText('Kartlarda ve meta açıklamada kullanılır. 140-160 karakter idealdir.')
+                                            ->rows(5)
+                                            ->maxLength(500)
+                                            ->columnSpanFull(),
 
-                                Toggle::make('comments_enabled')
-                                    ->label('Yorumlara Açık')
-                                    ->default(true),
+                                        RichEditor::make('content')
+                                            ->label('Haber İçeriği')
+                                            ->helperText('Okuma deneyimi için ara başlıklar ve kısa paragraflar tercih edin.')
+                                            ->required()
+                                            ->extraInputAttributes([
+                                                'style' => 'min-height: 500px;',
+                                            ])
+                                            ->columnSpanFull(),
+                                    ]),
                             ]),
 
-                        Tabs\Tab::make('Açıklama')
+                        Tabs\Tab::make('Yayın')
                             ->schema([
+                                Section::make('Yayın ve görünürlük')
+                                    ->description('Manşet, yorum ve editoryal vurgu ayarları.')
+                                    ->schema([
+                                        Select::make('news_type')
+                                            ->label('Haber Türü')
+                                            ->helperText('Editoryal vurgu tipini seçin; manşet gösterimi ayrı anahtar ile kontrol edilir.')
+                                            ->options([
+                                                'normal' => 'Normal',
+                                                'manset' => 'Manşet',
+                                                'son_dakika' => 'Son Dakika',
+                                            ])
+                                            ->default('normal'),
 
-                                Textarea::make('summary')
-                                    ->label('Kısa Açıklama')
-                                    ->rows(6)
-                                    ->columnSpanFull(),
+                                        Toggle::make('is_headline')
+                                            ->label('Manşete Göster')
+                                            ->helperText('Ana sayfa manşet alanında öne çıkarır.'),
 
-                                RichEditor::make('content')
-                                    ->label('Haber İçeriği')
-                                    ->required()
-                                    ->extraInputAttributes([
-                                        'style' => 'min-height: 500px;',
+                                        Toggle::make('comments_enabled')
+                                            ->label('Yorumlara Açık')
+                                            ->helperText('Okuyucu yorum formunu gösterir; mevcut moderasyon akışı korunur.')
+                                            ->default(true),
+
+                                        TextInput::make('views')
+                                            ->label('Görüntülenme')
+                                            ->helperText('Genellikle sistem tarafından artar; gerekirse düzeltme için kullanın.')
+                                            ->numeric()
+                                            ->default(0),
                                     ])
-                                    ->columnSpanFull(),
+                                    ->columns(2),
+
+                                Section::make('Sosyal hazırlık')
+                                    ->description('Sosyal paylaşım planı için editoryal işaretler.')
+                                    ->schema([
+                                        Toggle::make('share_facebook')
+                                            ->label('Facebook için yayınla')
+                                            ->helperText('Sosyal paylaşım hazırlığı için editoryal işaret.'),
+
+                                        Toggle::make('share_twitter')
+                                            ->label('Twitter/X için yayınla')
+                                            ->helperText('X/Twitter paylaşım hazırlığı için editoryal işaret.'),
+                                    ])
+                                    ->columns(2),
                             ]),
 
-                        Tabs\Tab::make('Detay')
+                        Tabs\Tab::make('Medya')
                             ->schema([
+                                Section::make('Haber görseli')
+                                    ->description('Manşet ve liste kartlarında kullanılacak ana görsel.')
+                                    ->schema([
+                                        View::make('filament.forms.components.news-image-preview'),
 
-                                TextInput::make('views')
-                                    ->label('Görüntülenme')
-                                    ->numeric()
-                                    ->default(0),
+                                        FileUpload::make('image')
+                                            ->label('Haber Görseli')
+                                            ->helperText('Yatay, net ve 1200px+ genişlikte JPG, PNG veya WEBP görsel tercih edin.')
+                                            ->image()
+                                            ->disk('public')
+                                            ->directory('news')
+                                            ->visibility('public')
+                                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                                            ->maxSize(5120)
+                                            ->previewable(false)
+                                            ->downloadable()
+                                            ->openable(),
+                                    ]),
+
+                                Section::make('Ek doküman')
+                                    ->description('Varsa habere bağlı PDF dokümanı.')
+                                    ->schema([
+                                        FileUpload::make('document')
+                                            ->label('PDF / Doküman')
+                                            ->helperText('Varsa ek belge yükleyin. Haber görselinden ayrı tutulur.')
+                                            ->acceptedFileTypes(['application/pdf'])
+                                            ->maxSize(10240),
+                                    ]),
+
+                                Section::make('Toplu içerik dosyaları')
+                                    ->description('Habere bağlı birden fazla görsel veya dokümanı yükleyin; kayıttan sonra listeden kopyalayabilir ya da içeriğe ekleyebilirsiniz.')
+                                    ->schema([
+                                        FileUpload::make('content_attachments')
+                                            ->label('Toplu resim / doküman yükle')
+                                            ->helperText('JPG, PNG, WEBP, GIF ve PDF desteklenir. Her dosya en fazla 10 MB olabilir.')
+                                            ->disk('public')
+                                            ->directory('news/attachments')
+                                            ->visibility('public')
+                                            ->multiple()
+                                            ->reorderable()
+                                            ->acceptedFileTypes([
+                                                'image/jpeg',
+                                                'image/png',
+                                                'image/webp',
+                                                'image/gif',
+                                                'application/pdf',
+                                            ])
+                                            ->maxSize(10240)
+                                            ->dehydrated(),
+
+                                        View::make('filament.forms.components.content-attachments'),
+                                    ]),
                             ]),
-
-                        Tabs\Tab::make('Sosyal')
-                            ->schema([
-
-                                Toggle::make('share_facebook')
-                                    ->label('Facebook için yayınla'),
-
-                                Toggle::make('share_twitter')
-                                    ->label('Twitter/X için yayınla'),
-                            ]),
-
-                        Tabs\Tab::make('Resim')
-                            ->schema([
-
-                                View::make('filament.forms.components.news-image-preview'),
-
-                                FileUpload::make('image')
-                                    ->label('Haber Görseli')
-                                    ->image()
-                                    ->disk('public')
-                                    ->directory('news')
-                                    ->visibility('public')
-                                    ->previewable(false)
-                                    ->downloadable()
-                                    ->openable(),
-
-                            ]),
-
-                        Tabs\Tab::make('Dökümanlar')
-                            ->schema([
-
-                                FileUpload::make('document')
-                                    ->label('PDF / Döküman'),
-                            ]),
-                    ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }

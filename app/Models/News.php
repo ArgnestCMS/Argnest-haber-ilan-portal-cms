@@ -43,6 +43,16 @@ class News extends Model
             ->where('status', 'approved')
             ->latest();
     }
+
+    public function contentAttachments(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable')
+            ->where('collection', 'news_attachment')
+            ->ready()
+            ->public()
+            ->latest();
+    }
+
     public function recordView(): void
 {
     $this->increment('views');

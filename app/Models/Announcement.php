@@ -44,4 +44,13 @@ class Announcement extends Model
             ->where('status', 'approved')
             ->latest();
     }
+
+    public function contentAttachments(): MorphMany
+    {
+        return $this->morphMany(MediaAsset::class, 'attachable')
+            ->where('collection', 'announcement_attachment')
+            ->ready()
+            ->public()
+            ->latest();
+    }
 }
