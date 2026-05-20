@@ -216,29 +216,8 @@
 
                             {{-- İÇERİK --}}
                             <div class="premium-reading prose max-w-none md:prose-lg">
-                                {!! $news->content !!}
+                                {!! \App\Support\ContentHtml::render($news->content) !!}
                             </div>
-
-                            @if($news->contentAttachments->isNotEmpty())
-                                <div class="mt-8 rounded-3xl border border-slate-200 bg-slate-50/80 p-5 md:p-6">
-                                    <h2 class="text-xl font-black text-slate-950">Ek Dosyalar / Dökümanlar</h2>
-
-                                    <div class="mt-4 grid gap-3">
-                                        @foreach($news->contentAttachments as $asset)
-                                            <a href="{{ $asset->url }}" target="_blank" rel="noopener" class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-blue-200 hover:bg-blue-50">
-                                                <div class="min-w-0">
-                                                    <div class="truncate font-black text-slate-900">{{ $asset->original_name }}</div>
-                                                    <div class="mt-1 text-xs font-bold text-slate-500">
-                                                        {{ $asset->human_size }} · {{ $asset->created_at?->format('d.m.Y H:i') }}
-                                                    </div>
-                                                </div>
-                                                <span class="shrink-0 rounded-full bg-blue-700 px-4 py-2 text-xs font-black text-white">Aç</span>
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
                             {{-- ALT BUTONLAR --}}
                             <div class="mt-8 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
 
@@ -577,6 +556,11 @@
 
         @foreach(
             \App\Models\Comment::where('status', 'approved')
+                ->whereHasMorph('commentable', [
+                    \App\Models\News::class,
+                    \App\Models\Announcement::class,
+                ])
+                ->with('commentable')
                 ->latest()
                 ->take(5)
                 ->get()
@@ -585,13 +569,14 @@
 
             @php
                 $commentUrl = '#';
+                $commentableSlug = $lastComment->commentable?->slug;
 
-                if($lastComment->commentable_type === 'App\Models\News') {
-                    $commentUrl = '/haber/' . $lastComment->commentable->slug;
+                if($lastComment->commentable_type === 'App\Models\News' && $commentableSlug) {
+                    $commentUrl = '/haber/' . $commentableSlug;
                 }
 
-                if($lastComment->commentable_type === 'App\Models\Announcement') {
-                    $commentUrl = '/ilan/' . $lastComment->commentable->slug;
+                if($lastComment->commentable_type === 'App\Models\Announcement' && $commentableSlug) {
+                    $commentUrl = '/ilan/' . $commentableSlug;
                 }
             @endphp
 

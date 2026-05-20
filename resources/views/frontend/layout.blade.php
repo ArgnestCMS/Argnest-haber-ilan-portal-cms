@@ -1278,25 +1278,14 @@
 </script>
 <script>
 function notificationSystem(initialCount = 0) {
+    const manager = window.__appCountPollingManager ??= createAppCountPollingManager();
+
     return {
         count: initialCount,
         pulse: false,
 
         init() {
-            this.fetchCount();
-            this.listenForNotifications();
-
-            setInterval(() => {
-                this.fetchCount();
-            }, 5000);
-        },
-
-        fetchCount() {
-            fetch('/bildirimler/count')
-                .then(res => res.json())
-                .then(data => {
-                    this.updateCount(Number(data.count || 0));
-                });
+            manager.registerNotification(this, initialCount);
         },
 
         updateCount(nextCount) {
@@ -1314,16 +1303,169 @@ function notificationSystem(initialCount = 0) {
                 setTimeout(() => this.pulse = false, 450);
             });
         },
+    };
+}
 
-        listenForNotifications() {
-            if (!window.Echo) {
+function createAppCountPollingManager() {
+    return {
+        notificationCount: 0,
+        messageCount: 0,
+        notificationSubscribers: new Set(),
+        messageSubscribers: new Set(),
+        intervalId: null,
+        notificationInFlight: false,
+        messageInFlight: false,
+        visibilityBound: false,
+        realtimeNotificationBound: false,
+        realtimeMessageBound: false,
+        urls: {
+            notificationCount: '/bildirimler/count',
+            messageCount: null,
+        },
+
+        isDisabled() {
+            return window.location.pathname.startsWith('/admin');
+        },
+
+        hasRealtime() {
+            return Boolean(window.Echo);
+        },
+
+        intervalMs() {
+            return this.hasRealtime() ? 120000 : 30000;
+        },
+
+        registerNotification(component, initialCount = 0) {
+            if (this.isDisabled()) {
                 return;
             }
 
+            this.notificationSubscribers.add(component);
+            this.notificationCount = Math.max(this.notificationCount, Number(initialCount || 0));
+            component.updateCount(this.notificationCount);
+            this.start();
+            this.bindNotificationRealtime();
+        },
+
+        registerMessage(component) {
+            if (this.isDisabled()) {
+                return;
+            }
+
+            this.messageSubscribers.add(component);
+            component.updateCount(this.messageCount);
+            this.start();
+            this.bindMessageRealtime();
+        },
+
+        start() {
+            if (this.isDisabled()) {
+                return;
+            }
+
+            this.bindVisibility();
+            this.refreshAll();
+
+            if (this.intervalId) {
+                return;
+            }
+
+            this.intervalId = setInterval(() => {
+                if (document.hidden) {
+                    return;
+                }
+
+                this.refreshAll();
+            }, this.intervalMs());
+        },
+
+        bindVisibility() {
+            if (this.visibilityBound) {
+                return;
+            }
+
+            this.visibilityBound = true;
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    this.refreshAll();
+                }
+            });
+        },
+
+        refreshAll() {
+            if (document.hidden || this.isDisabled()) {
+                return;
+            }
+
+            this.fetchNotificationCount();
+            this.fetchMessageCount();
+        },
+
+        fetchNotificationCount() {
+            if (this.notificationInFlight || !this.notificationSubscribers.size) {
+                return;
+            }
+
+            this.notificationInFlight = true;
+
+            fetch(this.urls.notificationCount, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    this.setNotificationCount(Number(data.count || 0));
+                })
+                .catch(() => {})
+                .finally(() => {
+                    this.notificationInFlight = false;
+                });
+        },
+
+        fetchMessageCount() {
+            if (this.messageInFlight || !this.urls.messageCount || !this.messageSubscribers.size) {
+                return;
+            }
+
+            this.messageInFlight = true;
+
+            fetch(this.urls.messageCount, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    this.setMessageCount(Number(data.count || 0));
+                })
+                .catch(() => {})
+                .finally(() => {
+                    this.messageInFlight = false;
+                });
+        },
+
+        setNotificationCount(count) {
+            this.notificationCount = count;
+            this.notificationSubscribers.forEach((component) => component.updateCount(count));
+        },
+
+        setMessageCount(count) {
+            this.messageCount = count;
+            this.messageSubscribers.forEach((component) => component.updateCount(count));
+        },
+
+        bindNotificationRealtime() {
+            if (!window.Echo || this.realtimeNotificationBound) {
+                return;
+            }
+
+            this.realtimeNotificationBound = true;
+
             window.Echo.private('users.{{ auth()->id() }}.notifications')
                 .listen('.user-notification.created', (notification) => {
-                    this.count += 1;
-                    this.flashBadge();
+                    this.setNotificationCount(this.notificationCount + 1);
                     window.dispatchEvent(new CustomEvent('realtime-ux:toast', {
                         detail: {
                             id: 'notification-' + (notification?.id || Date.now()),
@@ -1334,33 +1476,46 @@ function notificationSystem(initialCount = 0) {
                         },
                     }));
                 });
-        }
-    }
+        },
+
+        bindMessageRealtime() {
+            if (!window.Echo || this.realtimeMessageBound) {
+                return;
+            }
+
+            this.realtimeMessageBound = true;
+
+            window.Echo.private('users.{{ auth()->id() }}.messages')
+                .listen('.private-message.sent', (message) => {
+                    this.fetchMessageCount();
+                    window.dispatchEvent(new CustomEvent('realtime-ux:toast', {
+                        detail: {
+                            id: 'message-' + (message?.id || Date.now()),
+                            kind: 'message',
+                            title: message?.sender ? 'Yeni mesaj: ' + message.sender : 'Yeni mesaj',
+                            message: message?.body || 'Mesaj kutunuzda yeni bir mesaj var.',
+                            url: '{{ route('messages.index') }}',
+                        },
+                    }));
+                });
+        },
+    };
 }
 </script>
 @auth
 <script>
 function privateMessageCounter() {
+    const manager = window.__appCountPollingManager ??= createAppCountPollingManager();
+    manager.urls.messageCount = '{{ route('messages.count') }}';
+
     return {
         count: 0,
         pulse: false,
+
         init() {
-            this.fetchCount();
-            this.listenForMessages();
-            setInterval(() => this.fetchCount(), 7000);
+            manager.registerMessage(this);
         },
-        fetchCount() {
-            fetch('{{ route('messages.count') }}', {
-                headers: {
-                    'Accept': 'application/json',
-                },
-            })
-                .then(response => response.json())
-                .then(data => {
-                    this.updateCount(Number(data.count || 0));
-                })
-                .catch(() => {});
-        },
+
         updateCount(nextCount) {
             if (nextCount > this.count) {
                 this.flashBadge();
@@ -1374,26 +1529,6 @@ function privateMessageCounter() {
                 this.pulse = true;
                 setTimeout(() => this.pulse = false, 450);
             });
-        },
-        listenForMessages() {
-            if (!window.Echo) {
-                return;
-            }
-
-            window.Echo.private('users.{{ auth()->id() }}.messages')
-                .listen('.private-message.sent', (message) => {
-                    this.fetchCount();
-                    this.flashBadge();
-                    window.dispatchEvent(new CustomEvent('realtime-ux:toast', {
-                        detail: {
-                            id: 'message-' + (message?.id || Date.now()),
-                            kind: 'message',
-                            title: message?.sender ? 'Yeni mesaj: ' + message.sender : 'Yeni mesaj',
-                            message: message?.body || 'Mesaj kutunuzda yeni bir mesaj var.',
-                            url: '{{ route('messages.index') }}',
-                        },
-                    }));
-                });
         },
     };
 }
@@ -1534,5 +1669,131 @@ setInterval(() => {
 }, 60000);
 </script>
 @endauth
+<style>
+    .content-image-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 6, 23, 0.9);
+        padding: 64px 18px 24px;
+    }
+
+    .content-image-lightbox.is-open {
+        display: flex;
+    }
+
+    .content-image-lightbox img {
+        max-width: min(100%, 1180px);
+        max-height: calc(100vh - 96px);
+        border-radius: 10px;
+        object-fit: contain;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .content-image-lightbox__close {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 100001;
+        display: inline-flex;
+        min-width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.92);
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 800;
+        line-height: 1;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .content-image-lightbox__close:hover,
+    .content-image-lightbox__close:focus {
+        background: #ffffff;
+        color: #0f172a;
+        outline: none;
+    }
+
+    .premium-reading img {
+        cursor: zoom-in;
+    }
+
+    @media (max-width: 640px) {
+        .content-image-lightbox {
+            padding: 72px 12px 18px;
+        }
+
+        .content-image-lightbox__close {
+            top: 12px;
+            right: 12px;
+            min-width: 48px;
+            height: 48px;
+            font-size: 32px;
+        }
+    }
+</style>
+
+<div class="content-image-lightbox" data-content-image-lightbox aria-hidden="true">
+    <button type="button" class="content-image-lightbox__close" data-content-image-lightbox-close aria-label="Kapat">
+        ×
+    </button>
+    <img src="" alt="">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const lightbox = document.querySelector('[data-content-image-lightbox]');
+    const image = lightbox?.querySelector('img');
+    const closeButton = lightbox?.querySelector('[data-content-image-lightbox-close]');
+
+    if (!lightbox || !image || !closeButton) {
+        return;
+    }
+
+    const close = () => {
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        image.removeAttribute('src');
+        image.removeAttribute('alt');
+        document.body.style.overflow = '';
+    };
+
+    document.addEventListener('click', (event) => {
+        const clickedImage = event.target.closest?.('.premium-reading img');
+
+        if (!clickedImage) {
+            return;
+        }
+
+        event.preventDefault();
+        image.src = clickedImage.currentSrc || clickedImage.src;
+        image.alt = clickedImage.alt || '';
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        closeButton.focus();
+    });
+
+    closeButton.addEventListener('click', close);
+
+    lightbox.addEventListener('click', (event) => {
+        if (event.target === lightbox) {
+            close();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && lightbox.classList.contains('is-open')) {
+            close();
+        }
+    });
+});
+</script>
 </body>
 </html>

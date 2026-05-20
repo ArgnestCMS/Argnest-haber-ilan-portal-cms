@@ -5,8 +5,13 @@ namespace App\Filament\Resources\Announcements\Schemas;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Institution;
+use App\Models\MediaAsset;
+use App\Support\ContentAttachmentFilenames;
+use App\Support\ContentAttachmentLimits;
+use App\Support\ContentHtml;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +21,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AnnouncementForm
@@ -140,6 +146,7 @@ class AnnouncementForm
                                             ->visibility('public')
                                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                             ->maxSize(5120)
+                                            ->previewable(false)
                                             ->downloadable()
                                             ->openable(),
                                     ]),
@@ -150,8 +157,14 @@ class AnnouncementForm
                                         FileUpload::make('document')
                                             ->label('PDF / Doküman')
                                             ->helperText('Resmi duyuru PDF’i veya başvuru dosyası varsa ekleyin.')
+                                            ->disk('public')
+                                            ->directory('announcements/documents')
+                                            ->visibility('public')
                                             ->acceptedFileTypes(['application/pdf'])
-                                            ->maxSize(10240),
+                                            ->maxSize(fn () => ContentAttachmentLimits::maxKilobytes())
+                                            ->previewable(false)
+                                            ->downloadable()
+                                            ->openable(),
                                     ]),
 
                                 Section::make('Toplu içerik dosyaları')
@@ -159,9 +172,44 @@ class AnnouncementForm
                                     ->schema([
                                         FileUpload::make('content_attachments')
                                             ->label('Toplu resim / doküman yükle')
-                                            ->helperText('JPG, PNG, WEBP, GIF ve PDF desteklenir. Her dosya en fazla 10 MB olabilir.')
+                                            ->helperText(fn () => 'JPG, PNG, WEBP, GIF ve PDF desteklenir. Her dosya en fazla ' . ContentAttachmentLimits::maxMegabytes() . ' MB olabilir.')
                                             ->disk('public')
                                             ->directory('announcements/attachments')
+                                            ->extraAttributes(['class' => 'content-attachments-upload'])
+                                            ->getUploadedFileNameForStorageUsing(fn ($file): string => ContentAttachmentFilenames::forUploadedFile($file, 'announcements/attachments'))
+                                            ->deleteUploadedFileUsing(function ($file, $record = null): void {
+                                                if (! is_string($file)) {
+                                                    return;
+                                                }
+
+                                                $asset = MediaAsset::query()
+                                                    ->where('disk', 'public')
+                                                    ->where('path', $file)
+                                                    ->when($record, fn ($query) => $query
+                                                        ->where('attachable_type', $record::class)
+                                                        ->where('attachable_id', $record->getKey()))
+                                                    ->first();
+
+                                                if ($asset) {
+                                                    $asset->delete();
+                                                }
+
+                                                if ($record && isset($record->content)) {
+                                                    $cleaned = ContentHtml::removeReferencesToStoragePath(
+                                                        (string) $record->content,
+                                                        $file,
+                                                        $asset?->url,
+                                                    );
+
+                                                    if ($cleaned !== (string) $record->content) {
+                                                        $record->forceFill(['content' => $cleaned])->save();
+                                                    }
+                                                }
+
+                                                if (Storage::disk('public')->exists($file)) {
+                                                    Storage::disk('public')->delete($file);
+                                                }
+                                            })
                                             ->visibility('public')
                                             ->multiple()
                                             ->reorderable()
@@ -172,10 +220,18 @@ class AnnouncementForm
                                                 'image/gif',
                                                 'application/pdf',
                                             ])
-                                            ->maxSize(10240)
+                                            ->maxSize(fn () => ContentAttachmentLimits::maxKilobytes())
+                                            ->previewable(false)
+                                            ->fetchFileInformation(false)
+                                            ->downloadable()
+                                            ->openable()
                                             ->dehydrated(),
 
-                                        View::make('filament.forms.components.content-attachments'),
+                                        Hidden::make('deleted_content_attachment_ids')
+                                            ->default([])
+                                            ->dehydrated(),
+
+                                        View::make('filament.forms.content-files-table'),
                                     ]),
                             ]),
 

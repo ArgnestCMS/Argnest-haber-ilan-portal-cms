@@ -19,6 +19,8 @@ use App\Http\Controllers\PrivateMessageController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\ContentAttachmentController;
+use App\Http\Middleware\EnsureAdminPanelAccess;
 
 /*
 |--------------------------------------------------------------------------
@@ -356,6 +358,14 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 Route::get('/robots.txt', [SitemapController::class, 'robots']);
+
+Route::delete('/admin/content-attachments/{mediaAsset}', [ContentAttachmentController::class, 'destroy'])
+    ->middleware(['auth', EnsureAdminPanelAccess::class])
+    ->name('admin.content-attachments.destroy');
+
+Route::patch('/admin/content-attachments/{mediaAsset}', [ContentAttachmentController::class, 'update'])
+    ->middleware(['auth', EnsureAdminPanelAccess::class])
+    ->name('admin.content-attachments.update');
 
 /*
 |--------------------------------------------------------------------------

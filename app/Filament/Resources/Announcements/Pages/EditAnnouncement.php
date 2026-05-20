@@ -6,6 +6,7 @@ use App\Filament\Resources\Announcements\AnnouncementResource;
 use App\Filament\Resources\Concerns\HandlesContentAttachments;
 use App\Helpers\ActivityLogger;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -39,6 +40,12 @@ class EditAnnouncement extends EditRecord
         ];
     }
 
+    protected function getSaveFormAction(): Action
+    {
+        return parent::getSaveFormAction()
+            ->label('Değişiklikleri Kaydet');
+    }
+
     protected function afterSave(): void
     {
         $this->attachPendingContentUploads($this->record, 'announcement_attachment');
@@ -61,5 +68,10 @@ class EditAnnouncement extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         return $this->extractContentAttachments($data);
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return $this->removeContentAttachmentUploadStateFromFormData($data);
     }
 }
