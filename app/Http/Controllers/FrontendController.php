@@ -36,9 +36,38 @@ class FrontendController extends Controller
 
     public function home()
     {
-        $headlineNews = News::where('is_headline', true)->latest()->take(5)->get();
+        $headlineNews = News::where('is_headline', true)->latest()->take(10)->get();
+        $headlineAnnouncements = Announcement::where('is_headline', true)
+            ->where('is_active', true)
+            ->latest()
+            ->take(10)
+            ->get();
+        $headlines = $headlineNews
+            ->map(fn (News $news) => [
+                'type' => 'news',
+                'badge' => 'HABER',
+                'title' => $news->title,
+                'url' => url('/haber/' . $news->slug),
+                'image' => $news->image
+                    ? asset('storage/' . (str_contains($news->image, '/') ? $news->image : 'news/' . $news->image))
+                    : null,
+                'created_at' => $news->created_at,
+            ])
+            ->concat($headlineAnnouncements->map(fn (Announcement $announcement) => [
+                'type' => 'announcement',
+                'badge' => 'İLAN',
+                'title' => $announcement->title,
+                'url' => url('/ilan/' . $announcement->slug),
+                'image' => $announcement->image
+                    ? asset('storage/' . (str_contains($announcement->image, '/') ? $announcement->image : 'announcements/' . $announcement->image))
+                    : null,
+                'created_at' => $announcement->created_at,
+            ]))
+            ->sortByDesc('created_at')
+            ->take(10)
+            ->values();
         $latestNews = News::latest()->take(12)->get();
-        $latestAnnouncements = Announcement::latest()->take(12)->get();
+        $latestAnnouncements = Announcement::where('is_active', true)->latest()->take(12)->get();
 $trendingNews = News::where('is_trending', true)
     ->orderByDesc('trend_score')
     ->take(6)
@@ -47,11 +76,14 @@ $trendingNews = News::where('is_trending', true)
 $mostReadNews = News::orderByDesc('views')
     ->take(6)
     ->get();
-        $categories = Category::where('is_active', true)->orderBy('sort_order')->get();
+        $newsCategories = Category::where('type', 'news')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
 
         $announcementCategories = Category::where('type', 'announcement')
             ->where('is_active', true)
-            ->take(8)
+            ->orderBy('sort_order')
             ->get();
 
         $latestVideos = Video::where('is_active', true)->latest()->take(6)->get();
@@ -108,19 +140,20 @@ $mostReadNews = News::orderByDesc('views')
         });
 
         return view('frontend.home', compact(
-    'headlineNews',
-    'latestNews',
-    'latestAnnouncements',
-    'latestVideos',
-    'latestGalleries',
-    'categories',
-    'announcementCategories',
-    'ads',
-    'market',
-    'weather',
-    'trendingNews',
-    'mostReadNews',
-));
+            'headlineNews',
+            'latestNews',
+            'latestAnnouncements',
+            'latestVideos',
+            'latestGalleries',
+            'headlines',
+            'newsCategories',
+            'announcementCategories',
+            'ads',
+            'market',
+            'weather',
+            'trendingNews',
+            'mostReadNews',
+        ));
     }
 
     public function news()

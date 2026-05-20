@@ -22,7 +22,9 @@
 
 @section(
     'meta_image',
-    asset('default-og.jpg')
+    $announcement->image
+        ? asset('storage/' . (str_contains($announcement->image, '/') ? $announcement->image : 'announcements/' . $announcement->image))
+        : asset('default-og.jpg')
 )
 
 @section('schema')
@@ -40,7 +42,7 @@
     ),
 
     'image' => $announcement->image
-        ? asset('storage/' . $announcement->image)
+        ? asset('storage/' . (str_contains($announcement->image, '/') ? $announcement->image : 'announcements/' . $announcement->image))
         : asset('default-og.jpg'),
 
     'datePublished' => $announcement->created_at?->toAtomString(),
@@ -118,6 +120,16 @@
 
 @section('content')
 
+@php
+    $imagePath = $announcement->image
+        ? (str_contains($announcement->image, '/') ? $announcement->image : 'announcements/' . $announcement->image)
+        : null;
+
+    $contentAttachmentImages = $announcement->contentAttachments
+        ->filter(fn ($asset) => str_starts_with((string) $asset->mime_type, 'image/'))
+        ->values();
+@endphp
+
 <section class="max-w-[1600px] mx-auto px-3 mt-4 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6">
@@ -134,13 +146,11 @@
         </aside>
 
         {{-- ORTA DETAY ALANI --}}
-<div class="col-span-12 2xl:col-span-8">
+        <div class="col-span-12 2xl:col-span-8">
 
-<section class="max-w-7xl mx-auto px-0 mt-0 md:px-4 md:mt-6">
+            <div class="grid grid-cols-12 gap-6 items-start">
 
-    <div class="grid grid-cols-12 gap-6 items-start">
-
-        <main class="col-span-12 lg:col-span-8">
+        <main class="col-span-12 min-w-0 lg:col-span-9">
 
             {{-- ÜST REKLAM --}}
             @if(isset($topAd) && $topAd?->image)
@@ -156,31 +166,85 @@
 
             @endif
 
-            <article class="premium-article">
+            <article class="premium-article overflow-hidden">
 
-                <div class="bg-gradient-to-r from-blue-700 via-slate-900 to-slate-950 p-5 text-white md:p-8">
+                @if($imagePath)
+                    <div class="relative">
+                        <img
+                            src="{{ asset('storage/' . $imagePath) }}"
+                            class="h-[320px] w-full object-cover md:h-[520px]"
+                            alt="{{ $announcement->title }}"
+                        >
 
-                    <div class="text-sm text-white/80 mb-4">
-                        <a href="/" class="hover:underline">Anasayfa</a> /
-                        <a href="/ilanlar" class="hover:underline">İlanlar</a>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"></div>
+
+                        <div class="absolute bottom-5 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
+                            <div class="mb-3 text-xs font-bold text-white/80 sm:text-sm">
+                                <a href="/" class="hover:underline">Anasayfa</a>
+                                /
+                                <a href="/ilanlar" class="hover:underline">İlanlar</a>
+                            </div>
+
+                            <div class="max-w-4xl">
+                                <span class="inline-flex rounded-full bg-white px-4 py-1 text-xs font-black text-blue-700 shadow-sm sm:text-sm">
+                                    İLAN
+                                </span>
+
+                                <h1 class="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl md:mt-5 md:text-5xl">
+                                    {{ $announcement->title }}
+                                </h1>
+                            </div>
+                        </div>
                     </div>
+                @else
+                    <div class="bg-gradient-to-r from-blue-700 via-slate-900 to-slate-950 p-5 text-white sm:p-6 md:p-8">
+                        <div class="mb-4 text-xs font-bold text-white/80 sm:text-sm">
+                            <a href="/" class="hover:underline">Anasayfa</a>
+                            /
+                            <a href="/ilanlar" class="hover:underline">İlanlar</a>
+                        </div>
 
-                    <span class="rounded-full bg-white px-4 py-1 text-sm font-black text-blue-700 shadow-sm">
-                        İLAN
-                    </span>
+                        <div class="max-w-4xl">
+                            <span class="inline-flex rounded-full bg-white px-4 py-1 text-xs font-black text-blue-700 shadow-sm sm:text-sm">
+                                İLAN
+                            </span>
 
-                    <h1 class="mt-4 text-3xl font-black leading-tight md:mt-5 md:text-5xl">
-                        {{ $announcement->title }}
-                    </h1>
+                            <h1 class="mt-3 text-2xl font-black leading-tight sm:text-3xl md:mt-5 md:text-5xl">
+                                {{ $announcement->title }}
+                            </h1>
+                        </div>
+                    </div>
+                @endif
 
-                    <div class="mt-5 flex flex-wrap gap-4 text-sm font-bold text-white/80">
+                <div class="p-4 sm:p-5 md:p-8">
+
+                    {{-- META --}}
+                    <div class="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-100 pb-5 text-xs font-bold text-slate-500 md:mb-6 md:text-sm">
                         <span>📅 {{ $announcement->created_at->format('d.m.Y H:i') }}</span>
                         <span>👁️ {{ $announcement->views }} görüntülenme</span>
+                        <span>✍️ {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}</span>
                     </div>
 
-                </div>
+                    {{-- SOSYAL --}}
+                    <div class="mb-6 flex gap-2 overflow-x-auto pb-1 text-sm md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ url()->current() }}"
+                           target="_blank"
+                           class="shrink-0 rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
+                            Facebook
+                        </a>
 
-                <div class="p-5 md:p-8">
+                        <a href="https://twitter.com/intent/tweet?url={{ url()->current() }}&text={{ $announcement->title }}"
+                           target="_blank"
+                           class="shrink-0 rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                            X
+                        </a>
+
+                        <a href="https://api.whatsapp.com/send?text={{ $announcement->title }} {{ url()->current() }}"
+                           target="_blank"
+                           class="shrink-0 rounded bg-green-600 px-4 py-2 text-sm font-semibold text-white">
+                            WhatsApp
+                        </a>
+                    </div>
 
                     @if($announcement->summary)
 
@@ -190,7 +254,31 @@
 
                     @endif
 
-                    <div class="premium-reading prose max-w-none md:prose-lg">
+                    @if($contentAttachmentImages->isNotEmpty())
+                        <div class="mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-3 md:mb-8 md:p-4">
+                            <div class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
+                                İlan Görselleri
+                            </div>
+
+                            <div class="flex gap-3 overflow-x-auto pb-1">
+                                @foreach($contentAttachmentImages as $asset)
+                                    <a
+                                        href="{{ $asset->url }}"
+                                        target="_blank"
+                                        class="block shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 transition hover:border-blue-300 hover:shadow-sm"
+                                    >
+                                        <img
+                                            src="{{ $asset->thumbnail_url ?? $asset->url }}"
+                                            alt="{{ $asset->original_name ?? $announcement->title }}"
+                                            class="h-20 w-28 rounded-xl object-cover sm:h-24 sm:w-32 md:h-28 md:w-40"
+                                        >
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="premium-reading prose max-w-none overflow-hidden md:prose-lg prose-img:h-auto prose-img:max-w-full prose-img:rounded-2xl prose-table:block prose-table:w-full prose-table:overflow-x-auto [&_iframe]:max-w-full [&_video]:max-w-full">
                         {!! \App\Support\ContentHtml::render($announcement->content) !!}
                     </div>
                     <div class="mt-8 flex flex-col gap-4 border-t pt-6 sm:flex-row sm:flex-wrap sm:justify-between">
@@ -477,35 +565,35 @@
 
         </main>
 
-        <aside class="col-span-12 lg:col-span-4">
+        <aside class="col-span-12 min-w-0 space-y-6 lg:col-span-3">
 
-            <div class="sticky top-32 space-y-6">
+            <div class="space-y-6 lg:sticky lg:top-32">
 
                 {{-- ÇOK GÖRÜNTÜLENEN İLANLAR --}}
                 <div class="premium-card overflow-hidden">
 
-                    <div class="border-b px-5 py-4">
-                        <h2 class="text-2xl font-bold">Çok Görüntülenen İlanlar</h2>
+                    <div class="bg-red-600 text-white px-5 py-4 font-black text-lg">
+                        Çok Görüntülenen İlanlar
                     </div>
 
-                    <div class="divide-y">
+                    <div class="p-5 space-y-4">
 
                         @foreach(($sidebarAnnouncements ?? collect())->sortByDesc('views')->take(5) as $index => $item)
 
                             <a href="/ilan/{{ $item->slug }}"
-                               class="flex gap-3 p-4 hover:bg-slate-50">
+                               class="flex items-start gap-4 group border-b pb-4 last:border-none">
 
-                                <div class="w-8 h-8 bg-blue-600 text-white flex items-center justify-center font-bold rounded">
+                                <div class="text-3xl font-black text-red-500">
                                     {{ $index + 1 }}
                                 </div>
 
-                                <div>
-                                    <h3 class="font-bold hover:text-blue-600 leading-6">
-                                        {{ $item->title }}
+                                <div class="min-w-0">
+                                    <h3 class="font-bold leading-6 text-slate-800 group-hover:text-red-600 transition">
+                                        {{ Str::limit($item->title, 60) }}
                                     </h3>
 
                                     <p class="text-xs text-slate-500 mt-1">
-                                        {{ $item->views }} görüntülenme
+                                        👁️ {{ $item->views }} görüntülenme
                                     </p>
                                 </div>
 
@@ -520,12 +608,12 @@
                 {{-- SAĞ REKLAM --}}
                 @if(isset($sidebarAd) && $sidebarAd?->image)
 
-                    <div class="bg-white p-3 shadow">
+                    <div class="premium-ad-slot p-2 md:p-3">
 
                         <a href="{{ $sidebarAd->url }}" target="_blank">
                             <img
                                 src="{{ asset('storage/' . $sidebarAd->image) }}"
-                                class="w-full"
+                                class="max-h-[280px] w-full object-cover md:max-h-none"
                             >
                         </a>
 
@@ -536,24 +624,37 @@
                 {{-- SON İLANLAR --}}
                 <div class="premium-card overflow-hidden">
 
-                    <div class="border-b px-5 py-4">
-                        <h2 class="text-2xl font-bold">Son İlanlar</h2>
+                    <div class="bg-slate-900 text-white px-5 py-4 font-black text-lg">
+                        Son İlanlar
                     </div>
 
-                    <div class="divide-y">
+                    <div class="p-5 space-y-5">
 
                         @foreach($sidebarAnnouncements ?? [] as $item)
 
                             <a href="/ilan/{{ $item->slug }}"
-                               class="block p-4 hover:bg-slate-50">
+                               class="flex gap-4 group">
 
-                                <h3 class="font-bold hover:text-blue-600">
-                                    {{ $item->title }}
-                                </h3>
+                                <div class="w-24 h-20 shrink-0 overflow-hidden rounded">
+                                    @if($item->image)
+                                        <img
+                                            src="{{ asset('storage/' . (str_contains($item->image, '/') ? $item->image : 'announcements/' . $item->image)) }}"
+                                            class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                        >
+                                    @else
+                                        <div class="w-full h-full bg-slate-200"></div>
+                                    @endif
+                                </div>
 
-                                <p class="text-sm text-slate-500 mt-2">
-                                    {{ $item->created_at->format('d.m.Y') }}
-                                </p>
+                                <div class="min-w-0">
+                                    <h3 class="font-bold leading-6 text-slate-800 group-hover:text-blue-700 transition">
+                                        {{ Str::limit($item->title, 55) }}
+                                    </h3>
+
+                                    <p class="text-xs text-slate-400 mt-2">
+                                        {{ $item->created_at->diffForHumans() }}
+                                    </p>
+                                </div>
 
                             </a>
 
@@ -568,8 +669,6 @@
         </aside>
 
     </div>
-
-</section>
 
         </div>
 

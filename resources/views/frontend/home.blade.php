@@ -93,36 +93,44 @@
             </div>
 
             {{-- MANŞET SLIDER --}}
-            @if($headlineNews->count() > 0)
+            @if($headlines->count() > 0)
 
                 <div
-                    x-data="{ active: 0, total: {{ $headlineNews->count() }} }"
+                    x-data="{ active: 0, total: {{ $headlines->count() }} }"
                     x-init="setInterval(() => active = (active + 1) % total, 5000)"
                     class="premium-card relative overflow-hidden"
                 >
 
-                    @foreach($headlineNews as $index => $news)
+                    @foreach($headlines as $index => $item)
 
-                        <a href="/haber/{{ $news->slug }}"
+                        <a href="{{ $item['url'] }}"
                            x-show="active === {{ $index }}"
                            class="block relative">
 
-                            @if($news->image)
+                            @if($item['image'])
                                 <img
-                                    src="{{ asset('storage/' . (str_contains($news->image, '/') ? $news->image : 'news/' . $news->image)) }}"
+                                    src="{{ $item['image'] }}"
                                     class="h-[260px] w-full object-cover md:h-[480px]"
                                 >
+                            @else
+                                <div class="h-[260px] w-full bg-slate-800 md:h-[480px]"></div>
                             @endif
 
                             <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
 
                             <div class="absolute bottom-6 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
-                                <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg md:px-4 md:text-sm">
-                                    MANŞET
-                                </span>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-900 shadow-lg md:px-4 md:text-sm">
+                                        #{{ $index + 1 }}
+                                    </span>
+
+                                    <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg md:px-4 md:text-sm">
+                                        {{ $item['badge'] }}
+                                    </span>
+                                </div>
 
                                 <h1 class="mt-3 text-2xl font-black leading-tight text-white md:mt-4 md:text-5xl">
-                                    {{ $news->title }}
+                                    {{ $item['title'] }}
                                 </h1>
                             </div>
 
@@ -131,12 +139,14 @@
                     @endforeach
 
                     <div class="absolute bottom-4 right-4 flex gap-2">
-                        @foreach($headlineNews as $index => $news)
+                        @foreach($headlines as $index => $item)
                             <button
                                 @click="active = {{ $index }}"
-                                class="w-3 h-3 rounded-full"
-                                :class="active === {{ $index }} ? 'bg-red-600' : 'bg-white/70'"
-                            ></button>
+                                class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black shadow"
+                                :class="active === {{ $index }} ? 'bg-red-600 text-white' : 'bg-white/80 text-slate-900'"
+                            >
+                                {{ $index + 1 }}
+                            </button>
                         @endforeach
                     </div>
 
@@ -230,31 +240,31 @@
             </div>
 
             {{-- HABER + İLAN --}}
-            <div class="mt-4 grid gap-4 lg:grid-cols-3 lg:gap-6 md:mt-6">
+            <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 md:mt-6">
 
                 {{-- SON HABERLER --}}
-                <div class="premium-card overflow-hidden lg:col-span-2">
+                <div class="premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">Son Haberler</h2>
                         <a href="/haberler" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
-                    <div class="divide-y">
+                    <div class="grid gap-3 p-3 sm:grid-cols-2 md:gap-4 md:p-4">
 
                         @foreach($latestNews->take(8) as $news)
 
-                            <a href="/haber/{{ $news->slug }}" class="flex flex-col gap-3 p-3 transition hover:bg-slate-50 sm:flex-row md:gap-4 md:p-4">
+                            <a href="/haber/{{ $news->slug }}" class="home-mobile-card overflow-hidden rounded-2xl border border-slate-100 bg-white transition hover:border-blue-100 hover:bg-blue-50/60">
 
                                 @if($news->image)
                                     <img
                                         src="{{ asset('storage/' . (str_contains($news->image, '/') ? $news->image : 'news/' . $news->image)) }}"
-                                        class="h-44 w-full rounded-2xl object-cover sm:h-28 sm:w-44"
+                                        class="h-36 w-full object-cover"
                                     >
                                 @endif
 
-                                <div>
-                                    <h3 class="text-lg font-bold hover:text-blue-600 md:text-xl">
+                                <div class="p-4">
+                                    <h3 class="line-clamp-2 text-base font-bold hover:text-blue-600">
                                         {{ $news->title }}
                                     </h3>
 
@@ -279,18 +289,27 @@
                         <a href="/ilanlar" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
-                    <div class="divide-y">
+                    <div class="grid gap-3 p-3 sm:grid-cols-2 md:gap-4 md:p-4">
 
                         @foreach($latestAnnouncements->take(8) as $announcement)
 
-                            <a href="/ilan/{{ $announcement->slug }}" class="home-mobile-card m-3 block rounded-2xl border border-slate-100 bg-slate-50/80 p-4 transition hover:border-blue-100 hover:bg-blue-50/60 md:m-0 md:border-0 md:bg-white">
-                                <h3 class="font-bold hover:text-blue-600">
-                                    {{ $announcement->title }}
-                                </h3>
+                            <a href="/ilan/{{ $announcement->slug }}" class="home-mobile-card overflow-hidden rounded-2xl border border-slate-100 bg-white transition hover:border-blue-100 hover:bg-blue-50/60">
+                                @if($announcement->image)
+                                    <img
+                                        src="{{ asset('storage/' . (str_contains($announcement->image, '/') ? $announcement->image : 'announcements/' . $announcement->image)) }}"
+                                        class="h-36 w-full object-cover"
+                                    >
+                                @endif
 
-                                <p class="text-slate-500 mt-2 text-sm">
-                                    {{ $announcement->created_at->format('d.m.Y') }}
-                                </p>
+                                <div class="p-4">
+                                    <h3 class="line-clamp-2 text-base font-bold hover:text-blue-600">
+                                        {{ $announcement->title }}
+                                    </h3>
+
+                                    <p class="text-slate-500 mt-2 text-sm">
+                                        {{ $announcement->created_at->format('d.m.Y') }}
+                                    </p>
+                                </div>
                             </a>
 
                         @endforeach
@@ -387,29 +406,55 @@
                 </div>
             @endif
 
-            {{-- İLAN KATEGORİLERİ --}}
+            {{-- KATEGORİLER --}}
             <div class="premium-card mt-4 overflow-hidden md:mt-6">
 
                 <div class="border-b px-5 py-4">
-                    <h2 class="premium-section-heading">İlan Kategorileri</h2>
+                    <h2 class="premium-section-heading">Kategoriler</h2>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 p-3 md:grid-cols-4 md:gap-4 md:p-5">
+                <div class="grid gap-5 p-3 md:grid-cols-2 md:p-5">
+                    <div>
+                        <h3 class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
+                            Haber Kategorileri
+                        </h3>
 
-                    @foreach($announcementCategories as $category)
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach($newsCategories as $category)
+                                <a href="/kategori/{{ $category->slug }}"
+                                   class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
+                                    <h4 class="font-bold text-blue-700">
+                                        {{ $category->name }}
+                                    </h4>
 
-                        <a href="/kategori/{{ $category->slug }}"
-                           class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
-                            <h3 class="font-bold text-blue-700">
-                                {{ $category->name }}
-                            </h3>
+                                    <p class="text-sm text-slate-500 mt-1">
+                                        Güncel haberleri görüntüle
+                                    </p>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
 
-                            <p class="text-sm text-slate-500 mt-1">
-                                Güncel ilanları görüntüle
-                            </p>
-                        </a>
+                    <div>
+                        <h3 class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
+                            İlan Kategorileri
+                        </h3>
 
-                    @endforeach
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach($announcementCategories as $category)
+                                <a href="/kategori/{{ $category->slug }}"
+                                   class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
+                                    <h4 class="font-bold text-blue-700">
+                                        {{ $category->name }}
+                                    </h4>
+
+                                    <p class="text-sm text-slate-500 mt-1">
+                                        Güncel ilanları görüntüle
+                                    </p>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
 
                 </div>
 

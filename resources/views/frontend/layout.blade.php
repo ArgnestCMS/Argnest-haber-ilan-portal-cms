@@ -209,33 +209,22 @@
                 </a>
 
                 <nav class="hidden md:flex items-center gap-2 text-xs font-bold whitespace-nowrap">
+                    <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">ANA SAYFA</a>
 
-    <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">HABER</a>
+                    <a
+                        href="{{ $siteSetting?->email ? 'mailto:' . $siteSetting->email : '#' }}"
+                        class="px-2 py-4 hover:text-slate-200"
+                    >
+                        İLETİŞİM
+                    </a>
 
-    <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">İLAN</a>
-
-    <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">HABERLER</a>
-
-    <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">VİDEOLAR</a>
-
-    <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">GALERİLER</a>
-
- @if($siteSetting?->forum_enabled)
-    <a href="{{ route('forum.index') }}"
-       class="ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
-        FORUM
-    </a>
- @endif
-
- @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
-    <button type="button"
-        @click="liveActivityModal = true"
-        class="rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
-    🔴 CANLI AKTİVİTE
- </button>
- @endif
-
- </nav>
+                    <span
+                        title="{{ $siteSetting?->address ?? 'Adres bilgisi yakında eklenecek' }}"
+                        class="max-w-[220px] truncate px-2 py-4 hover:text-slate-200"
+                    >
+                        ADRES: {{ $siteSetting?->address ?? 'Yakında' }}
+                    </span>
+                </nav>
 
                 <div class="hidden md:flex items-center gap-4 text-sm font-semibold">
 
@@ -532,25 +521,15 @@
             <div x-show="mobileMenu" x-transition class="md:hidden bg-[#0667ad] border-t border-white/10" style="display:none;">
                 <div class="flex flex-col text-sm font-bold">
 
-                    <a href="/" class="py-3 border-b border-white/10">Anasayfa</a>
+                    <a href="/" class="py-3 border-b border-white/10">Ana Sayfa</a>
                     <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
                     <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
                     <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
                     <a href="{{ route('galleries.index') }}" class="py-3 border-b border-white/10">Galeriler</a>
-
-                    @if($siteSetting?->forum_enabled)
-                        <a href="{{ route('forum.index') }}" class="py-3 border-b border-white/10">Forum</a>
-                    @endif
-
-                    @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
-                        <button
-                            type="button"
-                            @click="liveActivityModal = true; mobileMenu = false"
-                            class="py-3 border-b border-white/10 text-left"
-                        >
-                            Canlı Aktivite
-                        </button>
-                    @endif
+                    <a href="{{ $siteSetting?->email ? 'mailto:' . $siteSetting->email : '#' }}" class="py-3 border-b border-white/10">İletişim</a>
+                    <div class="py-3 border-b border-white/10">
+                        Adres: {{ $siteSetting?->address ?? 'Yakında' }}
+                    </div>
 
                     <a href="/arama" class="py-3 border-b border-white/10">Arama</a>
 
@@ -844,15 +823,10 @@
     {{-- ALT MENÜ --}}
     <div class="bg-slate-800 text-white">
         <div class="max-w-7xl mx-auto px-4 h-10 flex items-center gap-5 text-sm font-semibold overflow-x-auto">
-            <a href="#">Kamu Personeli</a>
-            <a href="#">KPSS</a>
-            <a href="/haberler">Haberler</a>
-            <a href="#">Mevzuat</a>
-            <a href="#">Öğretmen</a>
-            <a href="#">Özel Konular</a>
-            <a href="#">Haber Arşivi</a>
-            <a href="#">Çok Okunan Haberler</a>
-            <a href="#">Haber Gönder</a>
+            <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">Haberler</a>
+            <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">İlanlar</a>
+            <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">Videolar</a>
+            <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">Galeriler</a>
         </div>
     </div>
 
