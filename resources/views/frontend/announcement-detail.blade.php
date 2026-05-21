@@ -264,7 +264,7 @@
                                 @foreach($contentAttachmentImages as $asset)
                                     <a
                                         href="{{ $asset->url }}"
-                                        target="_blank"
+                                        data-content-lightbox-image
                                         class="block shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 transition hover:border-blue-300 hover:shadow-sm"
                                     >
                                         <img
@@ -543,11 +543,11 @@
             {{-- İLAN ALTI REKLAM --}}
             <div class="premium-ad-slot mt-4 flex justify-center p-2 md:mt-6 md:p-3">
 
-                @if(isset($topAd) && $topAd?->image)
+                @if(isset($bottomAd) && $bottomAd?->image)
 
-                    <a href="{{ $topAd->url }}" target="_blank">
+                    <a href="{{ $bottomAd->url }}" target="_blank">
                         <img
-                            src="{{ asset('storage/' . $topAd->image) }}"
+                            src="{{ asset('storage/' . $bottomAd->image) }}"
                             class="max-h-[120px] w-full max-w-[970px] object-cover md:max-h-none"
                         >
                     </a>

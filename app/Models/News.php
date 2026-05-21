@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -58,6 +59,19 @@ class News extends Model
             ->ready()
             ->public()
             ->latest();
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query
+            ->where(function (Builder $query) {
+                $query->whereNull('publish_date')
+                    ->orWhere('publish_date', '<=', now());
+            })
+            ->where(function (Builder $query) {
+                $query->whereNull('end_date')
+                    ->orWhere('end_date', '>=', now());
+            });
     }
 
     public function recordView(): void

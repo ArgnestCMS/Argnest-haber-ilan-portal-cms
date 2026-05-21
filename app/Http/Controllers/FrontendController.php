@@ -36,9 +36,9 @@ class FrontendController extends Controller
 
     public function home()
     {
-        $headlineNews = News::where('is_headline', true)->latest()->take(10)->get();
-        $headlineAnnouncements = Announcement::where('is_headline', true)
-            ->where('is_active', true)
+        $headlineNews = News::published()->where('is_headline', true)->latest()->take(10)->get();
+        $headlineAnnouncements = Announcement::active()
+            ->where('is_headline', true)
             ->latest()
             ->take(10)
             ->get();
@@ -66,16 +66,18 @@ class FrontendController extends Controller
             ->sortByDesc('created_at')
             ->take(10)
             ->values();
-        $latestNews = News::latest()->take(12)->get();
-        $latestAnnouncements = Announcement::where('is_active', true)->latest()->take(12)->get();
-$trendingNews = News::where('is_trending', true)
-    ->orderByDesc('trend_score')
-    ->take(6)
-    ->get();
+        $latestNews = News::published()->latest()->take(12)->get();
+        $latestAnnouncements = Announcement::active()->latest()->take(12)->get();
+        $trendingNews = News::published()
+            ->where('is_trending', true)
+            ->orderByDesc('trend_score')
+            ->take(6)
+            ->get();
 
-$mostReadNews = News::orderByDesc('views')
-    ->take(6)
-    ->get();
+        $mostReadNews = News::published()
+            ->orderByDesc('views')
+            ->take(6)
+            ->get();
         $newsCategories = Category::where('type', 'news')
             ->where('is_active', true)
             ->orderBy('sort_order')
@@ -158,14 +160,14 @@ $mostReadNews = News::orderByDesc('views')
 
     public function news()
     {
-        $news = News::latest()->paginate(12);
+        $news = News::published()->latest()->paginate(12);
 
         return view('frontend.news', compact('news'));
     }
 
     public function announcements()
     {
-        $announcements = Announcement::latest()->paginate(12);
+        $announcements = Announcement::active()->latest()->paginate(12);
 
         return view('frontend.announcements', compact('announcements'));
     }
@@ -480,6 +482,7 @@ $mostReadNews = News::orderByDesc('views')
 
         if ($category->type === 'news') {
             $news = News::where('category_id', $category->id)
+                ->published()
                 ->latest()
                 ->paginate(12);
 
@@ -487,6 +490,7 @@ $mostReadNews = News::orderByDesc('views')
         }
 
         $announcements = Announcement::where('category_id', $category->id)
+            ->active()
             ->latest()
             ->paginate(12);
 
@@ -498,6 +502,7 @@ $mostReadNews = News::orderByDesc('views')
         $query = request('q');
 
         $news = News::query()
+            ->published()
             ->when($query, function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                     ->orWhere('summary', 'like', "%{$query}%")
@@ -507,6 +512,7 @@ $mostReadNews = News::orderByDesc('views')
             ->paginate(12);
 
         $announcements = Announcement::query()
+            ->active()
             ->when($query, function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                     ->orWhere('summary', 'like', "%{$query}%")
@@ -526,12 +532,12 @@ $mostReadNews = News::orderByDesc('views')
 
     public function newsDetail($slug)
     {
-        $news = News::where('slug', $slug)->firstOrFail();
+        $news = News::published()->where('slug', $slug)->firstOrFail();
 
         $news->recordView();
 
-        $relatedNews = News::where('id', '!=', $news->id)->latest()->take(6)->get();
-        $sidebarNews = News::where('id', '!=', $news->id)->latest()->take(8)->get();
+        $relatedNews = News::published()->where('id', '!=', $news->id)->latest()->take(6)->get();
+        $sidebarNews = News::published()->where('id', '!=', $news->id)->latest()->take(8)->get();
 
         $topAd = $this->activeAds()->where('position', 'top_banner')->first();
         $bottomAd = $this->activeAds()->where('position', 'bottom_banner')->first();
@@ -553,12 +559,12 @@ $mostReadNews = News::orderByDesc('views')
 
     public function announcementDetail($slug)
     {
-        $announcement = Announcement::where('slug', $slug)->firstOrFail();
+        $announcement = Announcement::active()->where('slug', $slug)->firstOrFail();
 
         $announcement->increment('views');
 
-        $relatedAnnouncements = Announcement::where('id', '!=', $announcement->id)->latest()->take(6)->get();
-        $sidebarAnnouncements = Announcement::where('id', '!=', $announcement->id)->latest()->take(8)->get();
+        $relatedAnnouncements = Announcement::active()->where('id', '!=', $announcement->id)->latest()->take(6)->get();
+        $sidebarAnnouncements = Announcement::active()->where('id', '!=', $announcement->id)->latest()->take(8)->get();
 
         $topAd = $this->activeAds()->where('position', 'top_banner')->first();
         $bottomAd = $this->activeAds()->where('position', 'bottom_banner')->first();

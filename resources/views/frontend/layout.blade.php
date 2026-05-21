@@ -1739,15 +1739,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.addEventListener('click', (event) => {
-        const clickedImage = event.target.closest?.('.premium-reading img');
+        const clickedImage = event.target.closest?.('.premium-reading img, [data-content-lightbox-image]');
 
         if (!clickedImage) {
             return;
         }
 
         event.preventDefault();
-        image.src = clickedImage.currentSrc || clickedImage.src;
-        image.alt = clickedImage.alt || '';
+        const nestedImage = clickedImage.matches('img') ? clickedImage : clickedImage.querySelector('img');
+
+        image.src = clickedImage.href || nestedImage?.currentSrc || nestedImage?.src || '';
+        image.alt = nestedImage?.alt || clickedImage.getAttribute('aria-label') || '';
         lightbox.classList.add('is-open');
         lightbox.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';

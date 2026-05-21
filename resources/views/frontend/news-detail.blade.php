@@ -100,6 +100,10 @@
     $imagePath = $news->image
         ? (str_contains($news->image, '/') ? $news->image : 'news/' . $news->image)
         : null;
+
+    $contentAttachmentImages = $news->contentAttachments
+        ->filter(fn ($asset) => str_starts_with((string) $asset->mime_type, 'image/'))
+        ->values();
 @endphp
 
 <section class="max-w-[1600px] mx-auto px-3 mt-4 md:px-4 md:mt-6">
@@ -211,6 +215,30 @@
                             @if($news->summary)
                                 <div class="mb-6 rounded-2xl border border-blue-100 border-l-4 border-l-blue-600 bg-blue-50 p-4 text-lg font-semibold text-slate-800 md:mb-8 md:p-5 md:text-xl">
                                     {{ $news->summary }}
+                                </div>
+                            @endif
+
+                            @if($contentAttachmentImages->isNotEmpty())
+                                <div class="mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-3 md:mb-8 md:p-4">
+                                    <div class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
+                                        Haber Görselleri
+                                    </div>
+
+                                    <div class="flex gap-3 overflow-x-auto pb-1">
+                                        @foreach($contentAttachmentImages as $asset)
+                                            <a
+                                                href="{{ $asset->url }}"
+                                                data-content-lightbox-image
+                                                class="block shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 transition hover:border-blue-300 hover:shadow-sm"
+                                            >
+                                                <img
+                                                    src="{{ $asset->thumbnail_url ?? $asset->url }}"
+                                                    alt="{{ $asset->original_name ?? $news->title }}"
+                                                    class="h-20 w-28 rounded-xl object-cover sm:h-24 sm:w-32 md:h-28 md:w-40"
+                                                >
+                                            </a>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
 
@@ -472,16 +500,16 @@
 
                         <div class="p-5 space-y-5">
 
-                            @foreach(\App\Models\News::latest()->take(5)->get() as $sidebarNews)
+                            @foreach(($sidebarNews ?? collect())->take(5) as $sidebarItem)
 
-                                <a href="/haber/{{ $sidebarNews->slug }}" class="flex gap-4 group">
+                                <a href="/haber/{{ $sidebarItem->slug }}" class="flex gap-4 group">
 
                                     <div class="w-24 h-20 shrink-0 overflow-hidden rounded">
 
-                                        @if($sidebarNews->image)
+                                        @if($sidebarItem->image)
 
                                             <img
-                                                src="{{ asset('storage/' . (str_contains($sidebarNews->image, '/') ? $sidebarNews->image : 'news/' . $sidebarNews->image)) }}"
+                                                src="{{ asset('storage/' . (str_contains($sidebarItem->image, '/') ? $sidebarItem->image : 'news/' . $sidebarItem->image)) }}"
                                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                                             >
 
@@ -495,11 +523,11 @@
 
                                     <div>
                                         <h3 class="font-bold leading-6 text-slate-800 group-hover:text-blue-700 transition">
-                                            {{ Str::limit($sidebarNews->title, 55) }}
+                                            {{ Str::limit($sidebarItem->title, 55) }}
                                         </h3>
 
                                         <div class="text-xs text-slate-400 mt-2">
-                                            {{ $sidebarNews->created_at->diffForHumans() }}
+                                            {{ $sidebarItem->created_at->diffForHumans() }}
                                         </div>
                                     </div>
 
@@ -520,7 +548,7 @@
 
                         <div class="p-5 space-y-4">
 
-                            @foreach(\App\Models\News::orderByDesc('views')->take(5)->get() as $trendNews)
+                            @foreach(($sidebarNews ?? collect())->sortByDesc('views')->take(5) as $trendNews)
 
                                 <a href="/haber/{{ $trendNews->slug }}" class="flex items-start gap-4 group border-b pb-4 last:border-none">
 

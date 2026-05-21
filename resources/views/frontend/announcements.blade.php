@@ -40,8 +40,8 @@
 @php
     $featuredAnnouncement = $announcements->first();
 
-    
-    $listAnnouncements = $announcements;
+    $listAnnouncements = $announcements->getCollection()
+        ->when($featuredAnnouncement, fn ($items) => $items->reject(fn ($item) => $item->is($featuredAnnouncement)));
 @endphp
 
 <section class="max-w-7xl mx-auto px-3 mt-4 md:px-4 md:mt-6">

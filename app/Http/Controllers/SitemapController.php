@@ -15,11 +15,11 @@ class SitemapController extends Controller
 {
     public function index()
     {
-        $news = News::latest()->get();
-        $announcements = Announcement::latest()->get();
-        $videos = Video::latest()->get();
-        $galleries = Gallery::latest()->get();
-        $categories = Category::latest()->get();
+        $news = News::published()->latest()->get();
+        $announcements = Announcement::active()->latest()->get();
+        $videos = Video::where('is_active', true)->latest()->get();
+        $galleries = Gallery::where('is_active', true)->latest()->get();
+        $categories = Category::where('is_active', true)->latest()->get();
         $forumCategories = ForumCategory::active()
             ->whereHas('topics', fn ($query) => $query->published())
             ->latest()
