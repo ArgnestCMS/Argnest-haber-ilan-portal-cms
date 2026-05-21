@@ -20,6 +20,12 @@ class SiteSetting extends Model
         'logo',
         'favicon',
 
+        'site_announcement_enabled',
+        'site_announcement_icon',
+        'site_announcement_text',
+        'site_announcement_starts_at',
+        'site_announcement_ends_at',
+
         /*
         |--------------------------------------------------------------------------
         | ÜYELİK
@@ -124,6 +130,9 @@ class SiteSetting extends Model
 
         'maintenance_mode' => 'boolean',
         'auto_punishment_enabled' => 'boolean',
+        'site_announcement_enabled' => 'boolean',
+        'site_announcement_starts_at' => 'datetime',
+        'site_announcement_ends_at' => 'datetime',
 
         /*
         |--------------------------------------------------------------------------
@@ -149,4 +158,21 @@ class SiteSetting extends Model
         'live_announcement_enabled' => 'boolean',
 
     ];
+
+    public function hasActiveSiteAnnouncement(): bool
+    {
+        if (! $this->site_announcement_enabled || blank($this->site_announcement_text)) {
+            return false;
+        }
+
+        if ($this->site_announcement_starts_at && $this->site_announcement_starts_at->isFuture()) {
+            return false;
+        }
+
+        if ($this->site_announcement_ends_at && $this->site_announcement_ends_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
 }

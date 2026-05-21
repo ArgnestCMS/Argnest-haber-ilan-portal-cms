@@ -4,6 +4,10 @@
 @php
     $siteSetting = \App\Models\SiteSetting::first();
     $seoSetting = \App\Models\SeoSetting::current();
+    $siteAnnouncements = \App\Models\SiteAnnouncement::visible()
+        ->orderBy('sort_order')
+        ->orderByDesc('created_at')
+        ->get();
 
     $metaTitle = trim($__env->yieldContent(
         'title',
@@ -210,13 +214,6 @@
 
                 <nav class="hidden md:flex items-center gap-2 text-xs font-bold whitespace-nowrap">
                     <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">ANA SAYFA</a>
-
-                    <a
-                        href="{{ $siteSetting?->email ? 'mailto:' . $siteSetting->email : '#' }}"
-                        class="px-2 py-4 hover:text-slate-200"
-                    >
-                        İLETİŞİM
-                    </a>
 
                     <span
                         title="{{ $siteSetting?->address ?? 'Adres bilgisi yakında eklenecek' }}"
@@ -526,7 +523,21 @@
                     <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
                     <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
                     <a href="{{ route('galleries.index') }}" class="py-3 border-b border-white/10">Galeriler</a>
-                    <a href="{{ $siteSetting?->email ? 'mailto:' . $siteSetting->email : '#' }}" class="py-3 border-b border-white/10">İletişim</a>
+
+                    @if($siteSetting?->forum_enabled)
+                        <a href="{{ route('forum.index') }}" class="py-3 border-b border-white/10">Forum</a>
+                    @endif
+
+                    @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
+                        <button
+                            type="button"
+                            @click="liveActivityModal = true; mobileMenu = false"
+                            class="py-3 border-b border-white/10 text-left"
+                        >
+                            Canlı Aktivite
+                        </button>
+                    @endif
+
                     <div class="py-3 border-b border-white/10">
                         Adres: {{ $siteSetting?->address ?? 'Yakında' }}
                     </div>
@@ -822,11 +833,56 @@
 </div>
     {{-- ALT MENÜ --}}
     <div class="bg-slate-800 text-white">
-        <div class="max-w-7xl mx-auto px-4 h-10 flex items-center gap-5 text-sm font-semibold overflow-x-auto">
-            <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">Haberler</a>
-            <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">İlanlar</a>
-            <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">Videolar</a>
-            <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'text-blue-200' : 'hover:text-blue-200' }} whitespace-nowrap">Galeriler</a>
+        <div class="max-w-7xl mx-auto flex min-h-10 items-center gap-4 px-4 py-2 text-sm font-semibold">
+            <nav class="flex shrink-0 items-center gap-5 overflow-x-auto whitespace-nowrap">
+                <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Haberler</a>
+                <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">İlanlar</a>
+                <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Videolar</a>
+                <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Galeriler</a>
+            </nav>
+
+            @if($siteAnnouncements->isNotEmpty())
+                <div class="hidden min-w-0 flex-1 items-center overflow-hidden rounded border border-white/10 bg-slate-900/45 px-3 py-1.5 text-xs font-bold text-slate-100 md:flex">
+                    <marquee behavior="scroll" direction="left" scrollamount="4" class="min-w-0">
+                        @foreach($siteAnnouncements as $announcement)
+                            @if($announcement->link_url)
+                                <a
+                                    href="{{ $announcement->link_url }}"
+                                    target="{{ $announcement->link_target }}"
+                                    @if($announcement->link_target === '_blank') rel="noopener noreferrer" @endif
+                                    class="hover:text-blue-200"
+                                >
+                                    {{ $announcement->icon ?: '📢' }} {{ $announcement->text }}
+                                </a>
+                            @else
+                                <span>{{ $announcement->icon ?: '📢' }} {{ $announcement->text }}</span>
+                            @endif
+
+                            @unless($loop->last)
+                                <span class="px-3 text-slate-400">—</span>
+                            @endunless
+                        @endforeach
+                    </marquee>
+                </div>
+            @endif
+
+            <div class="ml-auto hidden shrink-0 items-center gap-2 md:flex">
+                @if($siteSetting?->forum_enabled)
+                    <a href="{{ route('forum.index') }}"
+                       class="ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
+                        FORUM
+                    </a>
+                @endif
+
+                @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
+                    <button type="button"
+                        @click="liveActivityModal = true"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
+                        <span class="h-2 w-2 rounded-full bg-white shadow animate-pulse"></span>
+                        CANLI AKTİVİTE
+                    </button>
+                @endif
+            </div>
         </div>
     </div>
 
