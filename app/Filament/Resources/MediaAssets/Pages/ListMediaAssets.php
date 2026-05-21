@@ -15,9 +15,9 @@ class ListMediaAssets extends ListRecords
     {
         return [
             Action::make('storage_stats')
-                ->label('Storage Ozeti')
+                ->label('Depolama Özeti')
                 ->icon('heroicon-o-chart-bar')
-                ->modalHeading('Medya Storage Ozeti')
+                ->modalHeading('Medya Depolama Özeti')
                 ->modalDescription(fn (): string => $this->storageSummary())
                 ->modalSubmitAction(false)
                 ->modalCancelActionLabel('Kapat'),
@@ -38,7 +38,7 @@ class ListMediaAssets extends ListRecords
         return implode("\n", [
             'Toplam kayit: ' . number_format($totalCount),
             'Aktif kayit: ' . number_format($activeCount),
-            'Orphan medya: ' . number_format($orphanCount),
+            'Bağlantısız medya: ' . number_format($orphanCount),
             'Supheli medya: ' . number_format($suspiciousCount),
             'Buyuk medya: ' . number_format($largeCount),
             'Toplam boyut: ' . $this->formatBytes($totalBytes),

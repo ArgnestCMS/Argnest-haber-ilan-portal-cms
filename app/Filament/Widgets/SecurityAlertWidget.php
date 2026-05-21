@@ -55,7 +55,7 @@ class SecurityAlertWidget extends TableWidget
                     ->wrap(),
 
                 TextColumn::make('properties.email')
-                    ->label('Email')
+                    ->label('E-Posta')
                     ->placeholder('-')
                     ->copyable(),
 

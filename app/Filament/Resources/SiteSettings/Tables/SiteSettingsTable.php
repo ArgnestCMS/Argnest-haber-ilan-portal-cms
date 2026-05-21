@@ -27,7 +27,7 @@ class SiteSettingsTable
                 TextColumn::make('seo_title')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('E-Posta')
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),

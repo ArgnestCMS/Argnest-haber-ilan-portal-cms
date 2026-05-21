@@ -29,7 +29,7 @@ class CommunityReportForm
                     ->columnSpanFull(),
 
                 Textarea::make('moderator_note')
-                    ->label('Moderator Notu')
+                    ->label('Moderatör Notu')
                     ->rows(4)
                     ->columnSpanFull(),
             ])

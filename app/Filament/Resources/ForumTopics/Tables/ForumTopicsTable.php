@@ -244,7 +244,7 @@ class ForumTopicsTable
                         'slow_mode_seconds' => (int) $data['slow_mode_seconds'],
                     ])),
                 Action::make('moderator_note')
-                    ->label('Moderator Notu')
+                    ->label('Moderatör Notu')
                     ->icon('heroicon-o-pencil-square')
                     ->color('gray')
                     ->form([
@@ -258,7 +258,7 @@ class ForumTopicsTable
                         'moderator_note' => $data['moderator_note'] ?? null,
                     ])),
                 DeleteAction::make()->label('Sil'),
-                RestoreAction::make()->label('Geri Al'),
+                RestoreAction::make()->label('Geri Yükle'),
                 ForceDeleteAction::make()->label('Kalıcı Sil'),
             ])
             ->toolbarActions([

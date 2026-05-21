@@ -221,7 +221,7 @@ class LiveChatMessagesTable
                     }),
 
                 DeleteAction::make()->label('Sil'),
-                RestoreAction::make()->label('Geri Al'),
+                RestoreAction::make()->label('Geri Yükle'),
                 ForceDeleteAction::make()->label('Kalıcı Sil'),
             ])
             ->toolbarActions([

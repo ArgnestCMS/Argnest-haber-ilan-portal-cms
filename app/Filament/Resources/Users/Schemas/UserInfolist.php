@@ -11,22 +11,29 @@ class UserInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('name'),
+                TextEntry::make('name')
+                    ->label('Ad Soyad'),
                 TextEntry::make('email')
-                    ->label('Email address'),
-                TextEntry::make('role'),
+                    ->label('E-Posta'),
+                TextEntry::make('role')
+                    ->label('Rol'),
                 TextEntry::make('email_verified_at')
+                    ->label('E-Posta Doğrulama Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('created_at')
+                    ->label('Oluşturulma Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Güncellenme Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('avatar')
+                    ->label('Profil Resmi')
                     ->placeholder('-'),
                 TextEntry::make('bio')
+                    ->label('Biyografi')
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('facebook')

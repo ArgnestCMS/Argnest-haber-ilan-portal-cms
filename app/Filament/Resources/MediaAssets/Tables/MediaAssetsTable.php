@@ -80,7 +80,7 @@ class MediaAssetsTable
                     ->boolean(),
 
                 IconColumn::make('is_orphan')
-                    ->label('Orphan')
+                    ->label('Bağlantısız')
                     ->boolean(),
 
                 IconColumn::make('thumbnail_missing')
@@ -113,8 +113,8 @@ class MediaAssetsTable
                 SelectFilter::make('visibility')
                     ->label('Gorunurluk')
                     ->options([
-                        'public' => 'Public',
-                        'private' => 'Private',
+                        'public' => 'Herkese Açık',
+                        'private' => 'Özel',
                     ]),
 
                 SelectFilter::make('status')
@@ -135,7 +135,7 @@ class MediaAssetsTable
                     ]),
 
                 Filter::make('orphan')
-                    ->label('Orphan Medya')
+                    ->label('Bağlantısız Medya')
                     ->query(fn (Builder $query): Builder => $query->orphan()),
 
                 Filter::make('large')
@@ -143,7 +143,7 @@ class MediaAssetsTable
                     ->query(fn (Builder $query): Builder => $query->where('size', '>=', (int) config('media.management.large_file_warning_mb', 20) * 1024 * 1024)),
 
                 Filter::make('missing_thumbnail')
-                    ->label('Thumbnail Yolu Var')
+                    ->label('Küçük Görsel Yolu Var')
                     ->query(fn (Builder $query): Builder => $query->whereNotNull('thumbnail_path')),
 
                 TrashedFilter::make(),
@@ -158,7 +158,7 @@ class MediaAssetsTable
                     ->visible(fn (MediaAsset $record) => $record->status !== 'suspicious')
                     ->form([
                         Textarea::make('note')
-                            ->label('Moderator Notu')
+                            ->label('Moderatör Notu')
                             ->rows(4)
                             ->maxLength(1000),
                     ])
@@ -186,11 +186,11 @@ class MediaAssetsTable
                     ])),
 
                 DeleteAction::make()
-                    ->label('Soft Delete')
+                    ->label('Çöpe Taşı')
                     ->requiresConfirmation(),
 
                 RestoreAction::make()
-                    ->label('Geri Al'),
+                    ->label('Geri Yükle'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -201,7 +201,7 @@ class MediaAssetsTable
                         ->action(fn (Collection $records) => $records->each->markSuspicious('Toplu isaretleme')),
 
                     BulkAction::make('soft_delete_orphans')
-                        ->label('Secili Orphanlari Soft Delete')
+                        ->label('Seçili Bağlantısızları Çöpe Taşı')
                         ->icon('heroicon-o-trash')
                         ->color('danger')
                         ->requiresConfirmation()
@@ -210,7 +210,7 @@ class MediaAssetsTable
                             ->each->delete()),
 
                     DeleteBulkAction::make()
-                        ->label('Secilenleri Soft Delete'),
+                        ->label('Seçilenleri Çöpe Taşı'),
                 ]),
             ]);
     }

@@ -143,7 +143,7 @@ class CommunityReportsTable
                             ->required(),
 
                         Textarea::make('moderator_note')
-                            ->label('Moderator Notu')
+                            ->label('Moderatör Notu')
                             ->rows(4),
                     ])
                     ->action(function (CommunityReport $record, array $data) {
@@ -159,7 +159,7 @@ class CommunityReportsTable
                     ->color('gray')
                     ->form([
                         Textarea::make('moderator_note')
-                            ->label('Moderator Notu')
+                            ->label('Moderatör Notu')
                             ->rows(4),
                     ])
                     ->action(function (CommunityReport $record, array $data) {

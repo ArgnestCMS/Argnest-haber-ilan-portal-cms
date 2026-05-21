@@ -14,8 +14,8 @@ class ViewMediaAsset extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make()->label('Soft Delete'),
-            RestoreAction::make()->label('Geri Al'),
+            DeleteAction::make()->label('Çöpe Taşı'),
+            RestoreAction::make()->label('Geri Yükle'),
         ];
     }
 }

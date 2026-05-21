@@ -206,7 +206,7 @@ class ActivityLogInfolist
                             ->columnSpan(2),
 
                         TextEntry::make('user_agent')
-                            ->label('User Agent')
+                            ->label('Kullanıcı Aracısı')
                             ->copyable()
                             ->placeholder('-')
                             ->columnSpanFull(),
@@ -217,7 +217,7 @@ class ActivityLogInfolist
                     ->schema([
 
                         TextEntry::make('properties.email')
-                            ->label('Email')
+                            ->label('E-Posta')
                             ->placeholder('-')
                             ->copyable(),
 

@@ -28,7 +28,7 @@ class ModeratorSafetyOverview extends Page
 
     protected static ?string $slug = 'moderator-safety-overview';
 
-    protected static ?string $title = 'Moderator Dashboard';
+    protected static ?string $title = 'Moderatör Paneli';
 
     public static function canAccess(): bool
     {
@@ -53,7 +53,7 @@ class ModeratorSafetyOverview extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return 'Moderator Dashboard';
+        return 'Moderatör Paneli';
     }
 
     public function stats(): array
@@ -62,19 +62,19 @@ class ModeratorSafetyOverview extends Page
 
         return [
             [
-                'label' => 'Pending Forum Konulari',
+                'label' => 'Bekleyen Forum Konuları',
                 'value' => ForumTopic::query()->where('status', 'pending')->count(),
                 'url' => url('/admin/forum-topics'),
                 'tone' => 'warning',
             ],
             [
-                'label' => 'Pending Forum Cevaplari',
+                'label' => 'Bekleyen Forum Cevapları',
                 'value' => ForumPost::query()->where('status', 'pending')->count(),
                 'url' => url('/admin/forum-posts'),
                 'tone' => 'warning',
             ],
             [
-                'label' => 'Pending Canli Sohbet',
+                'label' => 'Bekleyen Canlı Sohbet',
                 'value' => LiveChatMessage::query()->where('status', 'pending')->count(),
                 'url' => url('/admin/live-chat-messages'),
                 'tone' => 'info',

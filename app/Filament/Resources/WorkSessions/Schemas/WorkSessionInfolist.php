@@ -12,31 +12,43 @@ class WorkSessionInfolist
         return $schema
             ->components([
                 TextEntry::make('user.name')
-                    ->label('User'),
-                TextEntry::make('type'),
-                TextEntry::make('status'),
+                    ->label('Kullanıcı'),
+                TextEntry::make('type')
+                    ->label('Tür'),
+                TextEntry::make('status')
+                    ->label('Durum'),
                 TextEntry::make('started_at')
+                    ->label('Başlangıç')
                     ->dateTime(),
                 TextEntry::make('ended_at')
+                    ->label('Bitiş')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('duration_minutes')
+                    ->label('Süre (dk)')
                     ->numeric(),
                 TextEntry::make('ip_address')
+                    ->label('IP Adresi')
                     ->placeholder('-'),
                 TextEntry::make('device')
+                    ->label('Cihaz')
                     ->placeholder('-'),
                 TextEntry::make('browser')
+                    ->label('Tarayıcı')
                     ->placeholder('-'),
                 TextEntry::make('platform')
+                    ->label('Platform')
                     ->placeholder('-'),
                 TextEntry::make('note')
+                    ->label('Not')
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('created_at')
+                    ->label('Oluşturulma Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Güncellenme Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
             ]);

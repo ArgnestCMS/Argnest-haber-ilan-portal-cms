@@ -14,31 +14,41 @@ class GalleryInfolist
         return $schema
             ->components([
                 TextEntry::make('user.name')
-                    ->label('User')
+                    ->label('Kullanıcı')
                     ->placeholder('-'),
                 TextEntry::make('category.name')
-                    ->label('Category')
+                    ->label('Kategori')
                     ->placeholder('-'),
-                TextEntry::make('title'),
-                TextEntry::make('slug'),
+                TextEntry::make('title')
+                    ->label('Başlık'),
+                TextEntry::make('slug')
+                    ->label('URL'),
                 TextEntry::make('description')
+                    ->label('Açıklama')
                     ->placeholder('-')
                     ->columnSpanFull(),
                 ImageEntry::make('cover_image')
+                    ->label('Kapak Görseli')
                     ->placeholder('-'),
                 TextEntry::make('views')
+                    ->label('Görüntülenme')
                     ->numeric(),
                 IconEntry::make('is_active')
+                    ->label('Aktif')
                     ->boolean(),
                 IconEntry::make('is_featured')
+                    ->label('Öne Çıkan')
                     ->boolean(),
                 TextEntry::make('published_at')
+                    ->label('Yayın Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('created_at')
+                    ->label('Oluşturulma Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Güncellenme Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
             ]);

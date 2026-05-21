@@ -21,7 +21,7 @@ class CommunityReportInfolist
                 TextEntry::make('subject_ai_risk_label')->label('AI Risk')->badge(),
                 TextEntry::make('subject_ai_risk_score')->label('AI Risk Puani')->numeric(),
                 TextEntry::make('details')->label('Kullanici Aciklamasi')->placeholder('-')->columnSpanFull(),
-                TextEntry::make('moderator_note')->label('Moderator Notu')->placeholder('-')->columnSpanFull(),
+                TextEntry::make('moderator_note')->label('Moderatör Notu')->placeholder('-')->columnSpanFull(),
                 TextEntry::make('resolution_action')->label('Aksiyon')->placeholder('-'),
                 TextEntry::make('reviewer.name')->label('Inceleyen')->placeholder('-'),
                 TextEntry::make('reviewed_at')->label('Inceleme Tarihi')->dateTime('d.m.Y H:i')->placeholder('-'),

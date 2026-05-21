@@ -29,7 +29,7 @@ class SiteSettingInfolist
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('email')
-                    ->label('Email address')
+                    ->label('E-Posta')
                     ->placeholder('-'),
                 TextEntry::make('phone')
                     ->placeholder('-'),

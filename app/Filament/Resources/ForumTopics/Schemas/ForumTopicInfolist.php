@@ -26,7 +26,7 @@ class ForumTopicInfolist
                 TextEntry::make('slow_mode_seconds')->label('Yavas Mod')->suffix(' sn')->numeric(),
                 TextEntry::make('lastPostUser.name')->label('Son Cevaplayan')->placeholder('-'),
                 TextEntry::make('views')->label('Goruntulenme')->numeric(),
-                TextEntry::make('moderator_note')->label('Moderator Notu')->placeholder('-')->columnSpanFull(),
+                TextEntry::make('moderator_note')->label('Moderatör Notu')->placeholder('-')->columnSpanFull(),
                 TextEntry::make('content')->label('Icerik')->html()->columnSpanFull(),
                 TextEntry::make('created_at')->label('Olusturma')->dateTime()->placeholder('-'),
             ]);

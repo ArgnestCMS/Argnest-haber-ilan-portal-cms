@@ -104,7 +104,7 @@ class ForumTopicForm
                     ->default(0),
 
                 Textarea::make('moderator_note')
-                    ->label('Moderator Notu')
+                    ->label('Moderatör Notu')
                     ->maxLength(5000)
                     ->columnSpanFull(),
             ])

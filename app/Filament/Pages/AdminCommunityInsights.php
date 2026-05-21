@@ -20,7 +20,7 @@ class AdminCommunityInsights extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBarSquare;
 
-    protected static ?string $navigationLabel = 'Community Insights';
+    protected static ?string $navigationLabel = 'Topluluk İçgörüleri';
 
     protected static string|\UnitEnum|null $navigationGroup = 'Moderasyon & Guvenlik';
 
@@ -28,7 +28,7 @@ class AdminCommunityInsights extends Page
 
     protected static ?string $slug = 'community-insights';
 
-    protected static ?string $title = 'Admin Analytics';
+    protected static ?string $title = 'Admin Analitikleri';
 
     public static function canAccess(): bool
     {
@@ -38,7 +38,7 @@ class AdminCommunityInsights extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return 'Admin Analytics + Community Insights';
+        return 'Admin Analitikleri ve Topluluk İçgörüleri';
     }
 
     public function rangeMetrics(): array

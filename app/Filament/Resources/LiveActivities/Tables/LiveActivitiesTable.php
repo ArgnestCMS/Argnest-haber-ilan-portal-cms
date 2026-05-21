@@ -174,7 +174,7 @@ class LiveActivitiesTable
                     ->action(fn ($record) => $record->update(['is_public' => true])),
 
                 DeleteAction::make()->label('Sil'),
-                RestoreAction::make()->label('Geri Al'),
+                RestoreAction::make()->label('Geri Yükle'),
                 ForceDeleteAction::make()->label('Kalıcı Sil'),
             ])
             ->toolbarActions([
@@ -198,7 +198,7 @@ class LiveActivitiesTable
                         ->action(fn ($records) => $records->each->update(['is_important' => true])),
 
                     DeleteBulkAction::make()->label('Seçilenleri Sil'),
-                    RestoreBulkAction::make()->label('Seçilenleri Geri Al'),
+                    RestoreBulkAction::make()->label('Seçilenleri Geri Yükle'),
                     ForceDeleteBulkAction::make()->label('Kalıcı Sil'),
                 ]),
             ]);

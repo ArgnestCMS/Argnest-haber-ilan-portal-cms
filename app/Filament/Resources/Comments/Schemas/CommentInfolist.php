@@ -13,13 +13,17 @@ class CommentInfolist
         return $schema
             ->components([
                 TextEntry::make('user.name')
-                    ->label('User'),
-                TextEntry::make('commentable_type'),
+                    ->label('Kullanıcı'),
+                TextEntry::make('commentable_type')
+                    ->label('İçerik Türü'),
                 TextEntry::make('commentable_id')
+                    ->label('İçerik ID')
                     ->numeric(),
                 TextEntry::make('content')
+                    ->label('Yorum')
                     ->columnSpanFull(),
                 TextEntry::make('status')
+                    ->label('Durum')
                     ->badge(),
                 TextEntry::make('ai_risk_label')
                     ->label('AI Risk')
@@ -33,22 +37,29 @@ class CommentInfolist
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('moderated_by')
+                    ->label('Moderatör ID')
                     ->numeric()
                     ->placeholder('-'),
                 TextEntry::make('moderated_at')
+                    ->label('Moderasyon Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('moderation_note')
+                    ->label('Moderasyon Notu')
                     ->placeholder('-')
                     ->columnSpanFull(),
                 TextEntry::make('ip_address')
+                    ->label('IP Adresi')
                     ->placeholder('-'),
                 IconEntry::make('is_edited')
+                    ->label('Düzenlendi')
                     ->boolean(),
                 TextEntry::make('created_at')
+                    ->label('Oluşturulma Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Güncellenme Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
             ]);

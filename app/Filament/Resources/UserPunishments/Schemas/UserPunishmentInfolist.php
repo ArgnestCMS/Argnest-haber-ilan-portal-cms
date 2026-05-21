@@ -13,23 +13,29 @@ class UserPunishmentInfolist
         return $schema
             ->components([
                 TextEntry::make('user.name')
-                    ->label('User'),
+                    ->label('Kullanıcı'),
                 TextEntry::make('moderator.name')
-                    ->label('Moderator')
+                    ->label('Moderatör')
                     ->placeholder('-'),
                 TextEntry::make('type')
+                    ->label('Ceza Türü')
                     ->badge(),
                 TextEntry::make('reason')
+                    ->label('Sebep')
                     ->columnSpanFull(),
                 TextEntry::make('expires_at')
+                    ->label('Bitiş Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 IconEntry::make('is_active')
+                    ->label('Aktif')
                     ->boolean(),
                 TextEntry::make('created_at')
+                    ->label('Oluşturulma Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('updated_at')
+                    ->label('Güncellenme Tarihi')
                     ->dateTime()
                     ->placeholder('-'),
             ]);
