@@ -4,6 +4,7 @@
 @php
     $siteSetting = \App\Models\SiteSetting::first();
     $seoSetting = \App\Models\SeoSetting::current();
+    $themeSetting = \App\Models\ThemeSetting::current();
     $siteName = $siteSetting?->site_name ?? config('app.name');
     $siteAnnouncements = \App\Models\SiteAnnouncement::visible()
         ->orderBy('sort_order')
@@ -53,6 +54,22 @@
         . ', ' .
         (($seoSetting?->robots_follow ?? true) ? 'follow' : 'nofollow')
     ));
+
+    $themeColors = [
+        'primary' => $themeSetting->color('primary_color'),
+        'secondary' => $themeSetting->color('secondary_color'),
+        'topbar' => $themeSetting->color('topbar_color'),
+        'navbar' => $themeSetting->color('navbar_color'),
+        'breaking' => $themeSetting->color('breaking_bar_color'),
+        'announcement' => $themeSetting->color('announcement_bar_color'),
+        'button' => $themeSetting->color('button_color'),
+        'button_hover' => $themeSetting->color('button_hover_color'),
+        'link' => $themeSetting->color('link_color'),
+        'heading' => $themeSetting->color('heading_color'),
+        'text' => $themeSetting->color('text_color'),
+        'card' => $themeSetting->color('card_background_color'),
+        'footer' => $themeSetting->color('footer_color'),
+    ];
 @endphp
 
 <head>
@@ -60,7 +77,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#0878c9">
+    <meta name="theme-color" content="{{ $themeColors['primary'] }}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -152,8 +169,73 @@
 @yield('schema')
 <style>
     :root {
+        --theme-primary: {{ $themeColors['primary'] }};
+        --theme-secondary: {{ $themeColors['secondary'] }};
+        --theme-topbar: {{ $themeColors['topbar'] }};
+        --theme-navbar: {{ $themeColors['navbar'] }};
+        --theme-breaking: {{ $themeColors['breaking'] }};
+        --theme-announcement: {{ $themeColors['announcement'] }};
+        --theme-button: {{ $themeColors['button'] }};
+        --theme-button-hover: {{ $themeColors['button_hover'] }};
+        --theme-link: {{ $themeColors['link'] }};
+        --theme-heading: {{ $themeColors['heading'] }};
+        --theme-text: {{ $themeColors['text'] }};
+        --theme-card: {{ $themeColors['card'] }};
+        --theme-footer: {{ $themeColors['footer'] }};
         --mobile-shell-bottom: 74px;
         --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    body {
+        color: var(--theme-text);
+    }
+
+    h1, h2, h3,
+    .theme-heading {
+        color: var(--theme-heading);
+    }
+
+    .theme-topbar {
+        background-color: var(--theme-topbar) !important;
+    }
+
+    .theme-navbar {
+        background-color: var(--theme-navbar) !important;
+    }
+
+    .theme-breaking {
+        background-color: var(--theme-breaking) !important;
+    }
+
+    .theme-announcement {
+        background-color: var(--theme-announcement) !important;
+    }
+
+    .theme-footer {
+        background-color: var(--theme-footer) !important;
+    }
+
+    .theme-button {
+        background-color: var(--theme-button) !important;
+        color: #fff !important;
+    }
+
+    .theme-button:hover {
+        background-color: var(--theme-button-hover) !important;
+    }
+
+    .theme-link,
+    main a:not([class*="bg-"]):not([class*="text-white"]) {
+        color: var(--theme-link);
+    }
+
+    .theme-chip {
+        background-color: var(--theme-primary) !important;
+        color: #fff !important;
+    }
+
+    .theme-card {
+        background-color: var(--theme-card) !important;
     }
 
     @media (max-width: 767px) {
@@ -207,7 +289,7 @@
 <header x-data="{ mobileMenu: false, mobileSearch: false, authModal: null, liveActivityModal: false }">
 
     {{-- ÜST MAVİ MENÜ --}}
-    <div class="bg-[#0878c9] text-white">
+    <div class="theme-topbar bg-[#0878c9] text-white">
        <div class="max-w-7xl mx-auto px-4">
 
             <div class="h-14 flex items-center justify-between">
@@ -218,13 +300,6 @@
 
                 <nav class="hidden md:flex items-center gap-2 text-xs font-bold whitespace-nowrap">
                     <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">ANA SAYFA</a>
-
-                    <span
-                        title="{{ $siteSetting?->address ?? 'Adres bilgisi yakında eklenecek' }}"
-                        class="max-w-[220px] truncate px-2 py-4 hover:text-slate-200"
-                    >
-                        ADRES: {{ $siteSetting?->address ?? 'Yakında' }}
-                    </span>
                 </nav>
 
                 <div class="hidden md:flex items-center gap-4 text-sm font-semibold">
@@ -238,7 +313,7 @@
                             class="w-24 focus:w-36 transition-all duration-300 px-2 py-1.5 rounded-l bg-white text-slate-900 text-sm outline-none"
                         >
 
-                        <button type="submit" class="bg-slate-900 px-3 py-1.5 rounded-r hover:bg-slate-800 transition">
+                        <button type="submit" class="theme-button bg-slate-900 px-3 py-1.5 rounded-r hover:bg-slate-800 transition">
                             🔍
                         </button>
                     </form>
@@ -292,7 +367,7 @@
                             <div x-data="{ openWorkPanel: false }" class="relative">
                                 <button
                                     @click="openWorkPanel = true"
-                                    class="bg-slate-900 px-3 py-2 rounded font-black hover:bg-slate-800 transition"
+                                    class="theme-button bg-slate-900 px-3 py-2 rounded font-black hover:bg-slate-800 transition"
                                 >
                                     ⏱️ {{ $workLabel }}
                                 </button>
@@ -308,7 +383,7 @@
                                         class="bg-white text-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                                     >
 
-                                        <div class="bg-slate-950 text-white px-6 py-4 flex items-center justify-between">
+                                        <div class="theme-navbar bg-slate-950 text-white px-6 py-4 flex items-center justify-between">
                                             <div>
                                                 <h3 class="text-xl font-black">Mesai Durumu</h3>
                                                 <p class="text-xs text-slate-300">Mola, yemek ve mesai takibi</p>
@@ -391,14 +466,14 @@
 
                                             <form action="{{ route('work.active') }}" method="POST">
                                                 @csrf
-                                                <button class="w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700">
+                                                <button class="theme-button w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700">
                                                     ⚡ Aktife Dön
                                                 </button>
                                             </form>
 
                                             <form action="{{ route('work.end') }}" method="POST">
                                                 @csrf
-                                                <button class="w-full bg-slate-900 text-white py-3 rounded-xl font-black hover:bg-slate-800">
+                                                <button class="theme-button w-full bg-slate-900 text-white py-3 rounded-xl font-black hover:bg-slate-800">
                                                     🔴 Mesai Bitir
                                                 </button>
                                             </form>
@@ -463,7 +538,7 @@
                             Üye Girişi
                         </button>
 
-                        <button @click="authModal = 'register'" class="bg-slate-800 px-3 py-2 rounded hover:bg-slate-700">
+                        <button @click="authModal = 'register'" class="theme-button bg-slate-800 px-3 py-2 rounded hover:bg-slate-700">
                             Kayıt Ol
                         </button>
 
@@ -512,14 +587,14 @@
                         class="flex-1 px-4 py-2 rounded-l text-slate-900 outline-none"
                     >
 
-                    <button type="submit" class="bg-slate-900 px-4 rounded-r">
+                    <button type="submit" class="theme-button bg-slate-900 px-4 rounded-r">
                         🔍
                     </button>
                 </form>
             </div>
 
             {{-- MOBİL MENÜ --}}
-            <div x-show="mobileMenu" x-transition class="md:hidden bg-[#0667ad] border-t border-white/10" style="display:none;">
+            <div x-show="mobileMenu" x-transition class="theme-topbar md:hidden bg-[#0667ad] border-t border-white/10" style="display:none;">
                 <div class="flex flex-col text-sm font-bold">
 
                     <a href="/" class="py-3 border-b border-white/10">Ana Sayfa</a>
@@ -542,10 +617,6 @@
                             Canlı Aktivite
                         </button>
                     @endif
-
-                    <div class="py-3 border-b border-white/10">
-                        Adres: {{ $siteSetting?->address ?? 'Yakında' }}
-                    </div>
 
                     <a href="/arama" class="py-3 border-b border-white/10">Arama</a>
 
@@ -610,9 +681,9 @@
             >
                 <div
                     @click.away="authModal = null"
-                    class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-slate-900"
+                    class="theme-card bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-slate-900"
                 >
-                    <div class="bg-slate-950 text-white px-6 py-5 flex items-center justify-between">
+                    <div class="theme-navbar bg-slate-950 text-white px-6 py-5 flex items-center justify-between">
                         <div>
                             <h2 class="text-2xl font-black" x-text="authModal === 'login' ? 'Üye Girişi' : 'Üye Ol'"></h2>
                             <p class="text-sm text-slate-300 mt-1">
@@ -659,18 +730,18 @@
                                         Beni hatırla
                                     </label>
 
-                                    <a href="{{ route('password.request') }}" class="text-blue-700 font-bold hover:underline">
+                                    <a href="{{ route('password.request') }}" class="theme-link text-blue-700 font-bold hover:underline">
                                         Şifremi unuttum
                                     </a>
                                 </div>
 
-                                <button class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
+                                <button class="theme-button w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
                                     Giriş Yap
                                 </button>
 
                                 <p class="text-center text-sm text-slate-600">
                                     Hesabınız yok mu?
-                                    <button type="button" @click="authModal = 'register'" class="text-blue-700 font-black">
+                                    <button type="button" @click="authModal = 'register'" class="theme-link text-blue-700 font-black">
                                         Üye ol
                                     </button>
                                 </p>
@@ -737,13 +808,13 @@
         </p>
     @enderror
 </div>
-                                <button class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
+                                <button class="theme-button w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
                                     Hesap Oluştur
                                 </button>
 
                                 <p class="text-center text-sm text-slate-600">
                                     Zaten hesabınız var mı?
-                                    <button type="button" @click="authModal = 'login'" class="text-blue-700 font-black">
+                                    <button type="button" @click="authModal = 'login'" class="theme-link text-blue-700 font-black">
                                         Giriş yap
                                     </button>
                                 </p>
@@ -765,9 +836,9 @@
 >
     <div
         @click.away="liveActivityModal = false"
-        class="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl text-slate-900"
+        class="theme-card w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl text-slate-900"
     >
-        <div class="flex items-center justify-between bg-red-700 px-6 py-5 text-white">
+        <div class="theme-breaking flex items-center justify-between bg-red-700 px-6 py-5 text-white">
             <div>
                 <h2 class="text-2xl font-black">Canlı Aktivite</h2>
 
@@ -824,7 +895,7 @@
             @endif
 
             <a href="{{ route('forum.index') }}"
-               class="block rounded-2xl border border-blue-100 bg-blue-50 p-4 font-black text-blue-700 transition hover:bg-blue-100">
+               class="theme-link block rounded-2xl border border-blue-100 bg-blue-50 p-4 font-black text-blue-700 transition hover:bg-blue-100">
 
                 👥 Forum
 
@@ -837,7 +908,7 @@
     </div>
 </div>
     {{-- ALT MENÜ --}}
-    <div class="bg-slate-800 text-white">
+    <div class="theme-navbar bg-slate-800 text-white">
         <div class="max-w-7xl mx-auto flex min-h-10 items-center gap-4 px-4 py-2 text-sm font-semibold">
             <nav class="flex shrink-0 items-center gap-5 overflow-x-auto whitespace-nowrap">
                 <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Haberler</a>
@@ -848,7 +919,7 @@
             </nav>
 
             @if($siteAnnouncements->isNotEmpty())
-                <div class="hidden min-w-0 flex-1 items-center overflow-hidden rounded border border-white/10 bg-slate-900/45 px-3 py-1.5 text-xs font-bold text-slate-100 md:flex">
+                <div class="theme-announcement hidden min-w-0 flex-1 items-center overflow-hidden rounded border border-white/10 bg-slate-900/45 px-3 py-1.5 text-xs font-bold text-slate-100 md:flex">
                     <marquee behavior="scroll" direction="left" scrollamount="4" class="min-w-0">
                         @foreach($siteAnnouncements as $announcement)
                             @if($announcement->link_url)
@@ -875,7 +946,7 @@
             <div class="ml-auto hidden shrink-0 items-center gap-2 md:flex">
                 @if($siteSetting?->forum_enabled)
                     <a href="{{ route('forum.index') }}"
-                       class="ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
+                       class="theme-chip ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
                         FORUM
                     </a>
                 @endif
@@ -883,7 +954,7 @@
                 @if($siteSetting?->live_chat_enabled || $siteSetting?->live_stream_enabled || $siteSetting?->live_announcement_enabled)
                     <button type="button"
                         @click="liveActivityModal = true"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
+                        class="theme-chip inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
                         <span class="h-2 w-2 rounded-full bg-white shadow animate-pulse"></span>
                         CANLI AKTİVİTE
                     </button>
@@ -893,9 +964,9 @@
     </div>
 
     {{-- SON DAKİKA --}}
-    <div id="son-dakika" class="bg-red-600 text-white overflow-hidden border-b border-red-700">
+    <div id="son-dakika" class="theme-breaking bg-red-600 text-white overflow-hidden border-b border-red-700">
         <div class="max-w-7xl mx-auto flex items-center h-10">
-            <div class="bg-red-800 px-4 h-full flex items-center font-bold text-sm whitespace-nowrap">
+            <div class="theme-announcement px-4 h-full flex items-center font-bold text-sm whitespace-nowrap">
                 SON DAKİKA
             </div>
 
@@ -939,17 +1010,17 @@
 
 <div
     id="pwa-install-banner"
-    class="mobile-app-banner fixed inset-x-4 z-[9998] hidden rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl md:bottom-4 md:left-auto md:w-96"
+    class="theme-card mobile-app-banner fixed inset-x-4 z-[9998] hidden rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl md:bottom-4 md:left-auto md:w-96"
 >
     <div class="flex items-start gap-3">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600 text-sm font-black text-white">APP</div>
+        <div class="theme-chip flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600 text-sm font-black text-white">APP</div>
         <div class="min-w-0">
             <div class="text-sm font-black">Uygulama olarak yukle</div>
             <p class="mt-1 text-xs font-bold leading-5 text-slate-500">{{ $siteName }}'i mobil cihazinizda daha hizli acabilirsiniz.</p>
         </div>
     </div>
     <div class="mt-3 flex gap-2">
-        <button type="button" data-pwa-install class="rounded-lg bg-red-600 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700">
+        <button type="button" data-pwa-install class="theme-button rounded-lg bg-red-600 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700">
             Yukle
         </button>
         <button type="button" data-pwa-dismiss class="rounded-lg bg-slate-100 px-4 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-200">
@@ -966,7 +1037,7 @@
         <div class="text-sm font-black">Bildirimleri ac</div>
         <p class="mt-1 text-xs font-bold leading-5 text-blue-800/80">Forum, mesaj ve moderasyon bildirimlerini tarayicinizdan alabilirsiniz.</p>
         <div class="mt-3 flex gap-2">
-            <button type="button" data-pwa-notification-enable class="rounded-lg bg-blue-700 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-800">
+            <button type="button" data-pwa-notification-enable class="theme-button rounded-lg bg-blue-700 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-800">
                 Izin ver
             </button>
             <button type="button" data-pwa-notification-dismiss class="rounded-lg bg-white px-4 py-2 text-xs font-black text-blue-800 transition hover:bg-blue-100">
@@ -1088,7 +1159,7 @@
     </div>
 @endauth
 
-<footer class="bg-slate-900 text-white mt-12 pb-24 md:pb-0">
+<footer class="theme-footer bg-slate-900 text-white mt-12 pb-24 md:pb-0">
     <div class="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-4 gap-8 text-sm">
 
         <div>
@@ -1121,15 +1192,41 @@
 
         <div>
             <h3 class="font-bold mb-3">İletişim</h3>
-            <p class="text-slate-300">
-                {{ $siteSetting?->email ?? config('mail.from.address') }}
-            </p>
+            <div class="space-y-2 text-slate-300">
+                <div>
+                    <a href="mailto:Argnest@gmail.com" class="theme-link hover:underline">
+                        Argnest@gmail.com
+                    </a>
+                </div>
+
+                @if($siteSetting?->phone)
+                    <div>{{ $siteSetting->phone }}</div>
+                @endif
+
+                @if($siteSetting?->address)
+                    <div>{{ $siteSetting->address }}</div>
+                @endif
+            </div>
         </div>
 
     </div>
 
     <div class="border-t border-slate-700 py-4 text-center text-sm text-slate-400">
         {{ $siteSetting?->footer_copyright ?? '© ' . date('Y') . ' ' . $siteName }}
+    </div>
+
+    <div class="border-t border-white/10 px-4 py-4 text-center text-xs leading-6 text-slate-400">
+        <div>
+            © {{ date('Y') }} HABER PROJE —
+            Proje Sahibi: Fikret Kaya —
+            <a href="mailto:Argnest@gmail.com" class="theme-link font-semibold hover:underline">Argnest@gmail.com</a>
+            —
+            Tüm Hakları Saklıdır.
+        </div>
+
+        <div class="mt-1 text-[11px] text-slate-500">
+            Bu yazı sistem çekirdeğine gömülüdür ve değiştirilemez.
+        </div>
     </div>
 </footer>
 
