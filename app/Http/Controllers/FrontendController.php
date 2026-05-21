@@ -175,8 +175,9 @@ class FrontendController extends Controller
     public function announcements()
     {
         $announcements = Announcement::active()->latest()->paginate(12);
+        $announcementPortal = $this->announcementPortalData();
 
-        return view('frontend.announcements', compact('announcements'));
+        return view('frontend.announcements', compact('announcements', 'announcementPortal'));
     }
 
     public function videos()
@@ -500,8 +501,45 @@ class FrontendController extends Controller
             ->active()
             ->latest()
             ->paginate(12);
+        $announcementPortal = $this->announcementPortalData($category);
 
-        return view('frontend.announcements', compact('announcements', 'category'));
+        return view('frontend.announcements', compact('announcements', 'category', 'announcementPortal'));
+    }
+
+    private function announcementPortalData(?Category $selectedCategory = null): array
+    {
+        $headlineQuery = Announcement::active()
+            ->where('is_headline', true)
+            ->with('category')
+            ->latest();
+
+        if ($selectedCategory) {
+            $headlineQuery->where('category_id', $selectedCategory->id);
+        }
+
+        $categoryBlocks = Category::announcementType()
+            ->active()
+            ->with(['announcements' => fn ($query) => $query->active()->latest()->take(5)])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (Category $category) => $category->announcements->isNotEmpty())
+            ->values();
+
+        return [
+            'headlines' => $headlineQuery->take(10)->get(),
+            'categoryBlocks' => $selectedCategory
+                ? $categoryBlocks->where('id', $selectedCategory->id)->values()
+                : $categoryBlocks,
+            'popular' => Announcement::active()->with('category')->orderByDesc('views')->take(8)->get(),
+            'latest' => Announcement::active()->with('category')->latest()->take(8)->get(),
+            'categories' => Category::announcementType()
+                ->active()
+                ->withCount(['announcements' => fn ($query) => $query->active()])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
+        ];
     }
 
     public function search()
