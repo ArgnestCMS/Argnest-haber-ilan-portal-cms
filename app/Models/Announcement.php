@@ -24,9 +24,19 @@ class Announcement extends Model
         'image',
         'document',
         'is_headline',
+        'is_breaking',
         'comments_enabled',
         'is_active',
         'views',
+    ];
+
+    protected $casts = [
+        'is_headline' => 'boolean',
+        'is_breaking' => 'boolean',
+        'comments_enabled' => 'boolean',
+        'is_active' => 'boolean',
+        'publish_date' => 'datetime',
+        'deadline' => 'datetime',
     ];
 
     public function category(): BelongsTo

@@ -11,6 +11,45 @@
         ->orderByDesc('created_at')
         ->get();
     $headerSlots = \App\Models\HeaderSlot::visibleInHeader()->get();
+    $breakingTickerItems = collect()
+    ->merge(
+        \App\Models\News::published()
+            ->where('is_breaking', true)
+            ->latest()
+            ->take(15)
+            ->get()
+            ->map(fn ($news) => [
+                'label' => '⚡ ' . $news->title,
+                'url' => url('/haber/' . $news->slug),
+                'target' => '_self',
+                'date' => $news->created_at,
+            ])
+     )
+     ->merge(
+        \App\Models\Announcement::query()
+            ->where('is_active', true)
+            ->where('is_breaking', true)
+            ->where(function ($query) {
+                $query->whereNull('publish_date')
+                    ->orWhere('publish_date', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('deadline')
+                    ->orWhere('deadline', '>=', now());
+            })
+            ->latest()
+            ->take(15)
+            ->get()
+            ->map(fn ($announcement) => [
+                'label' => '📢 ' . $announcement->title,
+                'url' => url('/ilan/' . $announcement->slug),
+                'target' => '_self',
+                'date' => $announcement->created_at,
+            ])
+     )
+     ->sortByDesc('date')
+     ->take(15)
+     ->values();
 
     $rawMetaTitle = trim($__env->yieldContent(
         'title',
@@ -1146,7 +1185,30 @@
                 SON DAKİKA
             </div>
 
-            <marquee behavior="scroll" direction="left" scrollamount="5" class="text-sm font-semibold px-4">
+            <marquee behavior="scroll" direction="left" scrollamount="5" class="min-w-0 px-4 text-sm font-semibold">
+                @forelse($breakingTickerItems as $item)
+                    @if($item['url'])
+                        <a
+                            href="{{ $item['url'] }}"
+                            target="{{ $item['target'] }}"
+                            @if($item['target'] === '_blank') rel="noopener noreferrer" @endif
+                            class="hover:text-red-100"
+                        >
+                            {{ $item['label'] }}
+                        </a>
+                    @else
+                        <span>{{ $item['label'] }}</span>
+                    @endif
+
+                    @unless($loop->last)
+                        <span class="px-3 text-red-100/80">-</span>
+                    @endunless
+                @empty
+                    <span>Son dakika haberlerini takip edin</span>
+                @endforelse
+            </marquee>
+
+            <marquee behavior="scroll" direction="left" scrollamount="5" class="hidden text-sm font-semibold px-4">
                 🔥 Memur alımı ilanları güncellendi —
                 🔥 KPSS tercih süreci başladı —
                 🔥 Yeni personel alım ilanları yayımlandı —

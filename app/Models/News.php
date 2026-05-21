@@ -24,6 +24,7 @@ class News extends Model
     'share_facebook',
     'share_twitter',
     'is_headline',
+    'is_breaking',
     'comments_enabled',
     'views',
 
@@ -34,6 +35,17 @@ class News extends Model
     'last_viewed_at',
     'is_trending',
  ];
+
+    protected $casts = [
+        'is_headline' => 'boolean',
+        'is_breaking' => 'boolean',
+        'comments_enabled' => 'boolean',
+        'share_facebook' => 'boolean',
+        'share_twitter' => 'boolean',
+        'is_trending' => 'boolean',
+        'publish_date' => 'datetime',
+        'end_date' => 'datetime',
+    ];
 
     public function category(): BelongsTo
     {

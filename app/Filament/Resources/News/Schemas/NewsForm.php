@@ -120,6 +120,10 @@ class NewsForm
                                             ->label('Manşete Göster')
                                             ->helperText('Ana sayfa manşet alanında öne çıkarır.'),
 
+                                        Toggle::make('is_breaking')
+                                            ->label('Son Dakika')
+                                            ->helperText('Ãœst kÄ±rmÄ±zÄ± son dakika barÄ±nda otomatik akar.'),
+
                                         Toggle::make('comments_enabled')
                                             ->label('Yorumlara Açık')
                                             ->helperText('Okuyucu yorum formunu gösterir; mevcut moderasyon akışı korunur.')

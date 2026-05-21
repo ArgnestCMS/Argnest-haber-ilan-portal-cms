@@ -244,6 +244,10 @@ class AnnouncementForm
                                             ->label('Manşette Göster')
                                             ->helperText('Ana sayfa ve ilan listesinde öne çıkarır.'),
 
+                                        Toggle::make('is_breaking')
+                                            ->label('Son Dakika')
+                                            ->helperText('Ãœst kÄ±rmÄ±zÄ± son dakika barÄ±nda otomatik akar.'),
+
                                         Toggle::make('comments_enabled')
                                             ->label('Yorumlara Açık')
                                             ->helperText('Mevcut yorum moderasyon akışı korunarak yorum formunu gösterir.')
@@ -254,7 +258,7 @@ class AnnouncementForm
                                             ->helperText('Pasif ilanlar public listelerde gösterilmez.')
                                             ->default(true),
                                     ])
-                                    ->columns(3),
+                                    ->columns(4),
                             ]),
                     ])
                     ->columnSpanFull(),
