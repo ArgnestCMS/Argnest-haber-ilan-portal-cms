@@ -13,6 +13,7 @@ use App\Models\Gallery;
 use App\Models\LiveActivity;
 use App\Models\LiveChatMessage;
 use App\Models\News;
+use App\Models\Poll;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Video;
@@ -90,6 +91,11 @@ class FrontendController extends Controller
 
         $latestVideos = Video::where('is_active', true)->latest()->take(6)->get();
         $latestGalleries = Gallery::where('is_active', true)->latest()->take(6)->get();
+        $popupPoll = Poll::popupActive()
+            ->with('activeOptions')
+            ->latest()
+            ->get()
+            ->first(fn (Poll $poll) => ! $poll->hasVoteFrom(request()) && $poll->activeOptions->isNotEmpty());
 
         $ads = $this->activeAds()->get()->groupBy('position');
 
@@ -155,6 +161,7 @@ class FrontendController extends Controller
             'weather',
             'trendingNews',
             'mostReadNews',
+            'popupPoll',
         ));
     }
 

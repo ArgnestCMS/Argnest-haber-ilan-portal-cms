@@ -523,6 +523,7 @@
                     <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
                     <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
                     <a href="{{ route('galleries.index') }}" class="py-3 border-b border-white/10">Galeriler</a>
+                    <a href="{{ route('polls.index') }}" class="py-3 border-b border-white/10">Anketler</a>
 
                     @if($siteSetting?->forum_enabled)
                         <a href="{{ route('forum.index') }}" class="py-3 border-b border-white/10">Forum</a>
@@ -839,6 +840,7 @@
                 <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">İlanlar</a>
                 <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Videolar</a>
                 <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Galeriler</a>
+                <a href="{{ route('polls.index') }}" class="{{ request()->is('anketler*') || request()->is('anket/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Anketler</a>
             </nav>
 
             @if($siteAnnouncements->isNotEmpty())

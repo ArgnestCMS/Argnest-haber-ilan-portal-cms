@@ -506,4 +506,88 @@
 
 </section>
 
+@if(isset($popupPoll) && $popupPoll)
+    <div
+        x-data="homePollPopup({{ $popupPoll->id }}, {{ (int) $popupPoll->popup_cooldown_minutes }})"
+        x-init="init()"
+        x-show="open"
+        x-transition
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4"
+        style="display:none;"
+    >
+        <div class="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
+            @if($popupPoll->image)
+                <img src="{{ asset('storage/' . $popupPoll->image) }}" alt="{{ $popupPoll->title }}" class="h-48 w-full rounded-t-3xl object-cover">
+            @endif
+
+            <div class="p-5 md:p-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-xs font-black uppercase text-blue-700">{{ $popupPoll->topic ?: 'Anket' }}</div>
+                        <h2 class="mt-2 text-2xl font-black leading-tight text-slate-950">{{ $popupPoll->title }}</h2>
+                        @if($popupPoll->subtitle)
+                            <p class="mt-2 text-sm leading-6 text-slate-600">{{ $popupPoll->subtitle }}</p>
+                        @endif
+                    </div>
+
+                    <button type="button" @click="dismiss()" class="rounded-full bg-slate-100 px-3 py-1 text-xl font-black text-slate-600">
+                        ×
+                    </button>
+                </div>
+
+                <form method="POST" action="{{ route('polls.vote', $popupPoll) }}" class="mt-5 space-y-3">
+                    @csrf
+                    @foreach($popupPoll->activeOptions as $option)
+                        <label class="flex cursor-pointer gap-3 rounded-2xl border border-slate-200 p-3 hover:border-blue-300">
+                            <input
+                                type="{{ $popupPoll->allow_multiple ? 'checkbox' : 'radio' }}"
+                                name="{{ $popupPoll->allow_multiple ? 'option_ids[]' : 'option_id' }}"
+                                value="{{ $option->id }}"
+                                class="mt-1"
+                                {{ $popupPoll->allow_multiple ? '' : 'required' }}
+                            >
+                            @if($option->image)
+                                <img src="{{ asset('storage/' . $option->image) }}" alt="{{ $option->title }}" class="h-14 w-16 rounded-xl object-cover">
+                            @endif
+                            <span>
+                                <span class="block font-black text-slate-950">{{ $option->title }}</span>
+                                @if($option->description)
+                                    <span class="mt-1 block text-xs leading-5 text-slate-500">{{ $option->description }}</span>
+                                @endif
+                            </span>
+                        </label>
+                    @endforeach
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <a href="{{ route('polls.show', $popupPoll->slug) }}" class="text-sm font-black text-blue-700">
+                            Detayları gör
+                        </a>
+                        <button class="rounded-full bg-blue-700 px-5 py-2.5 font-black text-white hover:bg-blue-800">
+                            Oy Ver
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function homePollPopup(pollId, cooldownMinutes) {
+            return {
+                open: false,
+                key: 'poll-popup-dismissed-' + pollId,
+                init() {
+                    const dismissedUntil = Number(localStorage.getItem(this.key) || 0);
+                    this.open = Date.now() > dismissedUntil;
+                },
+                dismiss() {
+                    const minutes = Math.max(Number(cooldownMinutes || 1440), 1);
+                    localStorage.setItem(this.key, String(Date.now() + minutes * 60 * 1000));
+                    this.open = false;
+                },
+            };
+        }
+    </script>
+@endif
+
 @endsection

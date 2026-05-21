@@ -20,6 +20,7 @@ use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\ContentAttachmentController;
+use App\Http\Controllers\PollController;
 use App\Http\Middleware\EnsureAdminPanelAccess;
 
 /*
@@ -59,6 +60,16 @@ Route::get('/galeriler', [FrontendController::class, 'galleries'])
 
 Route::get('/galeri/{slug}', [FrontendController::class, 'galleryDetail'])
     ->name('galleries.show');
+
+Route::get('/anketler', [PollController::class, 'index'])
+    ->name('polls.index');
+
+Route::get('/anket/{slug}', [PollController::class, 'show'])
+    ->name('polls.show');
+
+Route::post('/anket/{poll}/oy', [PollController::class, 'vote'])
+    ->middleware('throttle:10,1')
+    ->name('polls.vote');
 
 Route::get('/forum', [FrontendController::class, 'forum'])
     ->name('forum.index');
