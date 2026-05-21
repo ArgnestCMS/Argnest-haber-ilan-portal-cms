@@ -268,7 +268,7 @@
 
     .header-slot-banner img {
         display: block;
-        max-height: 36px;
+        max-height: 40px;
         max-width: min(260px, 32vw);
         object-fit: contain;
     }
@@ -377,18 +377,21 @@
                                 @elseif($headerSlot->isBanner())
                                     @php
                                         $bannerTarget = $headerSlot->banner_target === '_blank' ? '_blank' : '_self';
+                                        $bannerWidth = max((int) ($headerSlot->banner_width ?: 180), 180);
+                                        $bannerHeight = max((int) ($headerSlot->banner_height ?: 40), 40);
+                                        $bannerImageExists = $headerSlot->banner_image
+                                            ? \Illuminate\Support\Facades\Storage::disk('public')->exists($headerSlot->banner_image)
+                                            : false;
+                                        $bannerImage = $bannerImageExists ? asset('storage/' . $headerSlot->banner_image) : null;
                                         $bannerStyle = collect([
-                                            $headerSlot->banner_width ? 'width: ' . $headerSlot->banner_width . 'px' : null,
-                                            $headerSlot->banner_height ? 'height: ' . $headerSlot->banner_height . 'px' : null,
+                                            'width: ' . $bannerWidth . 'px',
+                                            'height: ' . $bannerHeight . 'px',
                                         ])->filter()->implode('; ');
                                     @endphp
 
-                                    <div class="header-slot-banner hidden shrink-0 items-center lg:flex">
-                                        @if($headerSlot->banner_image)
-                                            @php
-                                                $bannerImage = asset('storage/' . $headerSlot->banner_image);
-                                            @endphp
-
+                                    <!-- header slot rendered: {{ $headerSlot->id }}/{{ $headerSlot->slot_type }}/{{ $headerSlot->banner_image ?: 'no-path' }} -->
+                                    <div class="header-slot-banner flex shrink-0 items-center">
+                                        @if($bannerImageExists)
                                             @if($headerSlot->banner_url)
                                                 <a
                                                     href="{{ $headerSlot->banner_url }}"
@@ -410,6 +413,13 @@
                                                     style="{{ $bannerStyle }}"
                                                 >
                                             @endif
+                                        @elseif($headerSlot->banner_image)
+                                            <div
+                                                class="flex items-center justify-center rounded border border-dashed border-white/40 px-3 text-[11px] font-bold text-white/90"
+                                                style="{{ $bannerStyle }}"
+                                            >
+                                                Banner görseli bulunamadı
+                                            </div>
                                         @endif
 
                                         @if($headerSlot->html_code)

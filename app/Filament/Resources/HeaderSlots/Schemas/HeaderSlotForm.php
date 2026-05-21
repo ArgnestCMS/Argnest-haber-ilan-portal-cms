@@ -29,28 +29,32 @@ class HeaderSlotForm
                                 TextInput::make('title')
                                     ->label('Başlık / ad')
                                     ->required()
-                                    ->maxLength(255),
+                                    ->maxLength(255)
+                                    ->dehydratedWhenHidden(),
 
                                 Select::make('slot_type')
-                                    ->label('Mod')
+                                    ->label('Slot Tipi')
                                     ->options([
-                                        HeaderSlot::TYPE_BUTTON => 'Buton Modu',
-                                        HeaderSlot::TYPE_BANNER => 'Reklam / Banner Modu',
+                                        HeaderSlot::TYPE_BUTTON => 'Buton',
+                                        HeaderSlot::TYPE_BANNER => 'Reklam / Banner',
                                     ])
                                     ->default(HeaderSlot::TYPE_BUTTON)
                                     ->live()
-                                    ->required(),
+                                    ->required()
+                                    ->dehydratedWhenHidden(),
 
                                 Toggle::make('is_active')
                                     ->label('Aktif')
-                                    ->default(true),
+                                    ->default(true)
+                                    ->dehydratedWhenHidden(),
 
                                 TextInput::make('sort_order')
                                     ->label('Sıralama')
                                     ->numeric()
                                     ->default(0)
                                     ->minValue(0)
-                                    ->required(),
+                                    ->required()
+                                    ->dehydratedWhenHidden(),
 
                                 Select::make('display_position')
                                     ->label('Gösterim konumu')
@@ -58,80 +62,86 @@ class HeaderSlotForm
                                         HeaderSlot::POSITION_TOPBAR_AFTER_HOME => 'Ana Sayfa yanındaki üst bar alanı',
                                     ])
                                     ->default(HeaderSlot::POSITION_TOPBAR_AFTER_HOME)
-                                    ->required(),
+                                    ->required()
+                                    ->dehydratedWhenHidden(),
 
                                 DateTimePicker::make('starts_at')
-                                    ->label('Başlangıç tarihi'),
+                                    ->label('Başlangıç tarihi')
+                                    ->dehydratedWhenHidden(),
 
                                 DateTimePicker::make('ends_at')
-                                    ->label('Bitiş tarihi'),
+                                    ->label('Bitiş tarihi')
+                                    ->dehydratedWhenHidden(),
                             ])
                             ->columns(2),
 
                         Tabs\Tab::make('Buton Modu')
                             ->schema([
-                                TextInput::make('button_text')
-                                    ->label('Buton yazısı')
-                                    ->maxLength(120)
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
+                                Section::make('Buton Ayarları')
+                                    ->schema([
+                                        TextInput::make('button_text')
+                                            ->label('Buton yazısı')
+                                            ->maxLength(120)
+                                            ->dehydratedWhenHidden(),
 
-                                TextInput::make('button_url')
-                                    ->label('Link URL')
-                                    ->url()
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
+                                        TextInput::make('button_url')
+                                            ->label('Link URL')
+                                            ->url()
+                                            ->dehydratedWhenHidden(),
 
-                                Select::make('button_target')
-                                    ->label('Link hedefi')
-                                    ->options([
-                                        '_self' => 'Aynı sekme',
-                                        '_blank' => 'Yeni sekme',
+                                        Select::make('button_target')
+                                            ->label('Link hedefi')
+                                            ->options([
+                                                '_self' => 'Aynı sekme',
+                                                '_blank' => 'Yeni sekme',
+                                            ])
+                                            ->default('_self')
+                                            ->dehydratedWhenHidden(),
+
+                                        ColorPicker::make('button_background_color')
+                                            ->label('Arka plan rengi')
+                                            ->dehydratedWhenHidden(),
+
+                                        ColorPicker::make('button_hover_color')
+                                            ->label('Hover rengi')
+                                            ->dehydratedWhenHidden(),
+
+                                        ColorPicker::make('button_text_color')
+                                            ->label('Yazı rengi')
+                                            ->dehydratedWhenHidden(),
+
+                                        Select::make('button_size')
+                                            ->label('Buton boyutu')
+                                            ->options([
+                                                'small' => 'Küçük',
+                                                'medium' => 'Orta',
+                                                'large' => 'Büyük',
+                                            ])
+                                            ->default('medium')
+                                            ->dehydratedWhenHidden(),
+
+                                        TextInput::make('button_radius')
+                                            ->label('Border radius')
+                                            ->numeric()
+                                            ->suffix('px')
+                                            ->default(6)
+                                            ->minValue(0)
+                                            ->maxValue(48)
+                                            ->dehydratedWhenHidden(),
+
+                                        TextInput::make('button_icon')
+                                            ->label('Opsiyonel ikon/emoji')
+                                            ->maxLength(24)
+                                            ->dehydratedWhenHidden(),
+
+                                        TextInput::make('custom_css_class')
+                                            ->label('Opsiyonel özel CSS class')
+                                            ->helperText('Sadece güvenilir ve mevcut CSS sınıfları kullanılmalıdır.')
+                                            ->maxLength(255)
+                                            ->dehydratedWhenHidden(),
                                     ])
-                                    ->default('_self')
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                ColorPicker::make('button_background_color')
-                                    ->label('Arka plan rengi')
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                ColorPicker::make('button_hover_color')
-                                    ->label('Hover rengi')
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                ColorPicker::make('button_text_color')
-                                    ->label('Yazı rengi')
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                Select::make('button_size')
-                                    ->label('Buton boyutu')
-                                    ->options([
-                                        'small' => 'Küçük',
-                                        'medium' => 'Orta',
-                                        'large' => 'Büyük',
-                                    ])
-                                    ->default('medium')
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                TextInput::make('button_radius')
-                                    ->label('Border radius')
-                                    ->numeric()
-                                    ->suffix('px')
-                                    ->default(6)
-                                    ->minValue(0)
-                                    ->maxValue(48)
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                TextInput::make('button_icon')
-                                    ->label('Opsiyonel ikon/emoji')
-                                    ->maxLength(24)
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-
-                                TextInput::make('custom_css_class')
-                                    ->label('Opsiyonel özel CSS class')
-                                    ->helperText('Sadece güvenilir ve mevcut CSS sınıfları kullanılmalıdır.')
-                                    ->maxLength(255)
-                                    ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BUTTON),
-                            ])
-                            ->columns(2),
+                                    ->columns(2),
+                            ]),
 
                         Tabs\Tab::make('Reklam / Banner Modu')
                             ->schema([
@@ -146,12 +156,12 @@ class HeaderSlotForm
                                             ->downloadable()
                                             ->openable()
                                             ->nullable()
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
 
                                         TextInput::make('banner_url')
                                             ->label('Banner linki')
                                             ->url()
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
 
                                         Select::make('banner_target')
                                             ->label('Link hedefi')
@@ -160,7 +170,7 @@ class HeaderSlotForm
                                                 '_blank' => 'Yeni sekme',
                                             ])
                                             ->default('_self')
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
 
                                         TextInput::make('banner_width')
                                             ->label('Banner genişliği')
@@ -168,7 +178,7 @@ class HeaderSlotForm
                                             ->suffix('px')
                                             ->minValue(1)
                                             ->maxValue(1200)
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
 
                                         TextInput::make('banner_height')
                                             ->label('Banner yüksekliği')
@@ -176,12 +186,12 @@ class HeaderSlotForm
                                             ->suffix('px')
                                             ->minValue(1)
                                             ->maxValue(400)
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
 
                                         TextInput::make('banner_alt')
                                             ->label('Alt text')
                                             ->maxLength(255)
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
                                     ])
                                     ->columns(2),
 
@@ -196,14 +206,14 @@ class HeaderSlotForm
                                             ->label('Opsiyonel HTML kod alanı')
                                             ->rows(6)
                                             ->columnSpanFull()
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
 
                                         Textarea::make('script_code')
                                             ->label('Opsiyonel script kod alanı')
                                             ->helperText('Sadece admin/super admin kullanımı içindir. Boşsa frontendde render edilmez.')
                                             ->rows(6)
                                             ->columnSpanFull()
-                                            ->visible(fn ($get): bool => $get('slot_type') === HeaderSlot::TYPE_BANNER),
+                                            ->dehydratedWhenHidden(),
                                     ]),
                             ]),
                     ])
