@@ -149,7 +149,7 @@
                 @endphp
 
                 <a href="/haber/{{ $featuredNews->slug }}"
-                   class="premium-card premium-card-hover mb-6 block overflow-hidden md:mb-8">
+                   class="theme-card premium-card premium-card-hover mb-6 block overflow-hidden md:mb-8">
 
                     <div class="grid lg:grid-cols-2">
 
@@ -159,7 +159,7 @@
                                      class="w-full h-full object-cover hover:scale-105 transition duration-700">
                             @endif
 
-                            <div class="absolute top-4 left-4 rounded-full bg-red-600 px-4 py-2 text-xs font-black text-white shadow-lg">
+                            <div class="theme-primary-bg absolute top-4 left-4 rounded-full bg-red-600 px-4 py-2 text-xs font-black text-white shadow-lg">
                                 MANŞET
                             </div>
                         </div>
@@ -182,7 +182,7 @@
                             @endif
 
                             <div class="mt-6">
-                                <span class="inline-block bg-blue-700 text-white px-5 py-2 font-bold text-sm rounded">
+                                <span class="theme-primary-bg inline-block bg-blue-700 text-white px-5 py-2 font-bold text-sm rounded">
                                     Haberi Oku →
                                 </span>
                             </div>
@@ -225,7 +225,7 @@
                     @endphp
 
                     <a href="/haber/{{ $item->slug }}"
-                       class="premium-card premium-card-hover group overflow-hidden">
+                       class="theme-card premium-card premium-card-hover group overflow-hidden">
 
                         <div class="premium-media relative h-48 md:h-52">
                             @if($imagePath)
@@ -233,7 +233,7 @@
                                      class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
                             @endif
 
-                            <div class="absolute top-3 left-3 rounded-full bg-blue-700 px-3 py-1 text-xs font-black text-white shadow">
+                            <div class="theme-primary-bg absolute top-3 left-3 rounded-full bg-blue-700 px-3 py-1 text-xs font-black text-white shadow">
                                 HABER
                             </div>
 
@@ -287,7 +287,7 @@
     <div class="sticky top-6 space-y-6">
 
         {{-- TREND HABERLER --}}
-        <div class="premium-card overflow-hidden">
+        <div class="theme-card premium-card overflow-hidden">
 
             <div class="bg-slate-950 text-white px-5 py-4 font-black text-lg">
                 🔥 Trend Haberler
@@ -338,7 +338,7 @@
         </div>
 
         {{-- ÇOK OKUNAN --}}
-        <div class="premium-card overflow-hidden">
+        <div class="theme-card premium-card overflow-hidden">
 
             <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
                 👁️ Çok Okunanlar

@@ -60,7 +60,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="space-y-4 lg:col-span-8">
             @if($headline)
-                <section class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                <section class="theme-card overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
                     <a href="/ilan/{{ $headline->slug }}" class="relative block h-[190px] overflow-hidden bg-slate-950 text-white sm:h-[220px] md:h-[300px]">
                         @if($headline->image)
                             <img
@@ -74,7 +74,7 @@
                         @endif
 
                         <div class="absolute inset-x-0 bottom-0 p-5">
-                            <span class="mb-3 inline-flex rounded-lg bg-blue-700 px-3 py-1 text-xs font-black">
+                            <span class="theme-primary-bg mb-3 inline-flex rounded-lg bg-blue-700 px-3 py-1 text-xs font-black">
                                 İLAN MANŞET
                             </span>
 
@@ -99,7 +99,7 @@
                     </a>
 
                     @if($headlines->isNotEmpty())
-                        <div class="flex gap-2 overflow-x-auto border-t border-slate-100 bg-white px-4 py-3">
+                        <div class="theme-card flex gap-2 overflow-x-auto border-t border-slate-100 bg-white px-4 py-3">
                             @foreach($headlines->take(10) as $item)
                                 <a
                                     href="/ilan/{{ $item->slug }}"
@@ -114,7 +114,7 @@
                 </section>
             @endif
 
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 py-4 text-center text-slate-400">
+            <div class="theme-card rounded-2xl border border-dashed border-slate-300 bg-white/70 py-4 text-center text-slate-400">
                 İlan Liste Üst Reklam Alanı
             </div>
 
@@ -122,7 +122,7 @@
 
         <aside class="max-w-[240px] space-y-3 lg:col-span-4">
 
-            <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <div class="theme-card overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
                 <div class="bg-red-600 px-3 py-2 text-sm font-black text-white">Çok Görüntülenenler</div>
 
                 <div class="divide-y divide-slate-100">
@@ -140,7 +140,7 @@
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <div class="theme-card overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
                 <div class="bg-blue-700 px-3 py-2 text-sm font-black text-white">Son İlanlar</div>
 
                 <div class="space-y-2 p-2.5">
@@ -167,7 +167,7 @@
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <div class="theme-card overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
                 <div class="bg-slate-950 px-3 py-2 text-sm font-black text-white">İlan Kategorileri</div>
 
                 <div class="divide-y divide-slate-100">
@@ -195,7 +195,7 @@
             @if(($portal['categoryBlocks'] ?? collect())->isNotEmpty())
                 <section class="grid gap-2 md:grid-cols-2">
                     @foreach($portal['categoryBlocks'] as $block)
-                        <div class="max-w-[260px] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                        <div class="theme-card max-w-[260px] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
                             <div class="flex items-center justify-between border-b border-slate-100 px-3 py-2">
                                 <div>
                                     <h2 class="font-black text-slate-950">{{ $block->name }}</h2>
@@ -244,7 +244,7 @@
 
                 <div class="grid gap-2 md:grid-cols-2">
                     @forelse($latestCompact as $item)
-                        <a href="/ilan/{{ $item->slug }}" class="flex max-w-[260px] gap-2 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
+                        <a href="/ilan/{{ $item->slug }}" class="theme-card flex max-w-[260px] gap-2 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
                             <div class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                                 @if($item->image)
                                     <img
@@ -267,7 +267,7 @@
                             </div>
                         </a>
                     @empty
-                        <div class="rounded-2xl bg-white p-4 text-center text-sm font-bold text-slate-400 ring-1 ring-slate-200 md:col-span-2">
+                        <div class="theme-card rounded-2xl bg-white p-4 text-center text-sm font-bold text-slate-400 ring-1 ring-slate-200 md:col-span-2">
                             Şu anda aktif ilan bulunmuyor.
                         </div>
                     @endforelse
@@ -278,7 +278,7 @@
                 </div>
             </section>
 
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-400">
+            <div class="theme-card rounded-2xl border border-dashed border-slate-300 bg-white/60 px-4 py-6 text-center text-sm text-slate-400">
                 İlan Liste Alt Reklam Alanı
             </div>
         </main>

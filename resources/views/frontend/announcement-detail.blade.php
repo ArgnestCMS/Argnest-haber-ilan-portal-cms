@@ -166,7 +166,7 @@
 
             @endif
 
-            <article class="premium-article overflow-hidden">
+            <article class="theme-card premium-article overflow-hidden">
 
                 @if($imagePath)
                     <div class="relative">
@@ -186,7 +186,7 @@
                             </div>
 
                             <div class="max-w-4xl">
-                                <span class="inline-flex rounded-full bg-white px-4 py-1 text-xs font-black text-blue-700 shadow-sm sm:text-sm">
+                                <span class="theme-card theme-primary-text inline-flex rounded-full bg-white px-4 py-1 text-xs font-black text-blue-700 shadow-sm sm:text-sm">
                                     İLAN
                                 </span>
 
@@ -205,7 +205,7 @@
                         </div>
 
                         <div class="max-w-4xl">
-                            <span class="inline-flex rounded-full bg-white px-4 py-1 text-xs font-black text-blue-700 shadow-sm sm:text-sm">
+                            <span class="theme-card theme-primary-text inline-flex rounded-full bg-white px-4 py-1 text-xs font-black text-blue-700 shadow-sm sm:text-sm">
                                 İLAN
                             </span>
 
@@ -248,14 +248,14 @@
 
                     @if($announcement->summary)
 
-                        <div class="mb-6 rounded-2xl border border-blue-100 border-l-4 border-l-blue-600 bg-blue-50 p-4 text-lg font-semibold md:mb-8 md:p-5 md:text-xl">
+                        <div class="theme-card mb-6 rounded-2xl border border-blue-100 border-l-4 border-l-blue-600 bg-blue-50 p-4 text-lg font-semibold md:mb-8 md:p-5 md:text-xl">
                             {{ $announcement->summary }}
                         </div>
 
                     @endif
 
                     @if($contentAttachmentImages->isNotEmpty())
-                        <div class="mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-3 md:mb-8 md:p-4">
+                        <div class="theme-card mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 p-3 md:mb-8 md:p-4">
                             <div class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
                                 İlan Görselleri
                             </div>
@@ -265,7 +265,7 @@
                                     <a
                                         href="{{ $asset->url }}"
                                         data-content-lightbox-image
-                                        class="block shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 transition hover:border-blue-300 hover:shadow-sm"
+                                        class="theme-card block shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 transition hover:border-blue-300 hover:shadow-sm"
                                     >
                                         <img
                                             src="{{ $asset->thumbnail_url ?? $asset->url }}"
@@ -318,7 +318,7 @@
 {{-- YORUM SİSTEMİ --}}
 @if($announcement->comments_enabled)
 
-    <div class="premium-card mt-4 p-5 md:mt-6 md:p-8">
+    <div class="theme-card premium-card mt-4 p-5 md:mt-6 md:p-8">
 
         <div class="flex items-center justify-between mb-8">
 
@@ -479,7 +479,7 @@
 
             @forelse($announcement->approvedComments as $comment)
 
-                <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div class="theme-card bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
 
                     <div class="flex items-start gap-4">
 
@@ -570,7 +570,7 @@
             <div class="space-y-6 lg:sticky lg:top-32">
 
                 {{-- ÇOK GÖRÜNTÜLENEN İLANLAR --}}
-                <div class="premium-card overflow-hidden">
+                <div class="theme-card premium-card overflow-hidden">
 
                     <div class="bg-red-600 text-white px-5 py-4 font-black text-lg">
                         Çok Görüntülenen İlanlar
@@ -622,9 +622,9 @@
                 @endif
 
                 {{-- SON İLANLAR --}}
-                <div class="premium-card overflow-hidden">
+                <div class="theme-card premium-card overflow-hidden">
 
-                    <div class="bg-slate-900 text-white px-5 py-4 font-black text-lg">
+                    <div class="theme-secondary-bg bg-slate-900 text-white px-5 py-4 font-black text-lg">
                         Son İlanlar
                     </div>
 

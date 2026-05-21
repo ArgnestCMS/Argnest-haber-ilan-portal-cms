@@ -98,7 +98,7 @@
                 <div
                     x-data="{ active: 0, total: {{ $headlines->count() }} }"
                     x-init="setInterval(() => active = (active + 1) % total, 5000)"
-                    class="premium-card relative overflow-hidden"
+                    class="theme-card premium-card relative overflow-hidden"
                 >
 
                     @foreach($headlines as $index => $item)
@@ -168,7 +168,7 @@
             {{-- TREND + ÇOK OKUNAN --}}
             <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 md:mt-6">
 
-                <div class="premium-card overflow-hidden">
+                <div class="theme-card premium-card overflow-hidden">
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">🔥 Trend Haberler</h2>
                         <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">
@@ -204,7 +204,7 @@
                     </div>
                 </div>
 
-                <div class="premium-card overflow-hidden">
+                <div class="theme-card premium-card overflow-hidden">
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">👁 Çok Okunanlar</h2>
                         <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-black text-white">
@@ -243,7 +243,7 @@
             <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 md:mt-6">
 
                 {{-- SON HABERLER --}}
-                <div class="premium-card overflow-hidden">
+                <div class="theme-card premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">Son Haberler</h2>
@@ -254,7 +254,7 @@
 
                         @foreach($latestNews->take(8) as $news)
 
-                            <a href="/haber/{{ $news->slug }}" class="home-mobile-card overflow-hidden rounded-2xl border border-slate-100 bg-white transition hover:border-blue-100 hover:bg-blue-50/60">
+                            <a href="/haber/{{ $news->slug }}" class="theme-card home-mobile-card overflow-hidden rounded-2xl border border-slate-100 bg-white transition hover:border-blue-100 hover:bg-blue-50/60">
 
                                 @if($news->image)
                                     <img
@@ -282,7 +282,7 @@
                 </div>
 
                 {{-- SON İLANLAR --}}
-                <div class="premium-card overflow-hidden">
+                <div class="theme-card premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">Son İlanlar</h2>
@@ -293,7 +293,7 @@
 
                         @foreach($latestAnnouncements->take(8) as $announcement)
 
-                            <a href="/ilan/{{ $announcement->slug }}" class="home-mobile-card overflow-hidden rounded-2xl border border-slate-100 bg-white transition hover:border-blue-100 hover:bg-blue-50/60">
+                            <a href="/ilan/{{ $announcement->slug }}" class="theme-card home-mobile-card overflow-hidden rounded-2xl border border-slate-100 bg-white transition hover:border-blue-100 hover:bg-blue-50/60">
                                 @if($announcement->image)
                                     <img
                                         src="{{ asset('storage/' . (str_contains($announcement->image, '/') ? $announcement->image : 'announcements/' . $announcement->image)) }}"
@@ -322,7 +322,7 @@
 
             {{-- VİDEOLAR --}}
             @if(isset($latestVideos) && $latestVideos->count())
-                <div class="premium-card mt-4 overflow-hidden md:mt-6">
+                <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">🎥 Son Videolar</h2>
@@ -365,7 +365,7 @@
 
             {{-- GALERİLER --}}
             @if(isset($latestGalleries) && $latestGalleries->count())
-                <div class="premium-card mt-4 overflow-hidden md:mt-6">
+                <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
                         <h2 class="premium-section-heading">🖼️ Son Galeriler</h2>
@@ -407,7 +407,7 @@
             @endif
 
             {{-- KATEGORİLER --}}
-            <div class="premium-card mt-4 overflow-hidden md:mt-6">
+            <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                 <div class="border-b px-5 py-4">
                     <h2 class="premium-section-heading">Kategoriler</h2>
@@ -422,8 +422,8 @@
                         <div class="grid grid-cols-2 gap-3">
                             @foreach($newsCategories as $category)
                                 <a href="/kategori/{{ $category->slug }}"
-                                   class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
-                                    <h4 class="font-bold text-blue-700">
+                                   class="theme-card rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
+                                    <h4 class="theme-primary-text font-bold text-blue-700">
                                         {{ $category->name }}
                                     </h4>
 
@@ -443,8 +443,8 @@
                         <div class="grid grid-cols-2 gap-3">
                             @foreach($announcementCategories as $category)
                                 <a href="/kategori/{{ $category->slug }}"
-                                   class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
-                                    <h4 class="font-bold text-blue-700">
+                                   class="theme-card rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm">
+                                    <h4 class="theme-primary-text font-bold text-blue-700">
                                         {{ $category->name }}
                                     </h4>
 

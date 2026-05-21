@@ -139,7 +139,7 @@
                     @endif
 
                     {{-- HABER --}}
-                    <article class="premium-article">
+                    <article class="theme-card premium-article">
 
                         @if($imagePath)
 
@@ -492,7 +492,7 @@
                 <aside class="col-span-12 lg:col-span-3 space-y-6">
 
                     {{-- SON HABERLER --}}
-                    <div class="premium-card overflow-hidden">
+                    <div class="theme-card premium-card overflow-hidden">
 
                         <div class="bg-slate-900 text-white px-5 py-4 font-black text-lg">
                             Son Haberler
@@ -540,7 +540,7 @@
                     </div>
 
                     {{-- TREND HABERLER --}}
-                    <div class="premium-card overflow-hidden">
+                    <div class="theme-card premium-card overflow-hidden">
 
                         <div class="bg-red-600 text-white px-5 py-4 font-black text-lg">
                             Trend Haberler
@@ -574,7 +574,7 @@
 
                     </div>
 {{-- SON YORUMLAR --}}
-<div class="premium-card overflow-hidden">
+<div class="theme-card premium-card overflow-hidden">
 
     <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
         Son Yorumlar

@@ -239,6 +239,18 @@
         background-color: var(--theme-card) !important;
     }
 
+    .theme-primary-bg {
+        background-color: var(--theme-primary) !important;
+    }
+
+    .theme-secondary-bg {
+        background-color: var(--theme-secondary) !important;
+    }
+
+    .theme-primary-text {
+        color: var(--theme-primary) !important;
+    }
+
     .header-slot-scroll {
         scrollbar-width: none;
     }
