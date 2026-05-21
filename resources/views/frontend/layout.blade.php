@@ -4,18 +4,22 @@
 @php
     $siteSetting = \App\Models\SiteSetting::first();
     $seoSetting = \App\Models\SeoSetting::current();
+    $siteName = $siteSetting?->site_name ?? config('app.name');
     $siteAnnouncements = \App\Models\SiteAnnouncement::visible()
         ->orderBy('sort_order')
         ->orderByDesc('created_at')
         ->get();
 
-    $metaTitle = trim($__env->yieldContent(
+    $rawMetaTitle = trim($__env->yieldContent(
         'title',
         $seoSetting?->site_title
             ?? $siteSetting?->seo_title
-            ?? $siteSetting?->site_name
-            ?? 'İlan Haber Sitesi'
+            ?? $siteName
     ));
+
+    $metaTitle = $rawMetaTitle && ! \Illuminate\Support\Str::contains($rawMetaTitle, $siteName)
+        ? $rawMetaTitle . ' | ' . $siteName
+        : $rawMetaTitle;
 
     $metaDescription = trim($__env->yieldContent(
         'meta_description',
@@ -60,13 +64,13 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ $siteSetting?->site_name ?? 'ilanhaber.net' }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $siteName }}">
 
     <title>{{ $metaTitle }}</title>
 
     <meta name="description" content="{{ $metaDescription }}">
     <meta name="keywords" content="{{ $metaKeywords }}">
-    <meta name="author" content="{{ $siteSetting?->site_name ?? 'ilanhaber.net' }}">
+    <meta name="author" content="{{ $siteName }}">
     <meta name="robots" content="{{ $robots }}">
 
     <link rel="canonical" href="{{ $canonical }}">
@@ -75,7 +79,7 @@
     <meta property="og:title" content="{{ $metaTitle }}">
     <meta property="og:description" content="{{ $metaDescription }}">
     <meta property="og:url" content="{{ $canonical }}">
-    <meta property="og:site_name" content="{{ $siteSetting?->site_name ?? 'ilanhaber.net' }}">
+    <meta property="og:site_name" content="{{ $siteName }}">
     <meta property="og:image" content="{{ $metaImage }}">
 
     <meta name="twitter:card" content="summary_large_image">
@@ -123,7 +127,7 @@
         {!! json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
-            'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+            'name' => $siteName,
             'url' => url('/'),
             'logo' => $siteSetting?->logo
                 ? asset('storage/' . $siteSetting->logo)
@@ -135,7 +139,7 @@
         {!! json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
-            'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+            'name' => $siteName,
             'url' => url('/'),
             'potentialAction' => [
                 '@type' => 'SearchAction',
@@ -209,7 +213,7 @@
             <div class="h-14 flex items-center justify-between">
 
                 <a href="/" class="text-lg md:text-xl font-black tracking-tight leading-none whitespace-nowrap">
-                    {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                    {{ $siteName }}
                 </a>
 
                 <nav class="hidden md:flex items-center gap-2 text-xs font-bold whitespace-nowrap">
@@ -941,7 +945,7 @@
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600 text-sm font-black text-white">APP</div>
         <div class="min-w-0">
             <div class="text-sm font-black">Uygulama olarak yukle</div>
-            <p class="mt-1 text-xs font-bold leading-5 text-slate-500">ilanhaber.net'i mobil cihazinizda daha hizli acabilirsiniz.</p>
+            <p class="mt-1 text-xs font-bold leading-5 text-slate-500">{{ $siteName }}'i mobil cihazinizda daha hizli acabilirsiniz.</p>
         </div>
     </div>
     <div class="mt-3 flex gap-2">
@@ -1089,7 +1093,7 @@
 
         <div>
             <h3 class="font-bold text-lg mb-3">
-                {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                {{ $siteName }}
             </h3>
 
             <p class="text-slate-300">
@@ -1118,14 +1122,14 @@
         <div>
             <h3 class="font-bold mb-3">İletişim</h3>
             <p class="text-slate-300">
-                {{ $siteSetting?->email ?? 'info@ilanhaber.net' }}
+                {{ $siteSetting?->email ?? config('mail.from.address') }}
             </p>
         </div>
 
     </div>
 
     <div class="border-t border-slate-700 py-4 text-center text-sm text-slate-400">
-        {{ $siteSetting?->footer_copyright ?? '© ' . date('Y') . ' ' . ($siteSetting?->site_name ?? 'ilanhaber.net') }}
+        {{ $siteSetting?->footer_copyright ?? '© ' . date('Y') . ' ' . $siteName }}
     </div>
 </footer>
 

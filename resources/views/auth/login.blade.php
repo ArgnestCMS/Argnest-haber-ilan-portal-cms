@@ -12,7 +12,7 @@
         <div class="bg-[#0878c9] text-white">
             <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
                 <a href="/" class="text-3xl font-black">
-                    {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                    {{ $siteSetting?->site_name ?? config('app.name') }}
                 </a>
 
                 <div class="flex items-center gap-5 text-sm font-bold">

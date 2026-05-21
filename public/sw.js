@@ -80,7 +80,7 @@ self.addEventListener('push', (event) => {
         };
     }
 
-    const title = payload.title || 'ilanhaber.net';
+    const title = payload.title || 'Yeni bildirim';
     const options = {
         body: payload.body || payload.message || 'Yeni bir bildiriminiz var.',
         icon: '/pwa/icon.svg',

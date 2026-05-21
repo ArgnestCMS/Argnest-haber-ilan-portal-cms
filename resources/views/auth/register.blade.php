@@ -8,7 +8,7 @@
 
             <div class="text-center mb-6">
                 <a href="/" class="inline-block text-3xl font-black text-blue-700">
-                    {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                    {{ $siteSetting?->site_name ?? config('app.name') }}
                 </a>
 
                 <p class="text-sm text-slate-500 mt-2">

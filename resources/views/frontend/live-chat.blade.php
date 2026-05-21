@@ -1,10 +1,10 @@
 @extends('frontend.layout')
 
-@section('title', 'Canlı Sohbet | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
+@section('title', 'Canlı Sohbet | ' . ($siteSetting?->site_name ?? config('app.name')))
 
 @section(
     'meta_description',
-    'ilanhaber.net canlı sohbet alanı ile üyeler gündem, ilanlar ve haberler hakkında anlık etkileşim kurabilir.'
+    'Canlı sohbet alanı ile üyeler gündem, ilanlar ve haberler hakkında anlık etkileşim kurabilir.'
 )
 
 @section('meta_keywords', 'canlı sohbet, topluluk sohbeti, ilan sohbet, haber sohbet')
@@ -17,7 +17,7 @@
             '@context' => 'https://schema.org',
             '@type' => 'WebPage',
             'name' => 'Canlı Sohbet',
-            'description' => 'ilanhaber.net canlı sohbet alanı ile üyeler anlık etkileşim kurabilir.',
+            'description' => 'Canlı sohbet alanı ile üyeler anlık etkileşim kurabilir.',
             'url' => route('live-chat.index'),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>

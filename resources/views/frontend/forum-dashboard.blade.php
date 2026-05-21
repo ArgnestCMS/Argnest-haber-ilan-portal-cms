@@ -1,6 +1,6 @@
 @extends('frontend.layout')
 
-@section('title', 'Forum Panelim | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
+@section('title', 'Forum Panelim | ' . ($siteSetting?->site_name ?? config('app.name')))
 
 @section('content')
 

@@ -1,6 +1,6 @@
 {
-    "name": "ilanhaber.net",
-    "short_name": "Ilan Haber",
+    "name": "Haber ve Ilan Portali",
+    "short_name": "Haberler",
     "description": "Guncel haberler, kamu ilanlari ve topluluk forumu.",
     "start_url": "/?source=pwa",
     "scope": "/",

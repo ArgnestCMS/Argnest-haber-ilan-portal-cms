@@ -1,10 +1,10 @@
 @extends('frontend.layout')
 
-@section('title', 'Canli Aktivite | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
+@section('title', 'Canli Aktivite | ' . ($siteSetting?->site_name ?? config('app.name')))
 
 @section(
     'meta_description',
-    'Canli sohbet, canli yayin, duyurular ve forum baglantilari icin ilanhaber.net canli aktivite merkezi.'
+    'Canli sohbet, canli yayin, duyurular ve forum baglantilari icin canli aktivite merkezi.'
 )
 
 @section('meta_keywords', 'canli aktivite, canli sohbet, canli yayin, canli duyuru, forum')

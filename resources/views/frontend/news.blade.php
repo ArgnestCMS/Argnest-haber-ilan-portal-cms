@@ -31,22 +31,6 @@
 
 @section('meta_image', asset('default-og.jpg'))
 
-{{-- Category-aware meta sections above are the canonical SEO source for this listing page.
-@section(
-    'meta_description',
-    'Türkiye ve dünyadan güncel haberler, son dakika gelişmeleri, kamu gündemi ve en yeni haber başlıkları ilanhaber.net üzerinde.'
-)
-
-@section(
-    'meta_keywords',
-    'haberler, son dakika haberleri, güncel haberler, kamu haberleri, gündem, ilanhaber.net'
-)
-
-@section('canonical', url('/haberler'))
-
-@section('meta_image', asset('default-og.jpg'))
---}}
-
 @section('content')
 
 @php

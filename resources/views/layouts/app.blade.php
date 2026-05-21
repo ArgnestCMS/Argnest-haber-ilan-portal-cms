@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Kullanıcı Paneli | {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}</title>
+    <title>Kullanıcı Paneli | {{ $siteSetting?->site_name ?? config('app.name') }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -24,7 +24,7 @@
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
 
             <a href="/" class="text-3xl font-extrabold tracking-tight">
-                {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                {{ $siteSetting?->site_name ?? config('app.name') }}
             </a>
 
             <nav class="hidden md:flex items-center gap-5 text-sm font-bold">

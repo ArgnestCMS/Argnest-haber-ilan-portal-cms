@@ -44,7 +44,7 @@
         <div class="bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 rounded-2xl shadow-xl p-8 mb-8 text-white">
 
             <span class="inline-flex bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold mb-4">
-                {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                {{ $siteSetting?->site_name ?? config('app.name') }}
             </span>
 
             <h1 class="text-3xl md:text-4xl font-black">

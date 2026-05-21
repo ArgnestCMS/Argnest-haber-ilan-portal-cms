@@ -11,7 +11,7 @@
 
 @section(
     'meta_keywords',
-    $news->title . ', haber, son dakika, gündem, ilanhaber.net'
+    $news->title . ', haber, son dakika, gündem'
 )
 
 @section('canonical', url()->current())

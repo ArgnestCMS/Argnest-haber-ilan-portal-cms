@@ -9,7 +9,7 @@
         ? ($selectedCategory->description ?: $selectedCategory->name . ' kategorisindeki guncel forum konulari, sorular ve topluluk tartismalari.')
         : ($selectedTag
             ? '#' . $selectedTag->name . ' etiketiyle yayinlanan guncel forum konulari ve topluluk tartismalari.'
-            : 'ilanhaber.net forum alaninda kamu ilanlari, haberler, KPSS, personel alimlari ve guncel konular tartisilir.');
+            : 'Forum alaninda kamu ilanlari, haberler, KPSS, personel alimlari ve guncel konular tartisilir.');
 
     $forumCanonical = $selectedCategory
         ? route('forum.categories.show', $selectedCategory->slug)
@@ -26,7 +26,7 @@
     ])->filter()->implode(', ');
 @endphp
 
-@section('title', $forumBaseTitle . ' | ' . ($siteSetting?->site_name ?? 'ilanhaber.net'))
+@section('title', $forumBaseTitle . ' | ' . ($siteSetting?->site_name ?? config('app.name')))
 
 @section(
     'meta_description',
@@ -47,7 +47,7 @@
             'url' => $forumCanonical,
             'isPartOf' => [
                 '@type' => 'WebSite',
-                'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+                'name' => $siteSetting?->site_name ?? config('app.name'),
                 'url' => url('/'),
             ],
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}

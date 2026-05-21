@@ -4,7 +4,7 @@
     $siteSetting = \App\Models\SiteSetting::first();
  @endphp
 
-@section('title', $announcement->title . ' | ilanhaber.net')
+@section('title', $announcement->title)
 
 @section(
     'meta_description',
@@ -15,7 +15,7 @@
 
 @section(
     'meta_keywords',
-    $announcement->title . ', ilan, personel alımı, kamu ilanı, ilanhaber.net'
+    $announcement->title . ', ilan, personel alımı, kamu ilanı'
 )
 
 @section('canonical', url()->current())
@@ -222,7 +222,7 @@
                     <div class="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-100 pb-5 text-xs font-bold text-slate-500 md:mb-6 md:text-sm">
                         <span>📅 {{ $announcement->created_at->format('d.m.Y H:i') }}</span>
                         <span>👁️ {{ $announcement->views }} görüntülenme</span>
-                        <span>✍️ {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}</span>
+                        <span>✍️ {{ $siteSetting?->site_name ?? config('app.name') }}</span>
                     </div>
 
                     {{-- SOSYAL --}}

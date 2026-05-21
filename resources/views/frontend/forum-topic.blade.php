@@ -27,11 +27,11 @@
             'dateModified' => $topic->updated_at?->toIso8601String(),
             'author' => [
                 '@type' => 'Person',
-                'name' => $topic->user?->name ?? 'ilanhaber.net',
+                'name' => $topic->user?->name ?? config('app.name'),
             ],
             'publisher' => [
                 '@type' => 'Organization',
-                'name' => $siteSetting?->site_name ?? 'ilanhaber.net',
+                'name' => $siteSetting?->site_name ?? config('app.name'),
                 'logo' => [
                     '@type' => 'ImageObject',
                     'url' => asset('favicon.png'),
@@ -65,7 +65,7 @@
                     'datePublished' => $post->created_at?->toIso8601String(),
                     'author' => [
                         '@type' => 'Person',
-                        'name' => $post->user?->name ?? 'ilanhaber.net',
+                        'name' => $post->user?->name ?? config('app.name'),
                     ],
                 ])
                 ->values()

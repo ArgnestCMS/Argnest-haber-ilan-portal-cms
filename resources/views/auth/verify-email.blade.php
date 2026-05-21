@@ -18,7 +18,7 @@
             <div class="text-center mb-8">
 
                 <a href="/" class="inline-flex items-center justify-center text-4xl font-black text-white tracking-tight">
-                    {{ $siteSetting?->site_name ?? 'ilanhaber.net' }}
+                    {{ $siteSetting?->site_name ?? config('app.name') }}
                 </a>
 
                 <p class="text-sm text-blue-200 mt-3">
@@ -119,7 +119,7 @@
             </div>
 
             <div class="mt-6 text-center text-xs text-blue-200">
-                {{ $siteSetting?->site_name ?? 'ilanhaber.net' }} • Güvenli üyelik sistemi
+                {{ $siteSetting?->site_name ?? config('app.name') }} • Güvenli üyelik sistemi
             </div>
 
         </div>

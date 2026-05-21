@@ -12,7 +12,7 @@
         letter-spacing: -1px;
         font-family: Arial, sans-serif;
     ">
-        İlanHaber.net
+        {{ \App\Models\SiteSetting::first()?->site_name ?? config('app.name') }}
     </div>
 
 </a>
