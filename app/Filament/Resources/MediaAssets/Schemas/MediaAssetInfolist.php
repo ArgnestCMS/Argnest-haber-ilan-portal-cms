@@ -39,7 +39,25 @@ class MediaAssetInfolist
                 TextEntry::make('path')->label('Dosya Yolu')->copyable()->columnSpanFull(),
                 TextEntry::make('thumbnail_path')->label('Küçük Görsel Yolu')->copyable()->placeholder('-')->columnSpanFull(),
                 TextEntry::make('checksum')->label('Checksum')->copyable()->columnSpanFull(),
-                TextEntry::make('metadata')->label('Metadata')->json()->placeholder('-')->columnSpanFull(),
+                TextEntry::make('metadata')
+                    ->label('Metadata')
+                    ->formatStateUsing(function ($state): string {
+                        if (blank($state)) {
+                            return '-';
+                        }
+
+                        if (is_string($state)) {
+                            $decoded = json_decode($state, true);
+
+                            return json_last_error() === JSON_ERROR_NONE
+                                ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                                : $state;
+                        }
+
+                        return json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                    })
+                    ->placeholder('-')
+                    ->columnSpanFull(),
                 TextEntry::make('created_at')->label('Yukleme')->dateTime('d.m.Y H:i')->placeholder('-'),
                 TextEntry::make('updated_at')->label('Guncelleme')->dateTime('d.m.Y H:i')->placeholder('-'),
                 TextEntry::make('deleted_at')->label('Çöpe Taşınma Tarihi')->dateTime('d.m.Y H:i')->placeholder('-'),
