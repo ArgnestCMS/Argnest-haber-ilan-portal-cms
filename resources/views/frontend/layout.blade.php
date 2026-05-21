@@ -10,6 +10,7 @@
         ->orderBy('sort_order')
         ->orderByDesc('created_at')
         ->get();
+    $headerSlots = \App\Models\HeaderSlot::visibleInHeader()->get();
 
     $rawMetaTitle = trim($__env->yieldContent(
         'title',
@@ -238,6 +239,40 @@
         background-color: var(--theme-card) !important;
     }
 
+    .header-slot-scroll {
+        scrollbar-width: none;
+    }
+
+    .header-slot-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .header-slot-button {
+        align-items: center;
+        background-color: var(--header-slot-bg, var(--theme-button));
+        border-radius: var(--header-slot-radius, 6px);
+        color: var(--header-slot-color, #fff);
+        display: inline-flex;
+        font-weight: 900;
+        gap: 0.35rem;
+        line-height: 1;
+        max-width: 180px;
+        transition: background-color 160ms ease, transform 160ms ease;
+        white-space: nowrap;
+    }
+
+    .header-slot-button:hover {
+        background-color: var(--header-slot-hover, var(--theme-button-hover));
+        transform: translateY(-1px);
+    }
+
+    .header-slot-banner img {
+        display: block;
+        max-height: 36px;
+        max-width: min(260px, 32vw);
+        object-fit: contain;
+    }
+
     @media (max-width: 767px) {
         body {
             padding-bottom: calc(var(--mobile-shell-bottom) + var(--safe-bottom));
@@ -294,15 +329,106 @@
 
             <div class="h-14 flex items-center justify-between">
 
-                <a href="/" class="text-lg md:text-xl font-black tracking-tight leading-none whitespace-nowrap">
+                <a href="/" class="shrink-0 text-lg md:text-xl font-black tracking-tight leading-none whitespace-nowrap">
                     {{ $siteName }}
                 </a>
 
-                <nav class="hidden md:flex items-center gap-2 text-xs font-bold whitespace-nowrap">
-                    <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} px-2 py-4">ANA SAYFA</a>
+                <nav class="mx-4 hidden min-w-0 flex-1 items-center gap-2 text-xs font-bold whitespace-nowrap md:flex">
+                    <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} shrink-0 px-2 py-4">ANA SAYFA</a>
+
+                    @if($headerSlots->isNotEmpty())
+                        <div class="header-slot-scroll flex min-w-0 items-center gap-2 overflow-x-auto">
+                            @foreach($headerSlots as $headerSlot)
+                                @if($headerSlot->isButton() && filled($headerSlot->button_text))
+                                    @php
+                                        $buttonStyle = collect([
+                                            '--header-slot-bg: ' . ($headerSlot->button_background_color ?: 'var(--theme-button)'),
+                                            '--header-slot-hover: ' . ($headerSlot->button_hover_color ?: 'var(--theme-button-hover)'),
+                                            '--header-slot-color: ' . ($headerSlot->button_text_color ?: '#ffffff'),
+                                            '--header-slot-radius: ' . ($headerSlot->button_radius ?? 6) . 'px',
+                                        ])->implode('; ');
+                                        $buttonTarget = $headerSlot->button_target === '_blank' ? '_blank' : '_self';
+                                    @endphp
+
+                                    @if($headerSlot->button_url)
+                                        <a
+                                            href="{{ $headerSlot->button_url }}"
+                                            target="{{ $buttonTarget }}"
+                                            @if($buttonTarget === '_blank') rel="noopener noreferrer" @endif
+                                            class="header-slot-button {{ $headerSlot->buttonSizeClasses() }} {{ $headerSlot->custom_css_class }}"
+                                            style="{{ $buttonStyle }}"
+                                        >
+                                            @if($headerSlot->button_icon)
+                                                <span>{{ $headerSlot->button_icon }}</span>
+                                            @endif
+                                            <span class="truncate">{{ $headerSlot->button_text }}</span>
+                                        </a>
+                                    @else
+                                        <span
+                                            class="header-slot-button {{ $headerSlot->buttonSizeClasses() }} {{ $headerSlot->custom_css_class }}"
+                                            style="{{ $buttonStyle }}"
+                                        >
+                                            @if($headerSlot->button_icon)
+                                                <span>{{ $headerSlot->button_icon }}</span>
+                                            @endif
+                                            <span class="truncate">{{ $headerSlot->button_text }}</span>
+                                        </span>
+                                    @endif
+                                @elseif($headerSlot->isBanner())
+                                    @php
+                                        $bannerTarget = $headerSlot->banner_target === '_blank' ? '_blank' : '_self';
+                                        $bannerStyle = collect([
+                                            $headerSlot->banner_width ? 'width: ' . $headerSlot->banner_width . 'px' : null,
+                                            $headerSlot->banner_height ? 'height: ' . $headerSlot->banner_height . 'px' : null,
+                                        ])->filter()->implode('; ');
+                                    @endphp
+
+                                    <div class="header-slot-banner hidden shrink-0 items-center lg:flex">
+                                        @if($headerSlot->banner_image)
+                                            @php
+                                                $bannerImage = asset('storage/' . $headerSlot->banner_image);
+                                            @endphp
+
+                                            @if($headerSlot->banner_url)
+                                                <a
+                                                    href="{{ $headerSlot->banner_url }}"
+                                                    target="{{ $bannerTarget }}"
+                                                    @if($bannerTarget === '_blank') rel="noopener noreferrer" @endif
+                                                    class="block overflow-hidden rounded border border-white/10"
+                                                >
+                                                    <img
+                                                        src="{{ $bannerImage }}"
+                                                        alt="{{ $headerSlot->banner_alt ?: $headerSlot->title }}"
+                                                        style="{{ $bannerStyle }}"
+                                                    >
+                                                </a>
+                                            @else
+                                                <img
+                                                    src="{{ $bannerImage }}"
+                                                    alt="{{ $headerSlot->banner_alt ?: $headerSlot->title }}"
+                                                    class="overflow-hidden rounded border border-white/10"
+                                                    style="{{ $bannerStyle }}"
+                                                >
+                                            @endif
+                                        @endif
+
+                                        @if($headerSlot->html_code)
+                                            <div class="max-h-9 overflow-hidden">
+                                                {!! $headerSlot->html_code !!}
+                                            </div>
+                                        @endif
+
+                                        @if($headerSlot->script_code)
+                                            {!! $headerSlot->script_code !!}
+                                        @endif
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
                 </nav>
 
-                <div class="hidden md:flex items-center gap-4 text-sm font-semibold">
+                <div class="hidden shrink-0 items-center gap-4 text-sm font-semibold md:flex">
 
                     <form action="/arama" method="GET" class="hidden lg:flex items-center">
                         <input
@@ -598,6 +724,34 @@
                 <div class="flex flex-col text-sm font-bold">
 
                     <a href="/" class="py-3 border-b border-white/10">Ana Sayfa</a>
+                    @foreach($headerSlots->where('slot_type', \App\Models\HeaderSlot::TYPE_BUTTON) as $headerSlot)
+                        @if(filled($headerSlot->button_text))
+                            @php
+                                $mobileButtonTarget = $headerSlot->button_target === '_blank' ? '_blank' : '_self';
+                            @endphp
+
+                            @if($headerSlot->button_url)
+                                <a
+                                    href="{{ $headerSlot->button_url }}"
+                                    target="{{ $mobileButtonTarget }}"
+                                    @if($mobileButtonTarget === '_blank') rel="noopener noreferrer" @endif
+                                    class="py-3 border-b border-white/10"
+                                >
+                                    @if($headerSlot->button_icon)
+                                        <span class="mr-1">{{ $headerSlot->button_icon }}</span>
+                                    @endif
+                                    {{ $headerSlot->button_text }}
+                                </a>
+                            @else
+                                <div class="py-3 border-b border-white/10">
+                                    @if($headerSlot->button_icon)
+                                        <span class="mr-1">{{ $headerSlot->button_icon }}</span>
+                                    @endif
+                                    {{ $headerSlot->button_text }}
+                                </div>
+                            @endif
+                        @endif
+                    @endforeach
                     <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
                     <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
                     <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
