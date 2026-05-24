@@ -11,6 +11,8 @@ use App\Filament\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
 use BackedEnum;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -64,6 +66,14 @@ class UserResource extends Resource
         ];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->isAdmin()
@@ -84,8 +94,61 @@ class UserResource extends Resource
 
     public static function canDelete($record): bool
     {
-        return auth()->user()?->isAdmin()
-            || auth()->user()?->hasPermission('kullanici_yonet');
+        return (auth()->user()?->isAdmin()
+            || auth()->user()?->hasPermission('kullanici_yonet'))
+            && $record instanceof User
+            && static::canSafelyDelete($record);
+    }
+
+    public static function canSafelyDelete(User $record): bool
+    {
+        if ($record->trashed()) {
+            return false;
+        }
+
+        if (auth()->id() === $record->id) {
+            return false;
+        }
+
+        if (! static::isAdminRecord($record)) {
+            return true;
+        }
+
+        return static::adminCount() > 1;
+    }
+
+    public static function deleteBlockReason(User $record): string
+    {
+        if ($record->trashed()) {
+            return 'Kullanıcı zaten silinmiş.';
+        }
+
+        if (auth()->id() === $record->id) {
+            return 'Kendi hesabınızı silemezsiniz.';
+        }
+
+        if (static::isAdminRecord($record) && static::adminCount() <= 1) {
+            return 'Son kalan admin kullanıcı silinemez.';
+        }
+
+        return 'Bu kullanıcı silinemiyor.';
+    }
+
+    public static function isAdminRecord(User $record): bool
+    {
+        return $record->role === 'admin'
+            || $record->roleModel?->slug === 'admin';
+    }
+
+    public static function adminCount(): int
+    {
+        return User::query()
+            ->where(function (Builder $query): void {
+                $query
+                    ->where('role', 'admin')
+                    ->orWhereHas('roleModel', fn (Builder $roleQuery) => $roleQuery->where('slug', 'admin'));
+            })
+            ->count();
     }
 
     public static function shouldRegisterNavigation(): bool

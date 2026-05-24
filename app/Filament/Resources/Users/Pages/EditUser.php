@@ -19,6 +19,8 @@ class EditUser extends EditRecord
             ViewAction::make(),
 
             DeleteAction::make()
+                ->visible(fn (): bool => UserResource::canSafelyDelete($this->record))
+                ->requiresConfirmation()
                 ->after(function () {
 
                     ActivityLogger::log(

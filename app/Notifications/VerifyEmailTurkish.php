@@ -5,10 +5,9 @@ namespace App\Notifications;
 use App\Models\SiteSetting;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class VerifyEmailTurkish extends VerifyEmail implements ShouldQueue
+class VerifyEmailTurkish extends VerifyEmail
 {
     use Queueable;
 

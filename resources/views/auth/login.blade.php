@@ -10,16 +10,16 @@
     <div class="min-h-screen bg-slate-100">
 
         <div class="bg-[#0878c9] text-white">
-            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                <a href="/" class="text-3xl font-black">
+            <div class="mx-auto flex min-h-14 max-w-[980px] flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+                <a href="/" class="min-w-0 truncate text-2xl font-black">
                     {{ $siteSetting?->site_name ?? config('app.name') }}
                 </a>
 
-                <div class="flex items-center gap-5 text-sm font-bold">
+                <div class="flex flex-wrap items-center justify-end gap-2 text-xs font-bold sm:gap-3 sm:text-sm">
                     <a href="/" class="hover:text-slate-200">Anasayfa</a>
                     <a href="/haberler" class="hover:text-slate-200">Haberler</a>
                     <a href="/ilanlar" class="hover:text-slate-200">İlanlar</a>
-                    <a href="{{ route('register') }}" class="bg-slate-900 px-4 py-2 rounded-lg">
+                    <a href="{{ route('register') }}" class="inline-flex items-center rounded-lg bg-slate-900 px-3 py-2 leading-none">
                         Üye Ol
                     </a>
                 </div>
@@ -27,63 +27,63 @@
         </div>
 
         <div class="bg-red-600 text-white">
-            <div class="max-w-7xl mx-auto px-4 h-10 flex items-center text-sm font-bold">
-                <span class="bg-red-800 px-4 h-full flex items-center mr-4">SON DAKİKA</span>
+            <div class="mx-auto flex h-9 max-w-[980px] items-center px-4 text-xs font-bold sm:text-sm">
+                <span class="mr-3 flex h-full shrink-0 items-center bg-red-800 px-3">SON DAKİKA</span>
                 <marquee scrollamount="5">
                     🔥 Memur alımı ilanları güncellendi — 🔥 KPSS tercih süreci başladı — 🔥 Yeni ilanlar yayında
                 </marquee>
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 py-10">
+        <div class="mx-auto max-w-5xl px-4 py-12 lg:py-14">
 
-            <div class="grid lg:grid-cols-2 gap-8 items-stretch">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-                <div class="bg-slate-950 text-white rounded-3xl shadow-xl p-8 flex flex-col justify-between">
+                <div class="order-2 h-auto flex flex-col justify-between rounded-3xl bg-slate-950 p-6 text-white shadow-xl lg:order-1 lg:p-7">
                     <div>
-                        <span class="inline-flex bg-blue-500/20 text-blue-200 border border-blue-400/30 px-3 py-1 rounded-full text-xs font-bold mb-5">
+                        <span class="mb-4 inline-flex rounded-full border border-blue-400/30 bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-200">
                             Güvenli Üye Girişi
                         </span>
 
-                        <h1 class="text-4xl font-black leading-tight">
+                        <h1 class="text-2xl font-black leading-tight sm:text-3xl">
                             Haberleri, ilanları ve bildirimleri tek panelden takip edin.
                         </h1>
 
-                        <p class="text-slate-300 mt-4 leading-7">
+                        <p class="mt-4 text-sm leading-6 text-slate-300">
                             Üye olarak yorumlarınızı, bildirimlerinizi ve profil bilgilerinizi yönetebilirsiniz.
                         </p>
                     </div>
 
-                    <div class="grid sm:grid-cols-3 gap-4 mt-8">
-                        <div class="bg-white/10 rounded-2xl p-4">
-                            <div class="text-3xl mb-2">📰</div>
-                            <div class="font-black">Haberler</div>
-                            <div class="text-xs text-slate-300 mt-1">Güncel gelişmeler</div>
+                    <div class="mt-6 grid grid-cols-3 gap-2.5">
+                        <div class="min-w-0 rounded-2xl bg-white/10 p-3">
+                            <div class="mb-1 text-xl">📰</div>
+                            <div class="text-sm font-black">Haberler</div>
+                            <div class="mt-1 text-[11px] leading-4 text-slate-300">Güncel gelişmeler</div>
                         </div>
 
-                        <div class="bg-white/10 rounded-2xl p-4">
-                            <div class="text-3xl mb-2">📢</div>
-                            <div class="font-black">İlanlar</div>
-                            <div class="text-xs text-slate-300 mt-1">Kamu ve personel ilanları</div>
+                        <div class="min-w-0 rounded-2xl bg-white/10 p-3">
+                            <div class="mb-1 text-xl">📢</div>
+                            <div class="text-sm font-black">İlanlar</div>
+                            <div class="mt-1 text-[11px] leading-4 text-slate-300">Kamu ilanları</div>
                         </div>
 
-                        <div class="bg-white/10 rounded-2xl p-4">
-                            <div class="text-3xl mb-2">🔔</div>
-                            <div class="font-black">Bildirimler</div>
-                            <div class="text-xs text-slate-300 mt-1">Hesap hareketleri</div>
+                        <div class="min-w-0 rounded-2xl bg-white/10 p-3">
+                            <div class="mb-1 text-xl">🔔</div>
+                            <div class="text-sm font-black">Bildirim</div>
+                            <div class="mt-1 text-[11px] leading-4 text-slate-300">Hesap akışı</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-                    <div class="bg-slate-950 text-white px-8 py-6">
+                <div class="order-1 h-auto overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl lg:order-2">
+                    <div class="bg-slate-950 px-6 py-5 text-white">
                         <h2 class="text-2xl font-black">Üye Girişi</h2>
-                        <p class="text-sm text-slate-300 mt-1">
+                        <p class="mt-1 text-sm text-slate-300">
                             Hesabınıza güvenli giriş yapın.
                         </p>
                     </div>
 
-                    <div class="p-8">
+                    <div class="p-6 sm:p-7">
                         <x-auth-session-status class="mb-4" :status="session('status')" />
 
                         <form method="POST" action="{{ route('login') }}" class="space-y-5">
@@ -91,20 +91,20 @@
 
                             <div>
                                 <x-input-label for="email" value="E-posta Adresi" />
-                                <x-text-input id="email" class="block mt-2 w-full rounded-xl" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="ornek@mail.com" />
+                                <x-text-input id="email" class="mt-2 block h-11 w-full rounded-xl px-4" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" placeholder="ornek@mail.com" />
                                 <x-input-error :messages="$errors->get('email')" class="mt-2" />
                             </div>
 
                             <div>
                                 <x-input-label for="password" value="Şifre" />
-                                <x-text-input id="password" class="block mt-2 w-full rounded-xl" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+                                <x-text-input id="password" class="mt-2 block h-11 w-full rounded-xl px-4" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
                                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
                             </div>
 
-                            <div class="flex items-center justify-between">
-                                <label for="remember_me" class="inline-flex items-center">
+                            <div class="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                                <label for="remember_me" class="inline-flex items-center gap-2">
                                     <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-blue-700 shadow-sm focus:ring-blue-500" name="remember">
-                                    <span class="ms-2 text-sm text-slate-600">Beni hatırla</span>
+                                    <span class="text-slate-600">Beni hatırla</span>
                                 </label>
 
                                 @if (Route::has('password.request'))
@@ -114,7 +114,7 @@
                                 @endif
                             </div>
 
-                            <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black transition">
+                            <button type="submit" class="w-full rounded-xl bg-blue-700 py-3 font-black text-white transition hover:bg-blue-800">
                                 Giriş Yap
                             </button>
                         </form>
@@ -126,7 +126,7 @@
                             </a>
                         </div>
 
-                        <div class="mt-5 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 text-center">
+                        <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
                             Güvenli giriş sistemi aktif • IP ve cihaz kayıtları tutulur.
                         </div>
                     </div>
@@ -134,38 +134,38 @@
 
             </div>
 
-            <div class="grid lg:grid-cols-2 gap-8 mt-8">
+            <div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b font-black text-xl">
+                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b px-5 py-3.5 text-lg font-black">
                         Son Haberler
                     </div>
 
                     <div class="divide-y">
                         @forelse($latestNews as $news)
-                            <a href="/haber/{{ $news->slug }}" class="block p-5 hover:bg-slate-50">
+                            <a href="/haber/{{ $news->slug }}" class="block p-4 hover:bg-slate-50">
                                 <h3 class="font-black text-slate-900">{{ $news->title }}</h3>
-                                <p class="text-sm text-slate-500 mt-1">{{ $news->summary }}</p>
+                                <p class="mt-1 text-sm text-slate-500">{{ $news->summary }}</p>
                             </a>
                         @empty
-                            <div class="p-5 text-slate-500">Henüz haber bulunmuyor.</div>
+                            <div class="p-4 text-slate-500">Henüz haber bulunmuyor.</div>
                         @endforelse
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b font-black text-xl">
+                <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b px-5 py-3.5 text-lg font-black">
                         Son İlanlar
                     </div>
 
                     <div class="divide-y">
                         @forelse($latestAnnouncements as $announcement)
-                            <a href="/ilan/{{ $announcement->slug }}" class="block p-5 hover:bg-slate-50">
+                            <a href="/ilan/{{ $announcement->slug }}" class="block p-4 hover:bg-slate-50">
                                 <h3 class="font-black text-slate-900">{{ $announcement->title }}</h3>
-                                <p class="text-sm text-slate-500 mt-1">{{ $announcement->summary }}</p>
+                                <p class="mt-1 text-sm text-slate-500">{{ $announcement->summary }}</p>
                             </a>
                         @empty
-                            <div class="p-5 text-slate-500">Henüz ilan bulunmuyor.</div>
+                            <div class="p-4 text-slate-500">Henüz ilan bulunmuyor.</div>
                         @endforelse
                     </div>
                 </div>
