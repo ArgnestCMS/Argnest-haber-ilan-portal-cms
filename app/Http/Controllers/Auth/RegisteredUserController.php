@@ -100,7 +100,9 @@ class RegisteredUserController extends Controller
 
     private function recaptchaEnabled(): bool
     {
-        return filled(config('services.recaptcha.site_key'))
+        return (bool) config('services.recaptcha.enabled', true)
+            && (bool) config('security.captcha_required', true)
+            && filled(config('services.recaptcha.site_key'))
             && filled(config('services.recaptcha.secret_key'));
     }
 

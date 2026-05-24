@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Helpers\ActivityLogger;
 
 use App\Models\Announcement;
+use App\Models\IntegrationSetting;
 use App\Models\News;
 use App\Models\User;
 
@@ -16,7 +17,9 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->applyDatabaseBackedSettings();
+
         /*
         |--------------------------------------------------------------------------
         | AUTH LOGS
@@ -68,5 +73,18 @@ class AppServiceProvider extends ServiceProvider
         Announcement::observe(AnnouncementObserver::class);
 
         User::observe(UserObserver::class);
+    }
+
+    private function applyDatabaseBackedSettings(): void
+    {
+        try {
+            if (! Schema::hasTable('integration_settings')) {
+                return;
+            }
+
+            IntegrationSetting::query()->first()?->applyToConfig();
+        } catch (Throwable) {
+            //
+        }
     }
 }

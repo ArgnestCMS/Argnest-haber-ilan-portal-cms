@@ -45,8 +45,20 @@ return [
     ],
 
     'recaptcha' => [
+        'enabled' => env('RECAPTCHA_ENABLED', true),
         'site_key' => env('RECAPTCHA_SITE_KEY'),
         'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+    ],
+
+    'oauth' => [
+        'google' => [
+            'client_id' => env('GOOGLE_CLIENT_ID'),
+            'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        ],
+        'facebook' => [
+            'app_id' => env('FACEBOOK_APP_ID'),
+            'app_secret' => env('FACEBOOK_APP_SECRET'),
+        ],
     ],
 
 ];

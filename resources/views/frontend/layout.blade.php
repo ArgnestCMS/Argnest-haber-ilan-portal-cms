@@ -1015,7 +1015,7 @@
                                     Kayıt olarak kullanım şartlarını ve topluluk kurallarını kabul etmiş olursunuz.
                                 </div>
 <div>
-    <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_SITE_KEY') }}"></div>
+    <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
 
     @error('g-recaptcha-response')
         <p class="text-sm text-red-600 mt-2">

@@ -3,7 +3,7 @@
         $siteSetting = \App\Models\SiteSetting::first();
         $siteName = $siteSetting?->site_name ?? config('app.name');
         $registrationDisabled = $registrationDisabled ?? false;
-        $recaptchaEnabled = $recaptchaEnabled ?? (filled(config('services.recaptcha.site_key')) && filled(config('services.recaptcha.secret_key')));
+        $recaptchaEnabled = $recaptchaEnabled ?? ((bool) config('services.recaptcha.enabled', true) && (bool) config('security.captcha_required', true) && filled(config('services.recaptcha.site_key')) && filled(config('services.recaptcha.secret_key')));
     @endphp
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
