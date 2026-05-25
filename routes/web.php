@@ -23,6 +23,7 @@ use App\Http\Controllers\ContentAttachmentController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\AdminDatabaseBackupDownloadController;
 use App\Http\Controllers\AdminSiteReportExportController;
+use App\Http\Controllers\InstallController;
 use App\Http\Middleware\EnsureAdminPanelAccess;
 
 /*
@@ -30,6 +31,14 @@ use App\Http\Middleware\EnsureAdminPanelAccess;
 | Frontend Routes
 |--------------------------------------------------------------------------
 */
+
+Route::get('/install', [InstallController::class, 'show'])
+    ->middleware('throttle:20,1')
+    ->name('install');
+
+Route::post('/install', [InstallController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('install.store');
 
 Route::get('/', [FrontendController::class, 'home']);
 
