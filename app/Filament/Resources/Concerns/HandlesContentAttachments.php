@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Concerns;
 use App\Models\MediaAsset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -49,8 +48,6 @@ trait HandlesContentAttachments
             'processed' => [],
             'skipped' => [],
         ];
-
-        Log::info('content_attachments.extract', $this->contentAttachmentDebug);
 
         unset($data['content_attachments']);
         unset($data['deleted_content_attachment_ids']);
@@ -187,8 +184,6 @@ trait HandlesContentAttachments
 
         $debug['active_after_save_count'] = count($debug['active_after_save']);
 
-        Log::info('content_attachments.attach', $debug);
-
         $this->clearContentAttachmentUploadState();
 
         $this->pendingContentAttachmentPaths = [];
@@ -205,10 +200,6 @@ trait HandlesContentAttachments
         $this->data['content_attachments'] = [];
         $this->data['deleted_content_attachment_ids'] = [];
 
-        Log::info('content_attachments.state_cleared', [
-            'content_attachments_count' => count(Arr::wrap($this->data['content_attachments'] ?? [])),
-            'deleted_content_attachment_ids_count' => count(Arr::wrap($this->data['deleted_content_attachment_ids'] ?? [])),
-        ]);
     }
 
     protected function collectContentAttachmentPaths(mixed $state): array

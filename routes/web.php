@@ -386,12 +386,12 @@ Route::patch('/admin/content-attachments/{mediaAsset}', [ContentAttachmentContro
     ->name('admin.content-attachments.update');
 
 Route::get('/admin/database-backups/download/{filename}', AdminDatabaseBackupDownloadController::class)
-    ->middleware(['auth'])
+    ->middleware(['auth', EnsureAdminPanelAccess::class])
     ->where('filename', '[^/]+')
     ->name('admin.database-backups.download');
 
 Route::get('/admin/site-reports/export/{format}', AdminSiteReportExportController::class)
-    ->middleware(['auth'])
+    ->middleware(['auth', EnsureAdminPanelAccess::class])
     ->whereIn('format', ['csv', 'xlsx'])
     ->name('admin.site-reports.export');
 

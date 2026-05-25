@@ -452,7 +452,6 @@
                                         ])->filter()->implode('; ');
                                     @endphp
 
-                                    <!-- header slot rendered: {{ $headerSlot->id }}/{{ $headerSlot->slot_type }}/{{ $headerSlot->banner_image ?: 'no-path' }} -->
                                     <div class="header-slot-banner flex shrink-0 items-center">
                                         @if($bannerImageExists)
                                             @if($headerSlot->banner_url)

@@ -6,7 +6,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class HealthCheckController extends Controller
@@ -80,11 +79,7 @@ class HealthCheckController extends Controller
         try {
             $publicPath = public_path('storage');
             $targetPath = storage_path('app/public');
-            $probePath = 'health/.probe';
-
-            Storage::disk('public')->put($probePath, now()->toISOString());
-            $canWritePublicDisk = Storage::disk('public')->exists($probePath);
-            Storage::disk('public')->delete($probePath);
+            $canWritePublicDisk = File::isDirectory($targetPath) && File::isWritable($targetPath);
 
             return [
                 'ok' => $canWritePublicDisk && File::exists($targetPath),
