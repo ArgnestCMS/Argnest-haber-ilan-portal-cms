@@ -22,6 +22,7 @@ use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\ContentAttachmentController;
 use App\Http\Controllers\PollController;
 use App\Http\Controllers\AdminDatabaseBackupDownloadController;
+use App\Http\Controllers\AdminSiteReportExportController;
 use App\Http\Middleware\EnsureAdminPanelAccess;
 
 /*
@@ -383,6 +384,11 @@ Route::get('/admin/database-backups/download/{filename}', AdminDatabaseBackupDow
     ->middleware(['auth'])
     ->where('filename', '[^/]+')
     ->name('admin.database-backups.download');
+
+Route::get('/admin/site-reports/export/{format}', AdminSiteReportExportController::class)
+    ->middleware(['auth'])
+    ->whereIn('format', ['csv', 'xlsx'])
+    ->name('admin.site-reports.export');
 
 /*
 |--------------------------------------------------------------------------
