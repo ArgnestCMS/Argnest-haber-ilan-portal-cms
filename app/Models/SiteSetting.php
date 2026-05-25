@@ -117,6 +117,14 @@ class SiteSetting extends Model
 
         'maintenance_mode',
         'auto_punishment_enabled',
+        'home_news_enabled',
+        'home_announcements_enabled',
+        'home_forum_enabled',
+        'home_galleries_enabled',
+        'home_videos_enabled',
+        'home_polls_enabled',
+        'home_breaking_news_enabled',
+        'home_announcement_bar_enabled',
 
     ];
 
@@ -133,6 +141,14 @@ class SiteSetting extends Model
         'site_announcement_enabled' => 'boolean',
         'site_announcement_starts_at' => 'datetime',
         'site_announcement_ends_at' => 'datetime',
+        'home_news_enabled' => 'boolean',
+        'home_announcements_enabled' => 'boolean',
+        'home_forum_enabled' => 'boolean',
+        'home_galleries_enabled' => 'boolean',
+        'home_videos_enabled' => 'boolean',
+        'home_polls_enabled' => 'boolean',
+        'home_breaking_news_enabled' => 'boolean',
+        'home_announcement_bar_enabled' => 'boolean',
 
         /*
         |--------------------------------------------------------------------------
@@ -174,5 +190,39 @@ class SiteSetting extends Model
         }
 
         return true;
+    }
+
+    public function homeModuleEnabled(string $module): bool
+    {
+        $defaults = [
+            'news' => true,
+            'announcements' => true,
+            'forum' => false,
+            'galleries' => true,
+            'videos' => true,
+            'polls' => false,
+            'breaking_news' => false,
+            'announcement_bar' => false,
+        ];
+
+        $attribute = 'home_' . $module . '_enabled';
+
+        return (bool) ($this->{$attribute} ?? $defaults[$module] ?? false);
+    }
+
+    public function homeModuleSignature(): string
+    {
+        return collect([
+            'news',
+            'announcements',
+            'forum',
+            'galleries',
+            'videos',
+            'polls',
+            'breaking_news',
+            'announcement_bar',
+        ])
+            ->map(fn (string $module): string => $module . ':' . (int) $this->homeModuleEnabled($module))
+            ->implode('|');
     }
 }

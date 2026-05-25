@@ -85,10 +85,18 @@
                 </form>
 
                 <div class="mt-3 flex gap-2 overflow-x-auto pb-1 text-xs font-black">
-                    <a href="/haberler" class="premium-chip premium-chip-active">Haberler</a>
+                    @if($homeModules['news'])
+                        <a href="/haberler" class="premium-chip premium-chip-active">Haberler</a>
+                    @endif
+                    @if($homeModules['announcements'])
                     <a href="/ilanlar" class="premium-chip border-blue-100 bg-blue-50 text-blue-700 hover:border-blue-200 hover:bg-blue-100 hover:text-blue-800">İlanlar</a>
-                    <a href="{{ route('videos.index') }}" class="premium-chip border-red-100 bg-red-50 text-red-700 hover:border-red-200 hover:bg-red-100 hover:text-red-800">Videolar</a>
-                    <a href="{{ route('galleries.index') }}" class="premium-chip">Galeriler</a>
+                    @endif
+                    @if($homeModules['videos'])
+                        <a href="{{ route('videos.index') }}" class="premium-chip border-red-100 bg-red-50 text-red-700 hover:border-red-200 hover:bg-red-100 hover:text-red-800">Videolar</a>
+                    @endif
+                    @if($homeModules['galleries'])
+                        <a href="{{ route('galleries.index') }}" class="premium-chip">Galeriler</a>
+                    @endif
                 </div>
             </div>
 
@@ -166,6 +174,7 @@
             </div>
 
             {{-- TREND + ÇOK OKUNAN --}}
+            @if($homeModules['news'])
             <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 md:mt-6">
 
                 <div class="theme-card premium-card overflow-hidden">
@@ -238,11 +247,14 @@
                 </div>
 
             </div>
+            @endif
 
             {{-- HABER + İLAN --}}
-            <div class="mt-4 grid gap-4 lg:grid-cols-2 lg:gap-6 md:mt-6">
+            @if($homeModules['news'] || $homeModules['announcements'])
+            <div class="mt-4 grid gap-4 {{ $homeModules['news'] && $homeModules['announcements'] ? 'lg:grid-cols-2' : 'lg:grid-cols-1' }} lg:gap-6 md:mt-6">
 
                 {{-- SON HABERLER --}}
+                @if($homeModules['news'])
                 <div class="theme-card premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
@@ -281,7 +293,10 @@
 
                 </div>
 
+                @endif
+
                 {{-- SON İLANLAR --}}
+                @if($homeModules['announcements'])
                 <div class="theme-card premium-card overflow-hidden">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
@@ -317,11 +332,50 @@
                     </div>
 
                 </div>
+                @endif
 
             </div>
+            @endif
 
             {{-- VİDEOLAR --}}
-            @if(isset($latestVideos) && $latestVideos->count())
+            @if($homeFocus === 'community' && $homeModules['forum'])
+                <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
+                    <div class="border-b px-5 py-4 flex justify-between items-center">
+                        <h2 class="premium-section-heading">Toplulukta Öne Çıkanlar</h2>
+                        <a href="{{ route('forum.index') }}" class="text-blue-600 font-semibold">Foruma Git</a>
+                    </div>
+
+                    <div class="grid gap-4 p-4 lg:grid-cols-3 lg:p-5">
+                        <div class="lg:col-span-2">
+                            <h3 class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">Son Konular</h3>
+                            <div class="divide-y rounded-2xl border border-slate-100">
+                                @foreach(($communityData['latestForumTopics'] ?? collect())->take(6) as $topic)
+                                    <a href="{{ route('forum.topics.show', $topic->slug) }}" class="block p-4 transition hover:bg-slate-50">
+                                        <h4 class="font-black text-slate-900 line-clamp-2">{{ $topic->title }}</h4>
+                                        <p class="mt-2 text-xs font-semibold text-slate-500">
+                                            {{ $topic->category?->name }} · {{ $topic->posts_count ?? 0 }} cevap · {{ number_format($topic->views) }} görüntüleme
+                                        </p>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">Forum Kategorileri</h3>
+                            <div class="space-y-3">
+                                @foreach(($communityData['forumCategories'] ?? collect())->take(6) as $forumCategory)
+                                    <a href="{{ route('forum.categories.show', $forumCategory->slug) }}" class="theme-card block rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:border-blue-200 hover:bg-blue-50">
+                                        <h4 class="font-black text-blue-700">{{ $forumCategory->name }}</h4>
+                                        <p class="mt-1 text-xs font-semibold text-slate-500">{{ $forumCategory->topics_count }} konu</p>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if($homeModules['videos'] && isset($latestVideos) && $latestVideos->count())
                 <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
@@ -364,7 +418,7 @@
             @endif
 
             {{-- GALERİLER --}}
-            @if(isset($latestGalleries) && $latestGalleries->count())
+            @if($homeModules['galleries'] && isset($latestGalleries) && $latestGalleries->count())
                 <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
@@ -407,13 +461,15 @@
             @endif
 
             {{-- KATEGORİLER --}}
+            @if($homeModules['news'] || $homeModules['announcements'])
             <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                 <div class="border-b px-5 py-4">
                     <h2 class="premium-section-heading">Kategoriler</h2>
                 </div>
 
-                <div class="grid gap-5 p-3 md:grid-cols-2 md:p-5">
+                <div class="grid gap-5 p-3 {{ $homeModules['news'] && $homeModules['announcements'] ? 'md:grid-cols-2' : 'md:grid-cols-1' }} md:p-5">
+                    @if($homeModules['news'])
                     <div>
                         <h3 class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
                             Haber Kategorileri
@@ -434,7 +490,9 @@
                             @endforeach
                         </div>
                     </div>
+                    @endif
 
+                    @if($homeModules['announcements'])
                     <div>
                         <h3 class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
                             İlan Kategorileri
@@ -455,10 +513,12 @@
                             @endforeach
                         </div>
                     </div>
+                    @endif
 
                 </div>
 
             </div>
+            @endif
 
             {{-- ALT REKLAM --}}
             <div class="home-mobile-ad premium-ad-slot mt-4 flex justify-center p-2 md:mt-6 md:p-3">

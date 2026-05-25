@@ -50,6 +50,8 @@ class EditSiteSetting extends EditRecord
 
     protected function afterSave(): void
     {
+        app(PortalCacheService::class)->clearContent();
+
         $maintenanceMode = (bool) ($this->record->maintenance_mode ?? false);
 
         ActivityLogger::log(

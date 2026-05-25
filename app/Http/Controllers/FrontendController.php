@@ -43,12 +43,21 @@ class FrontendController extends Controller
 
     public function home()
     {
-        $headlineNews = $this->cache()->remember('portal:home:headline-news', 'home', fn () => News::published()->where('is_headline', true)->latest()->take(10)->get());
-        $headlineAnnouncements = $this->cache()->remember('portal:home:headline-announcements', 'home', fn () => Announcement::active()
+        $siteSetting = SiteSetting::first();
+        $homeModules = $this->homeModules($siteSetting);
+        $homeFocus = $this->homeFocus($homeModules);
+        $homeModuleSignature = md5($siteSetting?->homeModuleSignature() ?? implode('|', $homeModules));
+
+        $headlineNews = $homeModules['news']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:headline-news", 'home', fn () => News::published()->where('is_headline', true)->latest()->take(10)->get())
+            : collect();
+        $headlineAnnouncements = $homeModules['announcements']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:headline-announcements", 'home', fn () => Announcement::active()
             ->where('is_headline', true)
             ->latest()
             ->take(10)
-            ->get());
+            ->get())
+            : collect();
         $headlines = $headlineNews
             ->map(fn (News $news) => [
                 'type' => 'news',
@@ -73,37 +82,61 @@ class FrontendController extends Controller
             ->sortByDesc('created_at')
             ->take(10)
             ->values();
-        $latestNews = $this->cache()->remember('portal:home:latest-news', 'latest', fn () => News::published()->latest()->take(12)->get());
-        $latestAnnouncements = $this->cache()->remember('portal:home:latest-announcements', 'latest', fn () => Announcement::active()->latest()->take(12)->get());
-        $trendingNews = $this->cache()->remember('portal:home:trending-news', 'trending', fn () => News::published()
+        $latestNews = $homeModules['news']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:latest-news", 'latest', fn () => News::published()->latest()->take(12)->get())
+            : collect();
+        $latestAnnouncements = $homeModules['announcements']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:latest-announcements", 'latest', fn () => Announcement::active()->latest()->take(12)->get())
+            : collect();
+        $trendingNews = $homeModules['news']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:trending-news", 'trending', fn () => News::published()
             ->where('is_trending', true)
             ->orderByDesc('trend_score')
             ->take(6)
-            ->get());
+            ->get())
+            : collect();
 
-        $mostReadNews = $this->cache()->remember('portal:home:most-read-news', 'popular', fn () => News::published()
+        $mostReadNews = $homeModules['news']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:most-read-news", 'popular', fn () => News::published()
             ->orderByDesc('views')
             ->take(6)
-            ->get());
-        $newsCategories = $this->cache()->remember('portal:home:news-categories', 'categories', fn () => Category::where('type', 'news')
+            ->get())
+            : collect();
+        $newsCategories = $homeModules['news']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:news-categories", 'categories', fn () => Category::where('type', 'news')
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get());
+            ->get())
+            : collect();
 
-        $announcementCategories = $this->cache()->remember('portal:home:announcement-categories', 'categories', fn () => Category::where('type', 'announcement')
+        $announcementCategories = $homeModules['announcements']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:announcement-categories", 'categories', fn () => Category::where('type', 'announcement')
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get());
+            ->get())
+            : collect();
 
-        $latestVideos = $this->cache()->remember('portal:home:latest-videos', 'latest', fn () => Video::where('is_active', true)->latest()->take(6)->get());
-        $latestGalleries = $this->cache()->remember('portal:home:latest-galleries', 'latest', fn () => Gallery::where('is_active', true)->latest()->take(6)->get());
-        $popupPoll = Poll::popupActive()
+        $latestVideos = $homeModules['videos']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:latest-videos", 'latest', fn () => Video::where('is_active', true)->latest()->take(6)->get())
+            : collect();
+        $latestGalleries = $homeModules['galleries']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:latest-galleries", 'latest', fn () => Gallery::where('is_active', true)->latest()->take(6)->get())
+            : collect();
+        $communityData = $homeModules['forum']
+            ? $this->cache()->remember("portal:home:{$homeModuleSignature}:community", 'latest', fn () => $this->homeCommunityData())
+            : [
+                'latestForumTopics' => collect(),
+                'trendingForumTopics' => collect(),
+                'forumCategories' => collect(),
+            ];
+
+        $popupPoll = $homeModules['polls'] ? Poll::popupActive()
             ->with('activeOptions')
             ->latest()
             ->get()
-            ->first(fn (Poll $poll) => ! $poll->hasVoteFrom(request()) && $poll->activeOptions->isNotEmpty());
+            ->first(fn (Poll $poll) => ! $poll->hasVoteFrom(request()) && $poll->activeOptions->isNotEmpty()) : null;
 
-        $ads = $this->cache()->remember('portal:home:ads', 'ads', fn () => $this->activeAds()->get()->groupBy('position'));
+        $ads = $this->cache()->remember("portal:home:{$homeModuleSignature}:ads", 'ads', fn () => $this->activeAds()->get()->groupBy('position'));
 
         $market = $this->cache()->remember('portal:external:market', 'external', function () {
             try {
@@ -168,7 +201,61 @@ class FrontendController extends Controller
             'trendingNews',
             'mostReadNews',
             'popupPoll',
+            'homeModules',
+            'homeFocus',
+            'communityData',
+            'siteSetting',
         ));
+    }
+
+    private function homeModules(?SiteSetting $siteSetting): array
+    {
+        return [
+            'news' => $siteSetting?->homeModuleEnabled('news') ?? true,
+            'announcements' => $siteSetting?->homeModuleEnabled('announcements') ?? true,
+            'forum' => $siteSetting?->homeModuleEnabled('forum') ?? false,
+            'galleries' => $siteSetting?->homeModuleEnabled('galleries') ?? true,
+            'videos' => $siteSetting?->homeModuleEnabled('videos') ?? true,
+            'polls' => $siteSetting?->homeModuleEnabled('polls') ?? false,
+            'breaking_news' => $siteSetting?->homeModuleEnabled('breaking_news') ?? false,
+            'announcement_bar' => $siteSetting?->homeModuleEnabled('announcement_bar') ?? false,
+        ];
+    }
+
+    private function homeFocus(array $modules): string
+    {
+        return match (true) {
+            $modules['news'] && ! $modules['announcements'] => 'news',
+            ! $modules['news'] && $modules['announcements'] => 'announcements',
+            $modules['news'] && $modules['announcements'] => 'mixed',
+            default => 'community',
+        };
+    }
+
+    private function homeCommunityData(): array
+    {
+        $topicRelations = ['category', 'user', 'lastPostUser'];
+
+        return [
+            'latestForumTopics' => ForumTopic::published()
+                ->with($topicRelations)
+                ->withCount(['posts' => fn ($query) => $query->where('status', 'approved')])
+                ->activeOrder()
+                ->take(6)
+                ->get(),
+            'trendingForumTopics' => ForumTopic::published()
+                ->with($topicRelations)
+                ->withCount(['posts' => fn ($query) => $query->where('status', 'approved')])
+                ->trending()
+                ->take(4)
+                ->get(),
+            'forumCategories' => ForumCategory::active()
+                ->withCount(['topics' => fn ($query) => $query->published()])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->take(6)
+                ->get(),
+        ];
     }
 
     public function news()

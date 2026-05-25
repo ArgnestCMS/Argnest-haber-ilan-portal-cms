@@ -6,12 +6,23 @@
     $seoSetting = \App\Models\SeoSetting::current();
     $themeSetting = \App\Models\ThemeSetting::current();
     $siteName = $siteSetting?->site_name ?? config('app.name');
-    $siteAnnouncements = \App\Models\SiteAnnouncement::visible()
+    $homeAnnouncementBarEnabled = $siteSetting?->homeModuleEnabled('announcement_bar') ?? false;
+    $homeBreakingNewsEnabled = $siteSetting?->homeModuleEnabled('breaking_news') ?? false;
+    $homeMenuModules = [
+        'news' => $siteSetting?->homeModuleEnabled('news') ?? true,
+        'announcements' => $siteSetting?->homeModuleEnabled('announcements') ?? true,
+        'forum' => ($siteSetting?->homeModuleEnabled('forum') ?? false) && (bool) ($siteSetting?->forum_enabled ?? true),
+        'galleries' => $siteSetting?->homeModuleEnabled('galleries') ?? true,
+        'videos' => $siteSetting?->homeModuleEnabled('videos') ?? true,
+        'polls' => $siteSetting?->homeModuleEnabled('polls') ?? false,
+    ];
+    $mobileBottomColumns = $homeMenuModules['forum'] ? 'grid-cols-5' : 'grid-cols-4';
+    $siteAnnouncements = $homeAnnouncementBarEnabled ? \App\Models\SiteAnnouncement::visible()
         ->orderBy('sort_order')
         ->orderByDesc('created_at')
-        ->get();
+        ->get() : collect();
     $headerSlots = \App\Models\HeaderSlot::visibleInHeader()->get();
-    $breakingTickerItems = app(\App\Services\PortalCacheService::class)->remember('portal:layout:breaking-ticker', 'layout', fn () => collect()
+    $breakingTickerItems = $homeBreakingNewsEnabled ? app(\App\Services\PortalCacheService::class)->remember('portal:layout:breaking-ticker', 'layout', fn () => collect()
     ->merge(
         \App\Models\News::published()
             ->where('is_breaking', true)
@@ -49,7 +60,7 @@
      )
      ->sortByDesc('date')
      ->take(15)
-     ->values());
+     ->values()) : collect();
 
     $rawMetaTitle = trim($__env->yieldContent(
         'title',
@@ -388,8 +399,6 @@
                 </a>
 
                 <nav class="mx-4 hidden min-w-0 flex-1 items-center gap-2 text-xs font-bold whitespace-nowrap md:flex">
-                    <a href="/" class="{{ request()->is('/') ? 'bg-slate-800' : 'hover:text-slate-200' }} shrink-0 px-2 py-4">ANA SAYFA</a>
-
                     @if($headerSlots->isNotEmpty())
                         <div class="header-slot-scroll flex min-w-0 items-center gap-2 overflow-x-auto">
                             @foreach($headerSlots as $headerSlot)
@@ -816,13 +825,23 @@
                             @endif
                         @endif
                     @endforeach
-                    <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
+                    @if($homeMenuModules['news'])
+                        <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
+                    @endif
+                    @if($homeMenuModules['announcements'])
                     <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
-                    <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
-                    <a href="{{ route('galleries.index') }}" class="py-3 border-b border-white/10">Galeriler</a>
-                    <a href="{{ route('polls.index') }}" class="py-3 border-b border-white/10">Anketler</a>
+                    @endif
+                    @if($homeMenuModules['videos'])
+                        <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
+                    @endif
+                    @if($homeMenuModules['galleries'])
+                        <a href="{{ route('galleries.index') }}" class="py-3 border-b border-white/10">Galeriler</a>
+                    @endif
+                    @if($homeMenuModules['polls'])
+                        <a href="{{ route('polls.index') }}" class="py-3 border-b border-white/10">Anketler</a>
+                    @endif
 
-                    @if($siteSetting?->forum_enabled)
+                    @if($homeMenuModules['forum'])
                         <a href="{{ route('forum.index') }}" class="py-3 border-b border-white/10">Forum</a>
                     @endif
 
@@ -1112,6 +1131,7 @@
                 </a>
             @endif
 
+            @if($homeMenuModules['forum'])
             <a href="{{ route('forum.index') }}"
                class="theme-link block rounded-2xl border border-blue-100 bg-blue-50 p-4 font-black text-blue-700 transition hover:bg-blue-100">
 
@@ -1121,6 +1141,7 @@
                     Topluluk konuları ve tartışmalar
                 </div>
             </a>
+            @endif
 
         </div>
     </div>
@@ -1129,11 +1150,22 @@
     <div class="theme-navbar bg-slate-800 text-white">
         <div class="max-w-7xl mx-auto flex min-h-10 items-center gap-4 px-4 py-2 text-sm font-semibold">
             <nav class="flex shrink-0 items-center gap-5 overflow-x-auto whitespace-nowrap">
+                <a href="/" class="{{ request()->is('/') ? 'text-blue-200' : 'hover:text-blue-200' }}">Ana Sayfa</a>
+                @if($homeMenuModules['news'])
                 <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Haberler</a>
+                @endif
+                @if($homeMenuModules['announcements'])
                 <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">İlanlar</a>
+                @endif
+                @if($homeMenuModules['videos'])
                 <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Videolar</a>
+                @endif
+                @if($homeMenuModules['galleries'])
                 <a href="{{ route('galleries.index') }}" class="{{ request()->is('galeriler*') || request()->is('galeri/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Galeriler</a>
+                @endif
+                @if($homeMenuModules['polls'])
                 <a href="{{ route('polls.index') }}" class="{{ request()->is('anketler*') || request()->is('anket/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Anketler</a>
+                @endif
             </nav>
 
             @if($siteAnnouncements->isNotEmpty())
@@ -1162,7 +1194,7 @@
             @endif
 
             <div class="ml-auto hidden shrink-0 items-center gap-2 md:flex">
-                @if($siteSetting?->forum_enabled)
+                @if($homeMenuModules['forum'])
                     <a href="{{ route('forum.index') }}"
                        class="theme-chip ml-2 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
                         FORUM
@@ -1182,6 +1214,7 @@
     </div>
 
     {{-- SON DAKİKA --}}
+    @if($homeBreakingNewsEnabled)
     <div id="son-dakika" class="theme-breaking bg-red-600 text-white overflow-hidden border-b border-red-700">
         <div class="max-w-7xl mx-auto flex items-center h-10">
             <div class="theme-announcement px-4 h-full flex items-center font-bold text-sm whitespace-nowrap">
@@ -1222,6 +1255,8 @@
     </div>
 
     {{-- FİNANS + HAVA DURUMU --}}
+    @endif
+
     <div class="bg-white border-b">
         <div class="max-w-7xl mx-auto px-4 h-9 flex items-center justify-between text-sm">
 
@@ -1289,16 +1324,18 @@
 @endauth
 
 <nav class="mobile-safe-bottom fixed inset-x-0 bottom-0 z-[9996] border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
-    <div class="grid h-[74px] grid-cols-5 text-[11px] font-black text-slate-500">
+    <div class="grid h-[74px] {{ $mobileBottomColumns }} text-[11px] font-black text-slate-500">
         <a href="/" class="flex flex-col items-center justify-center gap-1 {{ request()->is('/') ? 'text-blue-700' : '' }}">
             <span class="text-lg leading-none">⌂</span>
             <span>Ana</span>
         </a>
 
-        <a href="{{ route('forum.index') }}" class="flex flex-col items-center justify-center gap-1 {{ request()->is('forum*') ? 'text-blue-700' : '' }}">
-            <span class="text-lg leading-none">#</span>
-            <span>Forum</span>
-        </a>
+        @if($homeMenuModules['forum'])
+            <a href="{{ route('forum.index') }}" class="flex flex-col items-center justify-center gap-1 {{ request()->is('forum*') ? 'text-blue-700' : '' }}">
+                <span class="text-lg leading-none">#</span>
+                <span>Forum</span>
+            </a>
+        @endif
 
         <a href="{{ route('search') }}" class="flex flex-col items-center justify-center gap-1 {{ request()->is('arama*') ? 'text-blue-700' : '' }}">
             <span class="text-lg leading-none">⌕</span>

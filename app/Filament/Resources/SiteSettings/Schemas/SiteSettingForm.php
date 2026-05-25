@@ -188,6 +188,51 @@ class SiteSettingForm
             ->helperText('Spam, flood ve kötüye kullanım tespitlerinde otomatik mute/ban sistemi uygulanır.'),
 
     ]),
+    Tabs\Tab::make('Ana Sayfa Modül Ayarları')
+    ->schema([
+
+        Toggle::make('home_news_enabled')
+            ->label('Haberler')
+            ->default(true)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_announcements_enabled')
+            ->label('İlanlar')
+            ->default(true)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_forum_enabled')
+            ->label('Forum')
+            ->default(false)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_galleries_enabled')
+            ->label('Galeriler')
+            ->default(true)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_videos_enabled')
+            ->label('Videolar')
+            ->default(true)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_polls_enabled')
+            ->label('Anketler')
+            ->default(false)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_breaking_news_enabled')
+            ->label('Son Dakika')
+            ->default(false)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+        Toggle::make('home_announcement_bar_enabled')
+            ->label('Duyuru barı')
+            ->default(false)
+            ->helperText('Bu ayar ana sayfada hangi içerik bloklarının görüneceğini belirler.'),
+
+    ])
+    ->columns(2),
     Tabs\Tab::make('Topluluk & Canlı Sistem')
     ->schema([
 
