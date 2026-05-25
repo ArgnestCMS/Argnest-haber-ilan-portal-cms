@@ -2,10 +2,10 @@
     <div class="space-y-6">
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div class="max-w-3xl">
-                <p class="text-sm font-bold uppercase tracking-wide text-primary-600 dark:text-primary-400">Argnest Haber-Ilan Portal CMS</p>
+                <p class="text-sm font-bold uppercase tracking-wide text-primary-600 dark:text-primary-400">{{ config('portal.name') }}</p>
                 <h2 class="mt-2 text-2xl font-black text-gray-950 dark:text-white">Baslangic Merkezi</h2>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    Kurulumdan sonra en cok kullanacaginiz yonetim alanlari ve ilk kontrol listesi burada.
+                    {{ config('portal.tagline') }}
                 </p>
             </div>
         </div>

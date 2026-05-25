@@ -50,7 +50,7 @@ class InstallController extends Controller
             'steps' => self::STEPS,
             'data' => $request->session()->get('install.data', $this->defaultData()),
             'requirements' => $this->requirements(),
-            'version' => config('app.version', '1.0.0'),
+            'version' => config('portal.version', 'v1.0.0') . ' - ' . config('portal.codename', 'Genesis'),
         ]);
     }
 
@@ -185,8 +185,8 @@ class InstallController extends Controller
             'db_database' => env('DB_DATABASE', ''),
             'db_username' => env('DB_USERNAME', ''),
             'db_password' => '',
-            'site_name' => 'Argnest Portal',
-            'site_description' => 'Modern haber, ilan ve topluluk yonetim sistemi.',
+            'site_name' => config('portal.name', 'Argnest Haber-İlan Portal CMS'),
+            'site_description' => config('portal.tagline', 'Modern Haber, İlan ve Topluluk Yönetim Sistemi'),
             'site_url' => config('app.url', 'http://localhost'),
             'default_language' => 'tr',
             'default_timezone' => config('app.timezone', 'Europe/Istanbul'),

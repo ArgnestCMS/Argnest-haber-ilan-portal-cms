@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
-    <title>Argnest Portal Kurulum</title>
+    <title>{{ config('portal.name') }} Kurulum</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-950">
@@ -19,9 +19,9 @@
             <div class="bg-slate-950 px-6 py-6 text-white sm:px-8">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <div class="text-xs font-black uppercase tracking-[0.22em] text-blue-200">Argnest Haber-Ilan Portal CMS</div>
+                        <div class="text-xs font-black uppercase tracking-[0.22em] text-blue-200">{{ config('portal.name') }}</div>
                         <h1 class="mt-2 text-2xl font-black sm:text-3xl">Kurulum Sihirbazi</h1>
-                        <p class="mt-1 text-sm text-slate-300">Modern Haber, Ilan ve Topluluk Yonetim Sistemi</p>
+                        <p class="mt-1 text-sm text-slate-300">{{ config('portal.tagline') }}</p>
                     </div>
                     <div class="rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm">
                         <div class="text-slate-300">Surum</div>
@@ -74,7 +74,7 @@
                         @if($step === 1)
                             <div class="space-y-4">
                                 <h2 class="text-2xl font-black">Hos geldiniz</h2>
-                                <p class="max-w-2xl text-slate-600">Bu sihirbaz Argnest Haber-Ilan Portal CMS kurulumunu guvenli adimlarla tamamlar. Demo icerik varsayilan olarak olusturulmaz.</p>
+                                <p class="max-w-2xl text-slate-600">Bu sihirbaz {{ config('portal.name') }} kurulumunu guvenli adimlarla tamamlar. Demo icerik varsayilan olarak olusturulmaz.</p>
                                 <div class="grid gap-4 sm:grid-cols-3">
                                     <div class="rounded-xl border border-slate-200 p-4">
                                         <div class="text-sm font-black">Temiz Kurulum</div>

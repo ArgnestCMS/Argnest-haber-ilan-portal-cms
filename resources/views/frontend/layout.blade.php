@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 
 @php
@@ -30,7 +30,7 @@
             ->take(15)
             ->get()
             ->map(fn ($news) => [
-                'label' => '⚡ ' . $news->title,
+                'label' => 'âš¡ ' . $news->title,
                 'url' => url('/haber/' . $news->slug),
                 'target' => '_self',
                 'date' => $news->created_at,
@@ -52,7 +52,7 @@
             ->take(15)
             ->get()
             ->map(fn ($announcement) => [
-                'label' => '📢 ' . $announcement->title,
+                'label' => 'ğŸ“¢ ' . $announcement->title,
                 'url' => url('/ilan/' . $announcement->slug),
                 'target' => '_self',
                 'date' => $announcement->created_at,
@@ -77,14 +77,14 @@
         'meta_description',
         $seoSetting?->site_description
             ?? $siteSetting?->seo_description
-            ?? 'Güncel haberler, kamu ilanları, personel alımları ve son dakika gelişmeleri.'
+            ?? 'GÃ¼ncel haberler, kamu ilanlarÄ±, personel alÄ±mlarÄ± ve son dakika geliÅŸmeleri.'
     ));
 
     $metaKeywords = trim($__env->yieldContent(
         'meta_keywords',
         $seoSetting?->site_keywords
             ?? $siteSetting?->seo_keywords
-            ?? 'haberler, ilanlar, memur alımı, kamu ilanları'
+            ?? 'haberler, ilanlar, memur alÄ±mÄ±, kamu ilanlarÄ±'
     ));
 
     $metaImage = trim($__env->yieldContent(
@@ -388,7 +388,7 @@
 
 <header x-data="{ mobileMenu: false, mobileSearch: false, authModal: null, liveActivityModal: false }">
 
-    {{-- ÜST MAVİ MENÜ --}}
+    {{-- ÃœST MAVÄ° MENÃœ --}}
     <div class="theme-topbar bg-[#0878c9] text-white">
        <div class="max-w-7xl mx-auto px-4">
 
@@ -480,7 +480,7 @@
                                                 class="flex items-center justify-center rounded border border-dashed border-white/40 px-3 text-[11px] font-bold text-white/90"
                                                 style="{{ $bannerStyle }}"
                                             >
-                                                Banner görseli bulunamadı
+                                                Banner gÃ¶rseli bulunamadÄ±
                                             </div>
                                         @endif
 
@@ -512,7 +512,7 @@
                         >
 
                         <button type="submit" class="theme-button bg-slate-900 px-3 py-1.5 rounded-r hover:bg-slate-800 transition">
-                            🔍
+                            ğŸ”
                         </button>
                     </form>
 
@@ -567,7 +567,7 @@
                                     @click="openWorkPanel = true"
                                     class="theme-button bg-slate-900 px-3 py-2 rounded font-black hover:bg-slate-800 transition"
                                 >
-                                    ⏱️ {{ $workLabel }}
+                                    â±ï¸ {{ $workLabel }}
                                 </button>
 
                                 <div
@@ -588,7 +588,7 @@
                                             </div>
 
                                             <button @click="openWorkPanel = false" class="text-2xl">
-                                                ×
+                                                Ã—
                                             </button>
                                         </div>
 
@@ -596,29 +596,29 @@
 
                                             <div class="grid grid-cols-3 gap-3">
                                                 <div class="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
-                                                    <div class="text-xs text-green-700 font-bold">Bugün Mesai</div>
+                                                    <div class="text-xs text-green-700 font-bold">BugÃ¼n Mesai</div>
                                                     <div class="text-xl font-black text-green-700">{{ $todayWorkMinutes }} dk</div>
                                                 </div>
 
                                                 <div class="bg-yellow-50 border border-yellow-100 rounded-xl p-3 text-center">
-                                                    <div class="text-xs text-yellow-700 font-bold">Bugün Mola</div>
+                                                    <div class="text-xs text-yellow-700 font-bold">BugÃ¼n Mola</div>
                                                     <div class="text-xl font-black text-yellow-700">{{ $todayBreakMinutes }} dk</div>
                                                 </div>
 
                                                 <div class="bg-red-50 border border-red-100 rounded-xl p-3 text-center">
-                                                    <div class="text-xs text-red-700 font-bold">Bugün Yemek</div>
+                                                    <div class="text-xs text-red-700 font-bold">BugÃ¼n Yemek</div>
                                                     <div class="text-xl font-black text-red-700">{{ $todayLunchMinutes }} dk</div>
                                                 </div>
                                             </div>
 
                                             <div class="grid grid-cols-2 gap-3">
                                                 <div class="bg-slate-100 rounded-xl p-3 text-center">
-                                                    <div class="text-xs text-slate-500 font-bold">Haftalık Mesai</div>
+                                                    <div class="text-xs text-slate-500 font-bold">HaftalÄ±k Mesai</div>
                                                     <div class="text-lg font-black text-slate-900">{{ $weekWorkMinutes }} dk</div>
                                                 </div>
 
                                                 <div class="bg-slate-100 rounded-xl p-3 text-center">
-                                                    <div class="text-xs text-slate-500 font-bold">Aylık Mesai</div>
+                                                    <div class="text-xs text-slate-500 font-bold">AylÄ±k Mesai</div>
                                                     <div class="text-lg font-black text-slate-900">{{ $monthWorkMinutes }} dk</div>
                                                 </div>
                                             </div>
@@ -632,11 +632,11 @@
 
                                                 @if($activeWorkSession)
                                                     <div class="text-xs text-slate-500 mt-1">
-                                                        Başlangıç: {{ $activeWorkSession->started_at->format('H:i:s') }}
+                                                        BaÅŸlangÄ±Ã§: {{ $activeWorkSession->started_at->format('H:i:s') }}
                                                     </div>
                                                 @else
                                                     <div class="text-xs text-slate-500 mt-1">
-                                                        Henüz aktif işlem yok
+                                                        HenÃ¼z aktif iÅŸlem yok
                                                     </div>
                                                 @endif
                                             </div>
@@ -644,35 +644,35 @@
                                             <form action="{{ route('work.start') }}" method="POST">
                                                 @csrf
                                                 <button class="w-full bg-green-600 text-white py-3 rounded-xl font-black hover:bg-green-700">
-                                                    🟢 Mesai Başlat
+                                                    ğŸŸ¢ Mesai BaÅŸlat
                                                 </button>
                                             </form>
 
                                             <form action="{{ route('work.break') }}" method="POST">
                                                 @csrf
                                                 <button class="w-full bg-yellow-500 text-white py-3 rounded-xl font-black hover:bg-yellow-600">
-                                                    ☕ Molaya Çık
+                                                    â˜• Molaya Ã‡Ä±k
                                                 </button>
                                             </form>
 
                                             <form action="{{ route('work.lunch') }}" method="POST">
                                                 @csrf
                                                 <button class="w-full bg-red-500 text-white py-3 rounded-xl font-black hover:bg-red-600">
-                                                    🍔 Yemeğe Çık
+                                                    ğŸ” YemeÄŸe Ã‡Ä±k
                                                 </button>
                                             </form>
 
                                             <form action="{{ route('work.active') }}" method="POST">
                                                 @csrf
                                                 <button class="theme-button w-full bg-blue-600 text-white py-3 rounded-xl font-black hover:bg-blue-700">
-                                                    ⚡ Aktife Dön
+                                                    âš¡ Aktife DÃ¶n
                                                 </button>
                                             </form>
 
                                             <form action="{{ route('work.end') }}" method="POST">
                                                 @csrf
                                                 <button class="theme-button w-full bg-slate-900 text-white py-3 rounded-xl font-black hover:bg-slate-800">
-                                                    🔴 Mesai Bitir
+                                                    ğŸ”´ Mesai Bitir
                                                 </button>
                                             </form>
 
@@ -692,7 +692,7 @@
     <a href="{{ route('user.notifications') }}"
        class="relative hover:text-slate-200 transition">
 
-        <span class="text-xl">🔔</span>
+        <span class="text-xl">ğŸ””</span>
 
         <span
             x-show="count > 0"
@@ -726,18 +726,18 @@
                         <form method="POST" action="{{ route('logout') }}">
     @csrf
     <button type="submit">
-        Çıkış
+        Ã‡Ä±kÄ±ÅŸ
     </button>
  </form>
 
                     @else
 
                         <button @click="authModal = 'login'" class="hover:text-slate-200">
-                            Üye Girişi
+                            Ãœye GiriÅŸi
                         </button>
 
                         <button @click="authModal = 'register'" class="theme-button bg-slate-800 px-3 py-2 rounded hover:bg-slate-700">
-                            Kayıt Ol
+                            KayÄ±t Ol
                         </button>
 
                     @endauth
@@ -764,17 +764,17 @@
                         </a>
                     @endauth
                     <button @click="mobileSearch = !mobileSearch" class="text-xl">
-                        🔍
+                        ğŸ”
                     </button>
 
                     <button @click="mobileMenu = !mobileMenu" class="text-2xl">
-                        ☰
+                        â˜°
                     </button>
                 </div>
 
             </div>
 
-            {{-- MOBİL ARAMA --}}
+            {{-- MOBÄ°L ARAMA --}}
             <div x-show="mobileSearch" x-transition class="md:hidden pb-4" style="display:none;">
                 <form action="/arama" method="GET" class="flex">
                     <input
@@ -786,12 +786,12 @@
                     >
 
                     <button type="submit" class="theme-button bg-slate-900 px-4 rounded-r">
-                        🔍
+                        ğŸ”
                     </button>
                 </form>
             </div>
 
-            {{-- MOBİL MENÜ --}}
+            {{-- MOBÄ°L MENÃœ --}}
             <div x-show="mobileMenu" x-transition class="theme-topbar md:hidden bg-[#0667ad] border-t border-white/10" style="display:none;">
                 <div class="flex flex-col text-sm font-bold">
 
@@ -828,7 +828,7 @@
                         <a href="/haberler" class="py-3 border-b border-white/10">Haberler</a>
                     @endif
                     @if($homeMenuModules['announcements'])
-                    <a href="/ilanlar" class="py-3 border-b border-white/10">İlanlar</a>
+                    <a href="/ilanlar" class="py-3 border-b border-white/10">Ä°lanlar</a>
                     @endif
                     @if($homeMenuModules['videos'])
                         <a href="{{ route('videos.index') }}" class="py-3 border-b border-white/10">Videolar</a>
@@ -850,7 +850,7 @@
                             @click="liveActivityModal = true; mobileMenu = false"
                             class="py-3 border-b border-white/10 text-left"
                         >
-                            Canlı Aktivite
+                            CanlÄ± Aktivite
                         </button>
                     @endif
 
@@ -892,23 +892,23 @@
                         <form method="POST" action="{{ route('logout') }}" class="py-3">
                             @csrf
                             <button type="submit" class="font-bold">
-                                Çıkış
+                                Ã‡Ä±kÄ±ÅŸ
                             </button>
                         </form>
                     @else
                         <button @click="authModal = 'login'; mobileMenu = false" class="py-3 border-b border-white/10 text-left">
-                            Giriş Yap
+                            GiriÅŸ Yap
                         </button>
 
                         <button @click="authModal = 'register'; mobileMenu = false" class="py-3 text-left">
-                            Kayıt Ol
+                            KayÄ±t Ol
                         </button>
                     @endauth
 
                 </div>
             </div>
 
-            {{-- GİRİŞ / KAYIT POPUP --}}
+            {{-- GÄ°RÄ°Å / KAYIT POPUP --}}
             <div
                 x-show="authModal"
                 x-transition
@@ -921,14 +921,14 @@
                 >
                     <div class="theme-navbar bg-slate-950 text-white px-6 py-5 flex items-center justify-between">
                         <div>
-                            <h2 class="text-2xl font-black" x-text="authModal === 'login' ? 'Üye Girişi' : 'Üye Ol'"></h2>
+                            <h2 class="text-2xl font-black" x-text="authModal === 'login' ? 'Ãœye GiriÅŸi' : 'Ãœye Ol'"></h2>
                             <p class="text-sm text-slate-300 mt-1">
-                                Güvenli kullanıcı paneli
+                                GÃ¼venli kullanÄ±cÄ± paneli
                             </p>
                         </div>
 
                         <button @click="authModal = null" class="text-3xl leading-none">
-                            ×
+                            Ã—
                         </button>
                     </div>
 
@@ -950,35 +950,35 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-sm font-bold">Şifre</label>
+                                    <label class="text-sm font-bold">Åifre</label>
                                     <input
                                         type="password"
                                         name="password"
                                         required
                                         class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
-                                        placeholder="••••••••"
+                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                     >
                                 </div>
 
                                 <div class="flex items-center justify-between text-sm">
                                     <label class="flex items-center gap-2">
                                         <input type="checkbox" name="remember" class="rounded">
-                                        Beni hatırla
+                                        Beni hatÄ±rla
                                     </label>
 
                                     <a href="{{ route('password.request') }}" class="theme-link text-blue-700 font-bold hover:underline">
-                                        Şifremi unuttum
+                                        Åifremi unuttum
                                     </a>
                                 </div>
 
                                 <button class="theme-button w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
-                                    Giriş Yap
+                                    GiriÅŸ Yap
                                 </button>
 
                                 <p class="text-center text-sm text-slate-600">
-                                    Hesabınız yok mu?
+                                    HesabÄ±nÄ±z yok mu?
                                     <button type="button" @click="authModal = 'register'" class="theme-link text-blue-700 font-black">
-                                        Üye ol
+                                        Ãœye ol
                                     </button>
                                 </p>
                             </form>
@@ -1011,29 +1011,29 @@
                                 </div>
 
                                 <div>
-                                    <label class="text-sm font-bold">Şifre</label>
+                                    <label class="text-sm font-bold">Åifre</label>
                                     <input
                                         type="password"
                                         name="password"
                                         required
                                         class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
-                                        placeholder="••••••••"
+                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                     >
                                 </div>
 
                                 <div>
-                                    <label class="text-sm font-bold">Şifre Tekrar</label>
+                                    <label class="text-sm font-bold">Åifre Tekrar</label>
                                     <input
                                         type="password"
                                         name="password_confirmation"
                                         required
                                         class="mt-2 w-full rounded-xl border-slate-300 text-slate-900"
-                                        placeholder="••••••••"
+                                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                                     >
                                 </div>
 
                                 <div class="bg-slate-50 border rounded-xl p-3 text-xs text-slate-600">
-                                    Kayıt olarak kullanım şartlarını ve topluluk kurallarını kabul etmiş olursunuz.
+                                    KayÄ±t olarak kullanÄ±m ÅŸartlarÄ±nÄ± ve topluluk kurallarÄ±nÄ± kabul etmiÅŸ olursunuz.
                                 </div>
 <div>
     <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
@@ -1045,13 +1045,13 @@
     @enderror
 </div>
                                 <button class="theme-button w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-black">
-                                    Hesap Oluştur
+                                    Hesap OluÅŸtur
                                 </button>
 
                                 <p class="text-center text-sm text-slate-600">
-                                    Zaten hesabınız var mı?
+                                    Zaten hesabÄ±nÄ±z var mÄ±?
                                     <button type="button" @click="authModal = 'login'" class="theme-link text-blue-700 font-black">
-                                        Giriş yap
+                                        GiriÅŸ yap
                                     </button>
                                 </p>
                             </form>
@@ -1063,7 +1063,7 @@
 
         </div>
     </div>
-   {{-- CANLI AKTİVİTE POPUP --}}
+   {{-- CANLI AKTÄ°VÄ°TE POPUP --}}
 <div
     x-show="liveActivityModal"
     x-transition
@@ -1076,10 +1076,10 @@
     >
         <div class="theme-breaking flex items-center justify-between bg-red-700 px-6 py-5 text-white">
             <div>
-                <h2 class="text-2xl font-black">Canlı Aktivite</h2>
+                <h2 class="text-2xl font-black">CanlÄ± Aktivite</h2>
 
                 <p class="mt-1 text-sm text-red-100">
-                    Canlı yayın, sohbet ve duyurular
+                    CanlÄ± yayÄ±n, sohbet ve duyurular
                 </p>
             </div>
 
@@ -1087,7 +1087,7 @@
                 @click="liveActivityModal = false"
                 class="text-3xl leading-none"
             >
-                ×
+                Ã—
             </button>
         </div>
 
@@ -1097,10 +1097,10 @@
                 <a href="{{ route('live-chat.index') }}"
                    class="block rounded-2xl border border-red-100 bg-red-50 p-4 font-black text-red-700 transition hover:bg-red-100">
 
-                    💬 Canlı Sohbet
+                    ğŸ’¬ CanlÄ± Sohbet
 
                     <div class="mt-1 text-xs font-semibold text-red-500">
-                        Üyelerle anlık sohbet alanı
+                        Ãœyelerle anlÄ±k sohbet alanÄ±
                     </div>
                 </a>
             @endif
@@ -1109,10 +1109,10 @@
                 <a href="{{ route('live-activity.index') }}"
                    class="block rounded-2xl border border-slate-200 bg-slate-50 p-4 font-black text-slate-800 transition hover:bg-slate-100">
 
-                    📺 Canlı Yayın
+                    ğŸ“º CanlÄ± YayÄ±n
 
                     <div class="mt-1 text-xs font-semibold text-slate-500">
-                        Aktif yayın varsa buradan izleyebilirsiniz
+                        Aktif yayÄ±n varsa buradan izleyebilirsiniz
                     </div>
                 </a>
             @endif
@@ -1122,10 +1122,10 @@
                    @click="liveActivityModal = false"
                    class="block rounded-2xl border border-yellow-100 bg-yellow-50 p-4 font-black text-yellow-700 transition hover:bg-yellow-100">
 
-                    📢 Canlı Duyuru
+                    ğŸ“¢ CanlÄ± Duyuru
 
                     <div class="mt-1 text-xs font-semibold text-yellow-600">
-                        {{ $siteSetting?->live_announcement_text ?? 'Güncel duyuruları görüntüle' }}
+                        {{ $siteSetting?->live_announcement_text ?? 'GÃ¼ncel duyurularÄ± gÃ¶rÃ¼ntÃ¼le' }}
                     </div>
                 </a>
             @endif
@@ -1134,10 +1134,10 @@
             <a href="{{ route('forum.index') }}"
                class="theme-link block rounded-2xl border border-blue-100 bg-blue-50 p-4 font-black text-blue-700 transition hover:bg-blue-100">
 
-                👥 Forum
+                ğŸ‘¥ Forum
 
                 <div class="mt-1 text-xs font-semibold text-blue-500">
-                    Topluluk konuları ve tartışmalar
+                    Topluluk konularÄ± ve tartÄ±ÅŸmalar
                 </div>
             </a>
             @endif
@@ -1145,7 +1145,7 @@
         </div>
     </div>
 </div>
-    {{-- ALT MENÜ --}}
+    {{-- ALT MENÃœ --}}
     <div class="theme-navbar bg-slate-800 text-white">
         <div class="max-w-7xl mx-auto flex min-h-10 items-center gap-4 px-4 py-2 text-sm font-semibold">
             <nav class="flex shrink-0 items-center gap-5 overflow-x-auto whitespace-nowrap">
@@ -1154,7 +1154,7 @@
                 <a href="/haberler" class="{{ request()->is('haberler*') || request()->is('haber/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Haberler</a>
                 @endif
                 @if($homeMenuModules['announcements'])
-                <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">İlanlar</a>
+                <a href="/ilanlar" class="{{ request()->is('ilanlar*') || request()->is('ilan/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Ä°lanlar</a>
                 @endif
                 @if($homeMenuModules['videos'])
                 <a href="{{ route('videos.index') }}" class="{{ request()->is('videolar*') || request()->is('video/*') ? 'text-blue-200' : 'hover:text-blue-200' }}">Videolar</a>
@@ -1178,14 +1178,14 @@
                                     @if($announcement->link_target === '_blank') rel="noopener noreferrer" @endif
                                     class="hover:text-blue-200"
                                 >
-                                    {{ $announcement->icon ?: '📢' }} {{ $announcement->text }}
+                                    {{ $announcement->icon ?: 'ğŸ“¢' }} {{ $announcement->text }}
                                 </a>
                             @else
-                                <span>{{ $announcement->icon ?: '📢' }} {{ $announcement->text }}</span>
+                                <span>{{ $announcement->icon ?: 'ğŸ“¢' }} {{ $announcement->text }}</span>
                             @endif
 
                             @unless($loop->last)
-                                <span class="px-3 text-slate-400">—</span>
+                                <span class="px-3 text-slate-400">â€”</span>
                             @endunless
                         @endforeach
                     </marquee>
@@ -1205,19 +1205,19 @@
                         @click="liveActivityModal = true"
                         class="theme-chip inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-700 px-3 py-1.5 text-[11px] font-black text-white shadow-md transition hover:scale-105 whitespace-nowrap">
                         <span class="h-2 w-2 rounded-full bg-white shadow animate-pulse"></span>
-                        CANLI AKTİVİTE
+                        CANLI AKTÄ°VÄ°TE
                     </button>
                 @endif
             </div>
         </div>
     </div>
 
-    {{-- SON DAKİKA --}}
+    {{-- SON DAKÄ°KA --}}
     @if($homeBreakingNewsEnabled)
     <div id="son-dakika" class="theme-breaking bg-red-600 text-white overflow-hidden border-b border-red-700">
         <div class="max-w-7xl mx-auto flex items-center h-10">
             <div class="theme-announcement px-4 h-full flex items-center font-bold text-sm whitespace-nowrap">
-                SON DAKİKA
+                SON DAKÄ°KA
             </div>
 
             <marquee behavior="scroll" direction="left" scrollamount="5" class="min-w-0 px-4 text-sm font-semibold">
@@ -1244,34 +1244,34 @@
             </marquee>
 
             <marquee behavior="scroll" direction="left" scrollamount="5" class="hidden text-sm font-semibold px-4">
-                🔥 Memur alımı ilanları güncellendi —
-                🔥 KPSS tercih süreci başladı —
-                🔥 Yeni personel alım ilanları yayımlandı —
-                🔥 Akademik ilanlarda yeni kadrolar açıldı —
-                🔥 Son dakika haberlerini takip edin
+                ğŸ”¥ Memur alÄ±mÄ± ilanlarÄ± gÃ¼ncellendi â€”
+                ğŸ”¥ KPSS tercih sÃ¼reci baÅŸladÄ± â€”
+                ğŸ”¥ Yeni personel alÄ±m ilanlarÄ± yayÄ±mlandÄ± â€”
+                ğŸ”¥ Akademik ilanlarda yeni kadrolar aÃ§Ä±ldÄ± â€”
+                ğŸ”¥ Son dakika haberlerini takip edin
             </marquee>
         </div>
     </div>
 
-    {{-- FİNANS + HAVA DURUMU --}}
+    {{-- FÄ°NANS + HAVA DURUMU --}}
     @endif
 
     <div class="bg-white border-b">
         <div class="max-w-7xl mx-auto px-4 h-9 flex items-center justify-between text-sm">
 
             <div class="flex items-center gap-6 overflow-x-auto text-sm font-semibold whitespace-nowrap">
-                <span><b>Dolar:</b> {{ $market['dolar'] ?? '45.35' }} <span class="text-green-600">%0.24 ↑</span></span>
-                <span><b>Euro:</b> {{ $market['euro'] ?? '53.52' }} <span class="text-green-600">%0.56 ↑</span></span>
-                <span><b>Altın:</b> {{ $market['altin'] ?? '6875.62' }} <span class="text-green-600">%0.87 ↑</span></span>
-                <span><b>BIST:</b> {{ $market['bist'] ?? '15062.65' }} <span class="text-green-600">%0.15 ↑</span></span>
-                <span><b>BTC:</b> {{ $market['btc'] ?? '81256' }} <span class="text-green-600">%0.48 ↑</span></span>
+                <span><b>Dolar:</b> {{ $market['dolar'] ?? '45.35' }} <span class="text-green-600">%0.24 â†‘</span></span>
+                <span><b>Euro:</b> {{ $market['euro'] ?? '53.52' }} <span class="text-green-600">%0.56 â†‘</span></span>
+                <span><b>AltÄ±n:</b> {{ $market['altin'] ?? '6875.62' }} <span class="text-green-600">%0.87 â†‘</span></span>
+                <span><b>BIST:</b> {{ $market['bist'] ?? '15062.65' }} <span class="text-green-600">%0.15 â†‘</span></span>
+                <span><b>BTC:</b> {{ $market['btc'] ?? '81256' }} <span class="text-green-600">%0.48 â†‘</span></span>
             </div>
 
             <div class="hidden md:block whitespace-nowrap">
-                {{ $weather['city'] ?? 'İstanbul' }},
-                {{ $weather['status'] ?? 'Açık' }}
-                •
-                <b>{{ $weather['temp'] ?? 19 }}°</b>
+                {{ $weather['city'] ?? 'Ä°stanbul' }},
+                {{ $weather['status'] ?? 'AÃ§Ä±k' }}
+                â€¢
+                <b>{{ $weather['temp'] ?? 19 }}Â°</b>
             </div>
 
         </div>
@@ -1325,7 +1325,7 @@
 <nav class="mobile-safe-bottom fixed inset-x-0 bottom-0 z-[9996] border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.12)] backdrop-blur md:hidden">
     <div class="grid h-[74px] {{ $mobileBottomColumns }} text-[11px] font-black text-slate-500">
         <a href="/" class="flex flex-col items-center justify-center gap-1 {{ request()->is('/') ? 'text-blue-700' : '' }}">
-            <span class="text-lg leading-none">⌂</span>
+            <span class="text-lg leading-none">âŒ‚</span>
             <span>Ana</span>
         </a>
 
@@ -1337,7 +1337,7 @@
         @endif
 
         <a href="{{ route('search') }}" class="flex flex-col items-center justify-center gap-1 {{ request()->is('arama*') ? 'text-blue-700' : '' }}">
-            <span class="text-lg leading-none">⌕</span>
+            <span class="text-lg leading-none">âŒ•</span>
             <span>Arama</span>
         </a>
 
@@ -1348,7 +1348,7 @@
                 x-init="init()"
                 class="relative flex flex-col items-center justify-center gap-1 {{ request()->is('mesajlar*') ? 'text-blue-700' : '' }}"
             >
-                <span class="text-lg leading-none">✉</span>
+                <span class="text-lg leading-none">âœ‰</span>
                 <span>Mesaj</span>
                 <span
                     x-show="count > 0"
@@ -1365,7 +1365,7 @@
                 x-init="init()"
                 class="relative flex flex-col items-center justify-center gap-1 {{ request()->is('bildirimler*') || request()->is('profil*') ? 'text-blue-700' : '' }}"
             >
-                <span class="text-lg leading-none">●</span>
+                <span class="text-lg leading-none">â—</span>
                 <span>Profil</span>
                 <span
                     x-show="count > 0"
@@ -1377,12 +1377,12 @@
             </a>
         @else
             <a href="{{ route('login') }}" class="flex flex-col items-center justify-center gap-1">
-                <span class="text-lg leading-none">✉</span>
+                <span class="text-lg leading-none">âœ‰</span>
                 <span>Mesaj</span>
             </a>
 
             <a href="{{ route('login') }}" class="flex flex-col items-center justify-center gap-1">
-                <span class="text-lg leading-none">●</span>
+                <span class="text-lg leading-none">â—</span>
                 <span>Profil</span>
             </a>
         @endauth
@@ -1445,30 +1445,30 @@
             </h3>
 
             <p class="text-slate-300">
-                {{ $siteSetting?->footer_about ?? 'Güncel haberler, kamu ilanları ve duyurular.' }}
+                {{ $siteSetting?->footer_about ?? 'GÃ¼ncel haberler, kamu ilanlarÄ± ve duyurular.' }}
             </p>
         </div>
 
         <div>
-            <h3 class="font-bold mb-3">Hızlı Linkler</h3>
+            <h3 class="font-bold mb-3">HÄ±zlÄ± Linkler</h3>
             <div class="space-y-2 text-slate-300">
                 <div><a href="/">Anasayfa</a></div>
                 <div><a href="/haberler">Haberler</a></div>
-                <div><a href="/ilanlar">İlanlar</a></div>
+                <div><a href="/ilanlar">Ä°lanlar</a></div>
             </div>
         </div>
 
         <div>
             <h3 class="font-bold mb-3">Kategoriler</h3>
             <div class="space-y-2 text-slate-300">
-                <div>Memur Alımı</div>
+                <div>Memur AlÄ±mÄ±</div>
                 <div>KPSS</div>
-                <div>Akademik İlanlar</div>
+                <div>Akademik Ä°lanlar</div>
             </div>
         </div>
 
         <div>
-            <h3 class="font-bold mb-3">İletişim</h3>
+            <h3 class="font-bold mb-3">Ä°letiÅŸim</h3>
             <div class="space-y-2 text-slate-300">
                 <div>
                     <a href="mailto:Argnest@gmail.com" class="theme-link hover:underline">
@@ -1489,20 +1489,16 @@
     </div>
 
     <div class="border-t border-slate-700 py-4 text-center text-sm text-slate-400">
-        {{ $siteSetting?->footer_copyright ?? '© ' . date('Y') . ' ' . $siteName }}
+        {{ $siteSetting?->footer_copyright ?? 'Â© ' . date('Y') . ' ' . $siteName }}
     </div>
 
     <div class="border-t border-white/10 px-4 py-4 text-center text-xs leading-6 text-slate-400">
         <div>
-            © {{ date('Y') }} HABER PROJE —
-            Proje Sahibi: Fikret Kaya —
-            <a href="mailto:Argnest@gmail.com" class="theme-link font-semibold hover:underline">Argnest@gmail.com</a>
-            —
-            Tüm Hakları Saklıdır.
+            Powered by {{ config('portal.name') }} {{ config('portal.version') }}
         </div>
 
         <div class="mt-1 text-[11px] text-slate-500">
-            Bu yazı sistem çekirdeğine gömülüdür ve değiştirilemez.
+            {{ config('portal.tagline') }}
         </div>
     </div>
 </footer>
@@ -2151,7 +2147,7 @@ setInterval(() => {
 
 <div class="content-image-lightbox" data-content-image-lightbox aria-hidden="true">
     <button type="button" class="content-image-lightbox__close" data-content-image-lightbox-close aria-label="Kapat">
-        ×
+        Ã—
     </button>
     <img src="" alt="">
 </div>

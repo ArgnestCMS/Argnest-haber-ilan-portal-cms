@@ -40,6 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->brandName(config('portal.name'))
             ->login()
             ->bootUsing(fn () => app()->setLocale('tr'))
             ->colors([
@@ -88,6 +89,12 @@ class AdminPanelProvider extends PanelProvider
 ->renderHook(
     PanelsRenderHook::USER_MENU_BEFORE,
     fn (): string => Blade::render('@include("filament.notification-bell")')
+)
+->renderHook(
+    PanelsRenderHook::FOOTER,
+    fn (): string => Blade::render(
+        '<div class="py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400">Powered by {{ config("portal.name") }} {{ config("portal.version") }}</div>'
+    )
 )
 
              ->middleware([

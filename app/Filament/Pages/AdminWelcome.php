@@ -24,7 +24,7 @@ class AdminWelcome extends Page
 
     protected static ?string $slug = 'welcome';
 
-    protected static ?string $title = 'Argnest Portal Baslangic Merkezi';
+    protected static ?string $title = 'Argnest Haber-İlan Portal CMS Baslangic Merkezi';
 
     public static function canAccess(): bool
     {
@@ -35,7 +35,7 @@ class AdminWelcome extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return 'Argnest Portal Baslangic Merkezi';
+        return 'Argnest Haber-İlan Portal CMS Baslangic Merkezi';
     }
 
     public function cards(): array

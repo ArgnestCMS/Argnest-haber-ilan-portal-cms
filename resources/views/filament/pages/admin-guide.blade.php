@@ -13,7 +13,7 @@
         @endphp
 
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-            <p class="text-sm font-bold uppercase tracking-wide text-primary-600 dark:text-primary-400">Argnest Portal</p>
+            <p class="text-sm font-bold uppercase tracking-wide text-primary-600 dark:text-primary-400">{{ config('portal.name') }}</p>
             <h2 class="mt-2 text-2xl font-black text-gray-950 dark:text-white">Kullanim Kilavuzu</h2>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Temel admin islemleri icin hizli referans.</p>
         </div>
