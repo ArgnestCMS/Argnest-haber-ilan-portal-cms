@@ -10,6 +10,8 @@ class SeoSetting extends Model
         'site_title',
         'site_description',
         'site_keywords',
+        'default_author',
+        'default_language',
 
         'og_title',
         'og_description',
@@ -24,6 +26,8 @@ class SeoSetting extends Model
 
         'robots_index',
         'robots_follow',
+        'robots_txt',
+        'sitemap_cache_minutes',
 
         'google_analytics',
         'google_tag_manager',
@@ -35,6 +39,7 @@ class SeoSetting extends Model
         'indexing' => 'boolean',
         'robots_index' => 'boolean',
         'robots_follow' => 'boolean',
+        'sitemap_cache_minutes' => 'integer',
     ];
 
     public static function current(): self

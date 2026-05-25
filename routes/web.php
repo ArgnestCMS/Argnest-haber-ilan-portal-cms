@@ -369,6 +369,11 @@ Route::get('/bildirimler/count', [UserNotificationController::class, 'unreadCoun
 */
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+Route::get('/sitemap-news.xml/{page?}', [SitemapController::class, 'news'])->whereNumber('page');
+Route::get('/sitemap-announcements.xml/{page?}', [SitemapController::class, 'announcements'])->whereNumber('page');
+Route::get('/sitemap-forum.xml/{page?}', [SitemapController::class, 'forum'])->whereNumber('page');
+Route::get('/sitemap-categories.xml/{page?}', [SitemapController::class, 'categories'])->whereNumber('page');
+Route::get('/sitemap-media.xml/{page?}', [SitemapController::class, 'media'])->whereNumber('page');
 
 Route::get('/robots.txt', [SitemapController::class, 'robots']);
 

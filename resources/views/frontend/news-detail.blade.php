@@ -15,6 +15,14 @@
 )
 
 @section('canonical', url()->current())
+@section('og_type', 'article')
+@section('author', $siteSetting?->site_name ?? config('app.name'))
+@section('news_meta')
+    <meta property="article:published_time" content="{{ $news->created_at?->toAtomString() }}">
+    <meta property="article:modified_time" content="{{ $news->updated_at?->toAtomString() }}">
+    <meta property="article:author" content="{{ $siteSetting?->site_name ?? config('app.name') }}">
+    <meta name="news_keywords" content="{{ $news->title }}, haber, son dakika, gündem">
+@endsection
 
 @section(
     'meta_image',

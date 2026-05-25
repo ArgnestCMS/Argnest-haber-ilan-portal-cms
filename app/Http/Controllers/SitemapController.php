@@ -2,57 +2,48 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Announcement;
-use App\Models\Category;
-use App\Models\Gallery;
-use App\Models\ForumCategory;
-use App\Models\ForumTag;
-use App\Models\ForumTopic;
-use App\Models\News;
-use App\Models\Video;
+use App\Services\SitemapService;
+use Illuminate\Http\Response;
 
 class SitemapController extends Controller
 {
-    public function index()
+    public function index(SitemapService $sitemap): Response
     {
-        $news = News::published()->latest()->get();
-        $announcements = Announcement::active()->latest()->get();
-        $videos = Video::where('is_active', true)->latest()->get();
-        $galleries = Gallery::where('is_active', true)->latest()->get();
-        $categories = Category::where('is_active', true)->latest()->get();
-        $forumCategories = ForumCategory::active()
-            ->whereHas('topics', fn ($query) => $query->published())
-            ->latest()
-            ->get();
-        $forumTags = ForumTag::active()
-            ->whereHas('topics', fn ($query) => $query->published())
-            ->latest()
-            ->get();
-        $forumTopics = ForumTopic::published()
-            ->latest('updated_at')
-            ->get();
-
-        return response()
-            ->view(
-                'frontend.sitemap',
-                compact(
-                    'news',
-                    'announcements',
-                    'videos',
-                    'galleries',
-                    'categories',
-                    'forumCategories',
-                    'forumTags',
-                    'forumTopics'
-                )
-            )
-            ->header('Content-Type', 'application/xml');
+        return $this->xml($sitemap->index());
     }
 
-    public function robots()
+    public function news(SitemapService $sitemap, int $page = 1): Response
     {
-        return response()
-            ->view('frontend.robots')
-            ->header('Content-Type', 'text/plain');
+        return $this->xml($sitemap->news($page));
+    }
+
+    public function announcements(SitemapService $sitemap, int $page = 1): Response
+    {
+        return $this->xml($sitemap->announcements($page));
+    }
+
+    public function forum(SitemapService $sitemap, int $page = 1): Response
+    {
+        return $this->xml($sitemap->forum($page));
+    }
+
+    public function categories(SitemapService $sitemap, int $page = 1): Response
+    {
+        return $this->xml($sitemap->categories($page));
+    }
+
+    public function media(SitemapService $sitemap, int $page = 1): Response
+    {
+        return $this->xml($sitemap->media($page));
+    }
+
+    public function robots(SitemapService $sitemap): Response
+    {
+        return response($sitemap->robots(), 200)->header('Content-Type', 'text/plain; charset=UTF-8');
+    }
+
+    private function xml(string $content): Response
+    {
+        return response($content, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 }

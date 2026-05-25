@@ -19,6 +19,13 @@
 )
 
 @section('canonical', url()->current())
+@section('og_type', 'article')
+@section('author', $siteSetting?->site_name ?? config('app.name'))
+@section('news_meta')
+    <meta property="article:published_time" content="{{ $announcement->created_at?->toAtomString() }}">
+    <meta property="article:modified_time" content="{{ $announcement->updated_at?->toAtomString() }}">
+    <meta property="article:author" content="{{ $siteSetting?->site_name ?? config('app.name') }}">
+@endsection
 
 @section(
     'meta_image',

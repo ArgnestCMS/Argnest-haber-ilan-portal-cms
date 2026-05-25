@@ -74,8 +74,17 @@ class SeoSettingResource extends Resource
                         TextInput::make('site_keywords')
                             ->label('Anahtar Kelimeler')
                             ->maxLength(255),
+
+                        TextInput::make('default_author')
+                            ->label('Varsayilan author')
+                            ->maxLength(255),
+
+                        TextInput::make('default_language')
+                            ->label('Dil meta')
+                            ->default('tr')
+                            ->maxLength(10),
                     ])
-                    ->columns(1),
+                    ->columns(2),
 
                 Section::make('Open Graph')
                     ->description('Facebook, WhatsApp ve sosyal medya paylaşım bilgileri.')
@@ -129,6 +138,17 @@ class SeoSettingResource extends Resource
                         Toggle::make('robots_follow')
                             ->label('Robots follow')
                             ->default(true),
+
+                        Textarea::make('robots_txt')
+                            ->label('Robots.txt icerigi')
+                            ->rows(8)
+                            ->columnSpanFull(),
+
+                        TextInput::make('sitemap_cache_minutes')
+                            ->label('Sitemap cache dakika')
+                            ->numeric()
+                            ->default(60)
+                            ->minValue(1),
                     ])
                     ->columns(2),
 

@@ -95,6 +95,25 @@
         (($seoSetting?->robots_follow ?? true) ? 'follow' : 'nofollow')
     ));
 
+    $seoMeta = app(\App\Services\SeoService::class)->meta([
+        'title' => $__env->yieldContent('title'),
+        'description' => $__env->yieldContent('meta_description'),
+        'keywords' => $__env->yieldContent('meta_keywords'),
+        'image' => $__env->yieldContent('meta_image'),
+        'canonical' => $__env->yieldContent('canonical'),
+        'robots' => $__env->yieldContent('robots', $robots),
+        'author' => $__env->yieldContent('author'),
+        'language' => $__env->yieldContent('language'),
+        'og_type' => $__env->yieldContent('og_type', 'website'),
+    ]);
+
+    $metaTitle = $seoMeta['title'];
+    $metaDescription = $seoMeta['description'];
+    $metaKeywords = $seoMeta['keywords'];
+    $metaImage = $seoMeta['image'];
+    $canonical = $seoMeta['canonical'];
+    $robots = $seoMeta['robots'];
+
     $themeColors = [
         'primary' => $themeSetting->color('primary_color'),
         'secondary' => $themeSetting->color('secondary_color'),
@@ -127,22 +146,24 @@
 
     <meta name="description" content="{{ $metaDescription }}">
     <meta name="keywords" content="{{ $metaKeywords }}">
-    <meta name="author" content="{{ $siteName }}">
+    <meta name="author" content="{{ $seoMeta['author'] }}">
+    <meta name="language" content="{{ $seoMeta['language'] }}">
     <meta name="robots" content="{{ $robots }}">
 
     <link rel="canonical" href="{{ $canonical }}">
 
-    <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:title" content="{{ $metaTitle }}">
-    <meta property="og:description" content="{{ $metaDescription }}">
-    <meta property="og:url" content="{{ $canonical }}">
+    <meta property="og:type" content="{{ $seoMeta['og_type'] }}">
+    <meta property="og:title" content="{{ $seoMeta['og_title'] }}">
+    <meta property="og:description" content="{{ $seoMeta['og_description'] }}">
+    <meta property="og:url" content="{{ $seoMeta['og_url'] }}">
     <meta property="og:site_name" content="{{ $siteName }}">
-    <meta property="og:image" content="{{ $metaImage }}">
+    <meta property="og:image" content="{{ $seoMeta['og_image'] }}">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $metaTitle }}">
-    <meta name="twitter:description" content="{{ $metaDescription }}">
-    <meta name="twitter:image" content="{{ $metaImage }}">
+    <meta name="twitter:title" content="{{ $seoMeta['twitter_title'] }}">
+    <meta name="twitter:description" content="{{ $seoMeta['twitter_description'] }}">
+    <meta name="twitter:image" content="{{ $seoMeta['twitter_image'] }}">
+    @yield('news_meta')
 
     <link rel="icon" type="image/png"
           href="{{ $siteSetting?->favicon ? asset('storage/' . $siteSetting->favicon) : asset('favicon.png') }}">
@@ -181,29 +202,11 @@
     @endif
 
     <script type="application/ld+json">
-        {!! json_encode([
-            '@context' => 'https://schema.org',
-            '@type' => 'Organization',
-            'name' => $siteName,
-            'url' => url('/'),
-            'logo' => $siteSetting?->logo
-                ? asset('storage/' . $siteSetting->logo)
-                : asset('favicon.png'),
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+        {!! json_encode(app(\App\Services\SeoService::class)->organizationSchema($siteSetting), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
 
     <script type="application/ld+json">
-        {!! json_encode([
-            '@context' => 'https://schema.org',
-            '@type' => 'WebSite',
-            'name' => $siteName,
-            'url' => url('/'),
-            'potentialAction' => [
-                '@type' => 'SearchAction',
-                'target' => url('/arama') . '?q={search_term_string}',
-                'query-input' => 'required name=search_term_string',
-            ],
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+        {!! json_encode(app(\App\Services\SeoService::class)->websiteSchema($siteSetting), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
     </script>
 
 @yield('schema')
