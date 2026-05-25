@@ -137,11 +137,13 @@ class DatabaseBackupService
 
     public function download(string $fileName): BinaryFileResponse
     {
-        $path = $this->pathForFileName($fileName);
+        $path = $this->pathForDownloadFileName($fileName);
 
         if (! File::exists($path)) {
-            throw new RuntimeException('Yedek dosyasi bulunamadi.');
+            throw new RuntimeException('Yedek dosyası bulunamadı.');
         }
+
+        set_time_limit(0);
 
         return response()->download($path, $fileName);
     }
@@ -224,6 +226,18 @@ class DatabaseBackupService
         }
 
         return $this->backupDirectory() . DIRECTORY_SEPARATOR . $baseName;
+    }
+
+    private function pathForDownloadFileName(string $fileName): string
+    {
+        $path = $this->pathForFileName($fileName);
+        $baseName = basename($fileName);
+
+        if (! str($baseName)->endsWith(['.sql', '.sql.gz'])) {
+            throw new RuntimeException('Sadece .sql ve .sql.gz yedek dosyalari indirilebilir.');
+        }
+
+        return $path;
     }
 
     private function backupDirectory(): string

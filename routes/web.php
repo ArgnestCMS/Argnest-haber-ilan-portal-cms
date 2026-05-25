@@ -21,6 +21,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\ContentAttachmentController;
 use App\Http\Controllers\PollController;
+use App\Http\Controllers\AdminDatabaseBackupDownloadController;
 use App\Http\Middleware\EnsureAdminPanelAccess;
 
 /*
@@ -377,6 +378,11 @@ Route::delete('/admin/content-attachments/{mediaAsset}', [ContentAttachmentContr
 Route::patch('/admin/content-attachments/{mediaAsset}', [ContentAttachmentController::class, 'update'])
     ->middleware(['auth', EnsureAdminPanelAccess::class])
     ->name('admin.content-attachments.update');
+
+Route::get('/admin/database-backups/download/{filename}', AdminDatabaseBackupDownloadController::class)
+    ->middleware(['auth'])
+    ->where('filename', '[^/]+')
+    ->name('admin.database-backups.download');
 
 /*
 |--------------------------------------------------------------------------

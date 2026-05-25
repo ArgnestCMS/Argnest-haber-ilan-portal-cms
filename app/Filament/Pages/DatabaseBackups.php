@@ -8,7 +8,6 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class DatabaseBackups extends Page
@@ -108,9 +107,9 @@ class DatabaseBackups extends Page
         }
     }
 
-    public function downloadBackup(string $fileName): StreamedResponse
+    public function downloadUrl(string $fileName): string
     {
-        return app(DatabaseBackupService::class)->download($fileName);
+        return route('admin.database-backups.download', ['filename' => $fileName]);
     }
 
     public function humanSize(int $bytes): string

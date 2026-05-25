@@ -62,12 +62,14 @@
                                     </span>
                                 </td>
                                 <td class="px-5 py-4">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex min-w-[140px] justify-end gap-2">
                                         <x-filament::button
-                                            wire:click="downloadBackup(@js($backup['name']))"
+                                            tag="a"
+                                            href="{{ $this->downloadUrl($backup['name']) }}"
                                             icon="heroicon-o-arrow-down-tray"
                                             color="gray"
                                             size="sm"
+                                            class="whitespace-nowrap"
                                         >
                                             Indir
                                         </x-filament::button>
@@ -78,6 +80,7 @@
                                             icon="heroicon-o-trash"
                                             color="danger"
                                             size="sm"
+                                            class="whitespace-nowrap"
                                         >
                                             Sil
                                         </x-filament::button>
