@@ -27,6 +27,7 @@ class IntegrationSetting extends Model
         'facebook_app_id',
         'facebook_app_secret',
         'captcha_required',
+        'mysqldump_path',
     ];
 
     protected $casts = [
@@ -69,6 +70,7 @@ class IntegrationSetting extends Model
             'services.oauth.facebook.app_id' => $this->facebook_app_id,
             'services.oauth.facebook.app_secret' => $this->facebook_app_secret,
             'security.captcha_required' => (bool) $this->captcha_required,
+            'backup.mysqldump_path' => $this->mysqldump_path,
         ]);
     }
 }

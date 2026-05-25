@@ -230,6 +230,19 @@ class IntegrationSettingResource extends Resource
                                     ->schema([]),
                             ])
                             ->columns(2),
+
+                        Tabs\Tab::make('Yedekleme')
+                            ->schema([
+                                TextInput::make('mysqldump_path')
+                                    ->label('mysqldump yolu')
+                                    ->placeholder('C:\\xampp\\mysql\\bin\\mysqldump.exe')
+                                    ->helperText('Boş bırakılırsa otomatik arama yapılır: PATH, XAMPP, Laragon ve Program Files MySQL yolları kontrol edilir.')
+                                    ->maxLength(500),
+
+                                Section::make('Not')
+                                    ->description('DB şifresi komuta yazılmaz ve loglanmaz. Windows path boşluk içerirse süreç güvenli argüman listesiyle çalışır.')
+                                    ->schema([]),
+                            ]),
                     ]),
             ]);
     }
