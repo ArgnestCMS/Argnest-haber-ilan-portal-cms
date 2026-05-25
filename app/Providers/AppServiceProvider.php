@@ -5,11 +5,15 @@ namespace App\Providers;
 use App\Helpers\ActivityLogger;
 
 use App\Models\Announcement;
+use App\Models\Category;
+use App\Models\Comment;
 use App\Models\IntegrationSetting;
 use App\Models\News;
 use App\Models\User;
 
 use App\Observers\AnnouncementObserver;
+use App\Observers\CategoryObserver;
+use App\Observers\CommentObserver;
 use App\Observers\NewsObserver;
 use App\Observers\UserObserver;
 
@@ -71,6 +75,10 @@ class AppServiceProvider extends ServiceProvider
         News::observe(NewsObserver::class);
 
         Announcement::observe(AnnouncementObserver::class);
+
+        Comment::observe(CommentObserver::class);
+
+        Category::observe(CategoryObserver::class);
 
         User::observe(UserObserver::class);
     }

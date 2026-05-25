@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Comment;
+use App\Services\PortalCacheService;
 
 class CommentObserver
 {
@@ -11,7 +12,7 @@ class CommentObserver
      */
     public function created(Comment $comment): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 
     /**
@@ -19,7 +20,7 @@ class CommentObserver
      */
     public function updated(Comment $comment): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 
     /**
@@ -27,7 +28,7 @@ class CommentObserver
      */
     public function deleted(Comment $comment): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 
     /**
@@ -35,7 +36,7 @@ class CommentObserver
      */
     public function restored(Comment $comment): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 
     /**
@@ -43,6 +44,6 @@ class CommentObserver
      */
     public function forceDeleted(Comment $comment): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 }

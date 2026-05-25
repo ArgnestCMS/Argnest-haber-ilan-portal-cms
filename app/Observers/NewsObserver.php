@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Helpers\ActivityLogger;
 use App\Models\News;
+use App\Services\PortalCacheService;
 
 class NewsObserver
 {
@@ -12,6 +13,8 @@ class NewsObserver
      */
     public function created(News $news): void
     {
+        app(PortalCacheService::class)->clearContent();
+
         ActivityLogger::log(
             'create_news',
             auth()->user()?->name . ' haber ekledi.',
@@ -27,6 +30,10 @@ class NewsObserver
      */
     public function updated(News $news): void
     {
+        if ($this->shouldClearCache($news)) {
+            app(PortalCacheService::class)->clearContent();
+        }
+
         ActivityLogger::log(
             'update_news',
             auth()->user()?->name . ' haber düzenledi.',
@@ -42,6 +49,8 @@ class NewsObserver
      */
     public function deleted(News $news): void
     {
+        app(PortalCacheService::class)->clearContent();
+
         ActivityLogger::log(
             'delete_news',
             auth()->user()?->name . ' haber sildi.',
@@ -57,7 +66,7 @@ class NewsObserver
      */
     public function restored(News $news): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 
     /**
@@ -65,6 +74,26 @@ class NewsObserver
      */
     public function forceDeleted(News $news): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
+    }
+
+    private function shouldClearCache(News $news): bool
+    {
+        return $news->wasChanged([
+            'category_id',
+            'title',
+            'slug',
+            'summary',
+            'content',
+            'image',
+            'document',
+            'source',
+            'publish_date',
+            'end_date',
+            'news_type',
+            'is_headline',
+            'is_breaking',
+            'comments_enabled',
+        ]);
     }
 }

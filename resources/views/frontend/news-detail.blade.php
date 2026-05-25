@@ -590,18 +590,7 @@
 
     <div class="p-5 space-y-5">
 
-        @foreach(
-            \App\Models\Comment::where('status', 'approved')
-                ->whereHasMorph('commentable', [
-                    \App\Models\News::class,
-                    \App\Models\Announcement::class,
-                ])
-                ->with('commentable')
-                ->latest()
-                ->take(5)
-                ->get()
-            as $lastComment
-        )
+        @foreach(($latestComments ?? collect()) as $lastComment)
 
             @php
                 $commentUrl = '#';

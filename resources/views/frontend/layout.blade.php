@@ -11,7 +11,7 @@
         ->orderByDesc('created_at')
         ->get();
     $headerSlots = \App\Models\HeaderSlot::visibleInHeader()->get();
-    $breakingTickerItems = collect()
+    $breakingTickerItems = app(\App\Services\PortalCacheService::class)->remember('portal:layout:breaking-ticker', 'layout', fn () => collect()
     ->merge(
         \App\Models\News::published()
             ->where('is_breaking', true)
@@ -49,7 +49,7 @@
      )
      ->sortByDesc('date')
      ->take(15)
-     ->values();
+     ->values());
 
     $rawMetaTitle = trim($__env->yieldContent(
         'title',

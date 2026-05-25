@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Advertisement;
 use App\Models\Announcement;
 use App\Models\Category;
+use App\Models\Comment;
 use App\Models\ForumCategory;
 use App\Models\ForumPost;
 use App\Models\ForumTag;
@@ -17,11 +18,16 @@ use App\Models\Poll;
 use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Support\Facades\Cache;
+use App\Services\PortalCacheService;
 use Illuminate\Support\Facades\Http;
 
 class FrontendController extends Controller
 {
+    private function cache(): PortalCacheService
+    {
+        return app(PortalCacheService::class);
+    }
+
     private function activeAds()
     {
         return Advertisement::where('is_active', true)
@@ -37,12 +43,12 @@ class FrontendController extends Controller
 
     public function home()
     {
-        $headlineNews = News::published()->where('is_headline', true)->latest()->take(10)->get();
-        $headlineAnnouncements = Announcement::active()
+        $headlineNews = $this->cache()->remember('portal:home:headline-news', 'home', fn () => News::published()->where('is_headline', true)->latest()->take(10)->get());
+        $headlineAnnouncements = $this->cache()->remember('portal:home:headline-announcements', 'home', fn () => Announcement::active()
             ->where('is_headline', true)
             ->latest()
             ->take(10)
-            ->get();
+            ->get());
         $headlines = $headlineNews
             ->map(fn (News $news) => [
                 'type' => 'news',
@@ -67,39 +73,39 @@ class FrontendController extends Controller
             ->sortByDesc('created_at')
             ->take(10)
             ->values();
-        $latestNews = News::published()->latest()->take(12)->get();
-        $latestAnnouncements = Announcement::active()->latest()->take(12)->get();
-        $trendingNews = News::published()
+        $latestNews = $this->cache()->remember('portal:home:latest-news', 'latest', fn () => News::published()->latest()->take(12)->get());
+        $latestAnnouncements = $this->cache()->remember('portal:home:latest-announcements', 'latest', fn () => Announcement::active()->latest()->take(12)->get());
+        $trendingNews = $this->cache()->remember('portal:home:trending-news', 'trending', fn () => News::published()
             ->where('is_trending', true)
             ->orderByDesc('trend_score')
             ->take(6)
-            ->get();
+            ->get());
 
-        $mostReadNews = News::published()
+        $mostReadNews = $this->cache()->remember('portal:home:most-read-news', 'popular', fn () => News::published()
             ->orderByDesc('views')
             ->take(6)
-            ->get();
-        $newsCategories = Category::where('type', 'news')
+            ->get());
+        $newsCategories = $this->cache()->remember('portal:home:news-categories', 'categories', fn () => Category::where('type', 'news')
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get();
+            ->get());
 
-        $announcementCategories = Category::where('type', 'announcement')
+        $announcementCategories = $this->cache()->remember('portal:home:announcement-categories', 'categories', fn () => Category::where('type', 'announcement')
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get();
+            ->get());
 
-        $latestVideos = Video::where('is_active', true)->latest()->take(6)->get();
-        $latestGalleries = Gallery::where('is_active', true)->latest()->take(6)->get();
+        $latestVideos = $this->cache()->remember('portal:home:latest-videos', 'latest', fn () => Video::where('is_active', true)->latest()->take(6)->get());
+        $latestGalleries = $this->cache()->remember('portal:home:latest-galleries', 'latest', fn () => Gallery::where('is_active', true)->latest()->take(6)->get());
         $popupPoll = Poll::popupActive()
             ->with('activeOptions')
             ->latest()
             ->get()
             ->first(fn (Poll $poll) => ! $poll->hasVoteFrom(request()) && $poll->activeOptions->isNotEmpty());
 
-        $ads = $this->activeAds()->get()->groupBy('position');
+        $ads = $this->cache()->remember('portal:home:ads', 'ads', fn () => $this->activeAds()->get()->groupBy('position'));
 
-        $market = Cache::remember('market_data', 600, function () {
+        $market = $this->cache()->remember('portal:external:market', 'external', function () {
             try {
                 $rates = Http::timeout(5)
                     ->get('https://api.frankfurter.app/latest?from=USD&to=TRY,EUR')
@@ -127,7 +133,7 @@ class FrontendController extends Controller
             }
         });
 
-        $weather = Cache::remember('weather_data', 600, function () {
+        $weather = $this->cache()->remember('portal:external:weather', 'external', function () {
             try {
                 $data = Http::timeout(5)
                     ->get('https://api.open-meteo.com/v1/forecast?latitude=41.0082&longitude=28.9784&current_weather=true')
@@ -167,14 +173,16 @@ class FrontendController extends Controller
 
     public function news()
     {
-        $news = News::published()->latest()->paginate(12);
+        $page = request()->integer('page', 1);
+        $news = $this->cache()->remember("portal:news:list:page:{$page}", 'lists', fn () => News::published()->latest()->paginate(12));
 
         return view('frontend.news', compact('news'));
     }
 
     public function announcements()
     {
-        $announcements = Announcement::active()->latest()->paginate(12);
+        $page = request()->integer('page', 1);
+        $announcements = $this->cache()->remember("portal:announcements:list:page:{$page}", 'lists', fn () => Announcement::active()->latest()->paginate(12));
         $announcementPortal = $this->announcementPortalData();
 
         return view('frontend.announcements', compact('announcements', 'announcementPortal'));
@@ -489,18 +497,22 @@ class FrontendController extends Controller
             ->firstOrFail();
 
         if ($category->type === 'news') {
-            $news = News::where('category_id', $category->id)
-                ->published()
-                ->latest()
-                ->paginate(12);
+            $page = request()->integer('page', 1);
+            $news = $this->cache()->remember(
+                "portal:news:category:{$category->id}:page:{$page}",
+                'lists',
+                fn () => News::where('category_id', $category->id)->published()->latest()->paginate(12),
+            );
 
             return view('frontend.news', compact('news', 'category'));
         }
 
-        $announcements = Announcement::where('category_id', $category->id)
-            ->active()
-            ->latest()
-            ->paginate(12);
+        $page = request()->integer('page', 1);
+        $announcements = $this->cache()->remember(
+            "portal:announcements:category:{$category->id}:page:{$page}",
+            'lists',
+            fn () => Announcement::where('category_id', $category->id)->active()->latest()->paginate(12),
+        );
         $announcementPortal = $this->announcementPortalData($category);
 
         return view('frontend.announcements', compact('announcements', 'category', 'announcementPortal'));
@@ -508,38 +520,42 @@ class FrontendController extends Controller
 
     private function announcementPortalData(?Category $selectedCategory = null): array
     {
-        $headlineQuery = Announcement::active()
-            ->where('is_headline', true)
-            ->with('category')
-            ->latest();
+        $categoryKey = $selectedCategory ? (string) $selectedCategory->id : 'all';
 
-        if ($selectedCategory) {
-            $headlineQuery->where('category_id', $selectedCategory->id);
-        }
+        return $this->cache()->remember("portal:announcements:portal:{$categoryKey}", 'categories', function () use ($selectedCategory): array {
+            $headlineQuery = Announcement::active()
+                ->where('is_headline', true)
+                ->with('category')
+                ->latest();
 
-        $categoryBlocks = Category::announcementType()
-            ->active()
-            ->with(['announcements' => fn ($query) => $query->active()->latest()->take(5)])
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get()
-            ->filter(fn (Category $category) => $category->announcements->isNotEmpty())
-            ->values();
+            if ($selectedCategory) {
+                $headlineQuery->where('category_id', $selectedCategory->id);
+            }
 
-        return [
-            'headlines' => $headlineQuery->take(10)->get(),
-            'categoryBlocks' => $selectedCategory
-                ? $categoryBlocks->where('id', $selectedCategory->id)->values()
-                : $categoryBlocks,
-            'popular' => Announcement::active()->with('category')->orderByDesc('views')->take(8)->get(),
-            'latest' => Announcement::active()->with('category')->latest()->take(8)->get(),
-            'categories' => Category::announcementType()
+            $categoryBlocks = Category::announcementType()
                 ->active()
-                ->withCount(['announcements' => fn ($query) => $query->active()])
+                ->with(['announcements' => fn ($query) => $query->active()->latest()->take(5)])
                 ->orderBy('sort_order')
                 ->orderBy('name')
-                ->get(),
-        ];
+                ->get()
+                ->filter(fn (Category $category) => $category->announcements->isNotEmpty())
+                ->values();
+
+            return [
+                'headlines' => $headlineQuery->take(10)->get(),
+                'categoryBlocks' => $selectedCategory
+                    ? $categoryBlocks->where('id', $selectedCategory->id)->values()
+                    : $categoryBlocks,
+                'popular' => Announcement::active()->with('category')->orderByDesc('views')->take(8)->get(),
+                'latest' => Announcement::active()->with('category')->latest()->take(8)->get(),
+                'categories' => Category::announcementType()
+                    ->active()
+                    ->withCount(['announcements' => fn ($query) => $query->active()])
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get(),
+            ];
+        });
     }
 
     public function search()
@@ -581,14 +597,7 @@ class FrontendController extends Controller
 
         $news->recordView();
 
-        $relatedNews = News::published()->where('id', '!=', $news->id)->latest()->take(6)->get();
-        $sidebarNews = News::published()->where('id', '!=', $news->id)->latest()->take(8)->get();
-
-        $topAd = $this->activeAds()->where('position', 'top_banner')->first();
-        $bottomAd = $this->activeAds()->where('position', 'bottom_banner')->first();
-        $leftAd = $this->activeAds()->where('position', 'left_sidebar')->first();
-        $rightAd = $this->activeAds()->where('position', 'right_sidebar')->first();
-        $sidebarAd = $rightAd;
+        extract($this->newsSidebarData($news->id));
 
         return view('frontend.news-detail', compact(
             'news',
@@ -598,7 +607,8 @@ class FrontendController extends Controller
             'bottomAd',
             'leftAd',
             'rightAd',
-            'sidebarAd'
+            'sidebarAd',
+            'latestComments'
         ));
     }
 
@@ -608,14 +618,7 @@ class FrontendController extends Controller
 
         $announcement->increment('views');
 
-        $relatedAnnouncements = Announcement::active()->where('id', '!=', $announcement->id)->latest()->take(6)->get();
-        $sidebarAnnouncements = Announcement::active()->where('id', '!=', $announcement->id)->latest()->take(8)->get();
-
-        $topAd = $this->activeAds()->where('position', 'top_banner')->first();
-        $bottomAd = $this->activeAds()->where('position', 'bottom_banner')->first();
-        $leftAd = $this->activeAds()->where('position', 'left_sidebar')->first();
-        $rightAd = $this->activeAds()->where('position', 'right_sidebar')->first();
-        $sidebarAd = $rightAd;
+        extract($this->announcementSidebarData($announcement->id));
 
         return view('frontend.announcement-detail', compact(
             'announcement',
@@ -627,5 +630,56 @@ class FrontendController extends Controller
             'rightAd',
             'sidebarAd'
         ));
+    }
+
+    private function newsSidebarData(int $newsId): array
+    {
+        return $this->cache()->remember("portal:sidebar:news-detail:{$newsId}", 'sidebar', function () use ($newsId): array {
+            return [
+                'relatedNews' => News::published()->where('id', '!=', $newsId)->latest()->take(6)->get(),
+                'sidebarNews' => News::published()->where('id', '!=', $newsId)->latest()->take(8)->get(),
+                'latestComments' => $this->latestComments(),
+                ...$this->sidebarAds(),
+            ];
+        });
+    }
+
+    private function announcementSidebarData(int $announcementId): array
+    {
+        return $this->cache()->remember("portal:sidebar:announcement-detail:{$announcementId}", 'sidebar', function () use ($announcementId): array {
+            return [
+                'relatedAnnouncements' => Announcement::active()->where('id', '!=', $announcementId)->latest()->take(6)->get(),
+                'sidebarAnnouncements' => Announcement::active()->where('id', '!=', $announcementId)->latest()->take(8)->get(),
+                ...$this->sidebarAds(),
+            ];
+        });
+    }
+
+    private function sidebarAds(): array
+    {
+        return $this->cache()->remember('portal:sidebar:ads', 'ads', function (): array {
+            $rightAd = $this->activeAds()->where('position', 'right_sidebar')->first();
+
+            return [
+                'topAd' => $this->activeAds()->where('position', 'top_banner')->first(),
+                'bottomAd' => $this->activeAds()->where('position', 'bottom_banner')->first(),
+                'leftAd' => $this->activeAds()->where('position', 'left_sidebar')->first(),
+                'rightAd' => $rightAd,
+                'sidebarAd' => $rightAd,
+            ];
+        });
+    }
+
+    private function latestComments()
+    {
+        return $this->cache()->remember('portal:sidebar:latest-comments', 'sidebar', fn () => Comment::where('status', 'approved')
+            ->whereHasMorph('commentable', [
+                News::class,
+                Announcement::class,
+            ])
+            ->with(['commentable', 'user'])
+            ->latest()
+            ->take(5)
+            ->get());
     }
 }

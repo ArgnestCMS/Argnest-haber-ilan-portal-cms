@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Helpers\ActivityLogger;
 use App\Models\Announcement;
+use App\Services\PortalCacheService;
 
 class AnnouncementObserver
 {
@@ -12,6 +13,8 @@ class AnnouncementObserver
      */
     public function created(Announcement $announcement): void
     {
+        app(PortalCacheService::class)->clearContent();
+
         ActivityLogger::log(
             'create_announcement',
             auth()->user()?->name . ' ilan ekledi.',
@@ -27,6 +30,10 @@ class AnnouncementObserver
      */
     public function updated(Announcement $announcement): void
     {
+        if ($this->shouldClearCache($announcement)) {
+            app(PortalCacheService::class)->clearContent();
+        }
+
         ActivityLogger::log(
             'update_announcement',
             auth()->user()?->name . ' ilan düzenledi.',
@@ -42,6 +49,8 @@ class AnnouncementObserver
      */
     public function deleted(Announcement $announcement): void
     {
+        app(PortalCacheService::class)->clearContent();
+
         ActivityLogger::log(
             'delete_announcement',
             auth()->user()?->name . ' ilan sildi.',
@@ -57,7 +66,7 @@ class AnnouncementObserver
      */
     public function restored(Announcement $announcement): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
     }
 
     /**
@@ -65,6 +74,29 @@ class AnnouncementObserver
      */
     public function forceDeleted(Announcement $announcement): void
     {
-        //
+        app(PortalCacheService::class)->clearContent();
+    }
+
+    private function shouldClearCache(Announcement $announcement): bool
+    {
+        return $announcement->wasChanged([
+            'category_id',
+            'title',
+            'slug',
+            'summary',
+            'content',
+            'institution',
+            'city',
+            'category',
+            'publish_date',
+            'deadline',
+            'source',
+            'image',
+            'document',
+            'is_headline',
+            'is_breaking',
+            'comments_enabled',
+            'is_active',
+        ]);
     }
 }
