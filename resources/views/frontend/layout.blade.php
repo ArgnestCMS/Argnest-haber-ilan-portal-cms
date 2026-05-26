@@ -402,6 +402,15 @@
     }
 
     .header-slot-scroll {
+        display: flex;
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: nowrap;
+        overflow-x: hidden;
+        overflow-y: hidden;
         scrollbar-width: none;
     }
 
@@ -415,6 +424,7 @@
         border-radius: var(--header-slot-radius, 6px);
         color: var(--header-slot-color, #fff);
         display: inline-flex;
+        flex: 0 0 auto;
         font-weight: 900;
         gap: 0.35rem;
         line-height: 1;
@@ -428,11 +438,33 @@
         transform: translateY(-1px);
     }
 
+    .header-slot-banner {
+        flex: 0 1 auto;
+        max-width: min(100%, var(--header-slot-banner-max-width, 260px));
+        min-width: 0;
+    }
+
     .header-slot-banner img {
         display: block;
+        width: auto;
+        height: auto;
         max-height: 40px;
-        max-width: min(260px, 32vw);
+        max-width: 100%;
         object-fit: contain;
+    }
+
+    .header-slot-banner a,
+    .header-slot-banner span {
+        display: inline-flex;
+        max-width: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 1023px) {
+        .header-slot-scroll {
+            overflow-x: auto;
+        }
     }
 
     @media (max-width: 767px) {
@@ -499,7 +531,7 @@
 
                 <nav class="mx-4 hidden min-w-0 flex-1 items-center gap-2 text-xs font-bold whitespace-nowrap md:flex">
                     @if($headerSlots->isNotEmpty())
-                        <div class="header-slot-scroll flex min-w-0 items-center gap-2 overflow-x-auto">
+                        <div class="header-slot-scroll">
                             @foreach($headerSlots as $headerSlot)
                                 @if($headerSlot->isButton() && filled($headerSlot->button_text))
                                     @php
@@ -539,26 +571,32 @@
                                 @elseif($headerSlot->isBanner())
                                     @php
                                         $bannerTarget = $headerSlot->banner_target === '_blank' ? '_blank' : '_self';
-                                        $bannerWidth = max((int) ($headerSlot->banner_width ?: 180), 180);
-                                        $bannerHeight = max((int) ($headerSlot->banner_height ?: 40), 40);
+                                        $bannerWidth = filled($headerSlot->banner_width) ? (int) $headerSlot->banner_width : null;
+                                        $bannerHeight = filled($headerSlot->banner_height) ? (int) $headerSlot->banner_height : null;
                                         $bannerImageExists = $headerSlot->banner_image
                                             ? \Illuminate\Support\Facades\Storage::disk('public')->exists($headerSlot->banner_image)
                                             : false;
                                         $bannerImage = $bannerImageExists ? asset('storage/' . $headerSlot->banner_image) : null;
                                         $bannerStyle = collect([
-                                            'width: ' . $bannerWidth . 'px',
-                                            'height: ' . $bannerHeight . 'px',
+                                            $bannerWidth ? 'width: ' . $bannerWidth . 'px' : null,
+                                            $bannerHeight ? 'height: ' . $bannerHeight . 'px' : null,
+                                            'max-height: 40px',
+                                            'max-width: 100%',
+                                            'object-fit: contain',
                                         ])->filter()->implode('; ');
+                                        $bannerWrapperStyle = $bannerWidth
+                                            ? '--header-slot-banner-max-width: clamp(120px, 25vw, ' . $bannerWidth . 'px)'
+                                            : '--header-slot-banner-max-width: clamp(120px, 25vw, 260px)';
                                     @endphp
 
-                                    <div class="header-slot-banner flex shrink-0 items-center">
+                                    <div class="header-slot-banner flex items-center overflow-hidden" style="{{ $bannerWrapperStyle }}">
                                         @if($bannerImageExists)
                                             @if($headerSlot->banner_url)
                                                 <a
                                                     href="{{ $headerSlot->banner_url }}"
                                                     target="{{ $bannerTarget }}"
                                                     @if($bannerTarget === '_blank') rel="noopener noreferrer" @endif
-                                                    class="block overflow-hidden rounded border border-white/10"
+                                                    class="overflow-hidden rounded border border-white/10"
                                                 >
                                                     <img
                                                         src="{{ $bannerImage }}"
