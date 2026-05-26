@@ -1,0 +1,19 @@
+* text=auto eol=lf
+
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+/.github export-ignore
+.styleci.yml export-ignore
+/.env export-ignore
+/node_modules export-ignore
+/storage/logs export-ignore
+/storage/app/backups export-ignore
+/storage/app/chrome-headless-profile* export-ignore
+/storage/app/edge-headless-profile* export-ignore
+/storage/app/reports export-ignore
+/.phpunit.result.cache export-ignore
+/.phpunit.cache export-ignore
