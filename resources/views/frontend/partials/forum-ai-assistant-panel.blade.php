@@ -1,4 +1,4 @@
-<div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+﻿<div class="rounded-2xl border border-blue-100 bg-blue-50 p-4">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <div class="text-sm font-black text-blue-950">Forum AI Assistant</div>
@@ -142,3 +142,7 @@
     }
     </script>
 @endonce
+
+
+
+

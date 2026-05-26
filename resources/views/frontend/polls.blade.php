@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', 'Anketler | ' . ($siteSetting?->site_name ?? config('app.name')))
 @section('meta_description', 'Güncel anketler ve katılım sayfası.')
@@ -49,3 +49,7 @@
     </div>
 </section>
 @endsection
+
+
+
+

@@ -320,6 +320,8 @@ class InstallController extends Controller
             'registration_enabled' => true,
             'email_verification_required' => false,
             'maintenance_mode' => false,
+            'maintenance_message' => null,
+            'maintenance_ends_at' => null,
             'home_news_enabled' => true,
             'home_announcements_enabled' => true,
             'home_forum_enabled' => true,

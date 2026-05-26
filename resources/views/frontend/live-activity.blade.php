@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', 'Canli Aktivite | ' . ($siteSetting?->site_name ?? config('app.name')))
 
@@ -279,3 +279,7 @@ function liveActivityFeed(config) {
 </script>
 
 @endsection
+
+
+
+

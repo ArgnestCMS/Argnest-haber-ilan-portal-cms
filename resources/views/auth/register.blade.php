@@ -1,4 +1,4 @@
-<x-guest-layout>
+﻿<x-guest-layout>
     @php
         $siteSetting = \App\Models\SiteSetting::first();
         $siteName = $siteSetting?->site_name ?? config('app.name');
@@ -71,7 +71,7 @@
                         </div>
 
                         <div class="min-w-0 rounded-2xl bg-white/10 p-3">
-                            <div class="mb-1 text-xl">🛡️</div>
+                            <div class="mb-1 text-xl">🛡</div>
                             <div class="text-sm font-black">Güvenli</div>
                             <div class="mt-1 text-[11px] leading-4 text-slate-300">Spam koruma</div>
                         </div>
@@ -169,3 +169,7 @@
         </div>
     </div>
 </x-guest-layout>
+
+
+
+

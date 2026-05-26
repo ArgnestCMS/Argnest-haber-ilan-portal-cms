@@ -116,6 +116,8 @@ class SiteSetting extends Model
         */
 
         'maintenance_mode',
+        'maintenance_message',
+        'maintenance_ends_at',
         'auto_punishment_enabled',
         'home_news_enabled',
         'home_announcements_enabled',
@@ -137,6 +139,7 @@ class SiteSetting extends Model
         */
 
         'maintenance_mode' => 'boolean',
+        'maintenance_ends_at' => 'datetime',
         'auto_punishment_enabled' => 'boolean',
         'site_announcement_enabled' => 'boolean',
         'site_announcement_starts_at' => 'datetime',

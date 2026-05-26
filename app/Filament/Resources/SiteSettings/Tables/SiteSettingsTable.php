@@ -45,6 +45,9 @@ class SiteSettingsTable
                     ->searchable(),
                 IconColumn::make('maintenance_mode')
                     ->boolean(),
+                TextColumn::make('maintenance_ends_at')
+                    ->dateTime()
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -1,4 +1,4 @@
-@php
+﻿@php
     $siteSetting = \App\Models\SiteSetting::first();
 @endphp
 @extends('frontend.layout')
@@ -116,7 +116,7 @@
                     <div class="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 md:gap-5 md:text-sm">
 
                         <span>
-                            🖼️ {{ $gallery->images->count() }} Fotoğraf
+                            🖼 {{ $gallery->images->count() }} Fotoğraf
                         </span>
 
                         <span>
@@ -327,7 +327,7 @@
         <div class="mt-10">
 
             <h2 class="mb-6 text-3xl font-black text-gray-900 dark:text-white">
-                🖼️ İlgili Galeriler
+                🖼 İlgili Galeriler
             </h2>
 
             <div class="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
@@ -702,3 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 @endsection
+
+
+
+

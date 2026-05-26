@@ -65,6 +65,12 @@ class SiteSettingInfolist
                     ->columnSpanFull(),
                 IconEntry::make('maintenance_mode')
                     ->boolean(),
+                TextEntry::make('maintenance_message')
+                    ->placeholder('-')
+                    ->columnSpanFull(),
+                TextEntry::make('maintenance_ends_at')
+                    ->dateTime()
+                    ->placeholder('-'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

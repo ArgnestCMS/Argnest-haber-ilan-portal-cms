@@ -1,4 +1,4 @@
-<x-guest-layout>
+﻿<x-guest-layout>
     @php
         $siteSetting = \App\Models\SiteSetting::first();
 
@@ -175,3 +175,7 @@
         </div>
     </div>
 </x-guest-layout>
+
+
+
+

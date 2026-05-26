@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', $query ? '"' . $query . '" arama sonuçları' : 'Arama')
 @section('meta_description', 'Haber, ilan, forum konusu, forum cevabı, kullanıcı ve etiketlerde arama yapın.')
@@ -193,3 +193,7 @@ function instantSearch() {
 }
 </script>
 @endsection
+
+
+
+

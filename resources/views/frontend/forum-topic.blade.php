@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', $topic->title . ' | Forum')
 
@@ -982,3 +982,7 @@ function topicPresence(config) {
 </script>
 
 @endsection
+
+
+
+

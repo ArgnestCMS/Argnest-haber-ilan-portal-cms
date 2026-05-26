@@ -1,4 +1,4 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
 
 Disallow: /admin
@@ -11,3 +11,6 @@ Disallow: /bildirimler
 Disallow: /yorumlarim
 
 Sitemap: {{ url('/sitemap.xml') }}
+
+
+

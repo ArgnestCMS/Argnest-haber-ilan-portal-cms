@@ -7,6 +7,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 
@@ -182,6 +183,15 @@ class SiteSettingForm
 
         Toggle::make('maintenance_mode')
             ->label('Bakım Modu'),
+
+        Textarea::make('maintenance_message')
+            ->label('Bakım Mesajı')
+            ->rows(3)
+            ->columnSpanFull(),
+
+        DateTimePicker::make('maintenance_ends_at')
+            ->label('Tahmini Bitiş Tarihi')
+            ->seconds(false),
 
         Toggle::make('auto_punishment_enabled')
             ->label('Otomatik Ceza Sistemi')

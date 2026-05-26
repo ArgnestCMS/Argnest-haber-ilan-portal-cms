@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', 'Canlı Sohbet | ' . ($siteSetting?->site_name ?? config('app.name')))
 
@@ -448,3 +448,7 @@ function liveChat(config) {
 </script>
 
 @endsection
+
+
+
+

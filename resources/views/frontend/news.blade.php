@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section(
     'title',
@@ -168,7 +168,7 @@
 
                             <div class="text-sm text-slate-500 flex gap-4 mb-4">
                                 <span>📅 {{ $featuredNews->created_at->format('d.m.Y') }}</span>
-                                <span>👁️ {{ $featuredNews->views }} okunma</span>
+                                <span>👁 {{ $featuredNews->views }} okunma</span>
                             </div>
 
                             <h2 class="text-2xl font-black leading-tight text-slate-950 transition hover:text-blue-700 md:text-3xl">
@@ -238,7 +238,7 @@
                             </div>
 
                             <div class="absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm backdrop-blur">
-                                👁️ {{ $item->views }}
+                                👁 {{ $item->views }}
                             </div>
                         </div>
 
@@ -311,7 +311,7 @@
                             </h3>
 
                             <div class="text-xs text-slate-500 mt-2">
-                                👁️ {{ $trend->views }} okunma
+                                👁 {{ $trend->views }} okunma
                             </div>
 
                         </div>
@@ -341,7 +341,7 @@
         <div class="theme-card premium-card overflow-hidden">
 
             <div class="bg-blue-700 text-white px-5 py-4 font-black text-lg">
-                👁️ Çok Okunanlar
+                👁 Çok Okunanlar
             </div>
 
             <div class="p-4 space-y-4">
@@ -356,7 +356,7 @@
                         </h3>
 
                         <div class="text-xs text-slate-500 mt-2 flex gap-3">
-                            <span>👁️ {{ $popular->views }}</span>
+                            <span>👁 {{ $popular->views }}</span>
                             <span>📅 {{ $popular->created_at->format('d.m.Y') }}</span>
                         </div>
 
@@ -377,3 +377,7 @@
 </section>
 
 @endsection
+
+
+
+

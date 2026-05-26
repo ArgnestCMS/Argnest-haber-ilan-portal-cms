@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', $poll->title . ' | Anket')
 @section('meta_description', $poll->subtitle ?: Str::limit(strip_tags($poll->description), 160))
@@ -106,3 +106,7 @@
     </article>
 </section>
 @endsection
+
+
+
+

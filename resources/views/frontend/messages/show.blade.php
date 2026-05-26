@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', ($otherUser?->name ?? 'Konusma') . ' Mesajlari')
 @section('meta_description', 'Ozel mesaj konusmasi.')
@@ -281,7 +281,7 @@
                     >{{ old('body') }}</textarea>
 
                     <div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-                        @foreach(['👍', '❤️', '😂', '👏', '🔥', '🙏'] as $emoji)
+                        @foreach(['👍', '❤', '😂', '👏', '🔥', '🙏'] as $emoji)
                             <button type="button" @click="insertEmoji('{{ $emoji }}')" class="rounded-lg bg-slate-100 px-3 py-2 text-sm font-black transition hover:bg-slate-200">
                                 {{ $emoji }}
                             </button>
@@ -435,3 +435,7 @@ function privateConversation(config) {
 }
 </script>
 @endsection
+
+
+
+

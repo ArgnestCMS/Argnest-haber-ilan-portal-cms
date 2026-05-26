@@ -14,26 +14,29 @@
 
 @section('canonical', url('/'))
 
+@section('body_class', 'home-page')
+
 @section('content')
 
 <style>
     @media (max-width: 767px) {
-        .home-mobile-section {
+        .home-page-wrapper .home-mobile-section {
             border-radius: 18px;
             overflow: hidden;
         }
 
-        .home-mobile-ad img {
+        .home-page-wrapper .home-mobile-ad img {
             max-height: 92px;
             object-fit: cover;
         }
 
-        .home-mobile-card {
+        .home-page-wrapper .home-mobile-card {
             border-radius: 16px;
         }
     }
 </style>
 
+<div class="home-page-wrapper">
 <section class="max-w-[1600px] mx-auto px-3 mt-4 md:px-4 md:mt-6">
 
     <div class="grid grid-cols-12 gap-6">
@@ -422,7 +425,7 @@
                 <div class="theme-card premium-card mt-4 overflow-hidden md:mt-6">
 
                     <div class="border-b px-5 py-4 flex justify-between items-center">
-                        <h2 class="premium-section-heading">🖼️ Son Galeriler</h2>
+                        <h2 class="premium-section-heading">🖼 Son Galeriler</h2>
                         <a href="{{ route('galleries.index') }}" class="text-blue-600 font-semibold">Tümü</a>
                     </div>
 
@@ -437,7 +440,7 @@
                                         >
                                     @else
                                         <div class="flex h-32 items-center justify-center text-4xl md:h-44 md:text-5xl">
-                                            🖼️
+                                            🖼
                                         </div>
                                     @endif
 
@@ -565,6 +568,7 @@
     </div>
 
 </section>
+</div>
 
 @if(isset($popupPoll) && $popupPoll)
     <div

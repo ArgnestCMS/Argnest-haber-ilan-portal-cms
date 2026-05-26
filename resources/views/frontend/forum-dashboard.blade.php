@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', 'Forum Panelim | ' . ($siteSetting?->site_name ?? config('app.name')))
 
@@ -504,3 +504,7 @@ function followingPresence(config) {
 </script>
 
 @endsection
+
+
+
+

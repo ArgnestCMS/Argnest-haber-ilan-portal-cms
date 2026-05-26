@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @php
     $siteSetting = \App\Models\SiteSetting::first();
@@ -356,3 +356,7 @@
     </div>
 </section>
 @endsection
+
+
+
+

@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
  @php
     $siteSetting = \App\Models\SiteSetting::first();
@@ -228,8 +228,8 @@
                     {{-- META --}}
                     <div class="mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-100 pb-5 text-xs font-bold text-slate-500 md:mb-6 md:text-sm">
                         <span>📅 {{ $announcement->created_at->format('d.m.Y H:i') }}</span>
-                        <span>👁️ {{ $announcement->views }} görüntülenme</span>
-                        <span>✍️ {{ $siteSetting?->site_name ?? config('app.name') }}</span>
+                        <span>👁 {{ $announcement->views }} görüntülenme</span>
+                        <span>✍ {{ $siteSetting?->site_name ?? config('app.name') }}</span>
                     </div>
 
                     {{-- SOSYAL --}}
@@ -600,7 +600,7 @@
                                     </h3>
 
                                     <p class="text-xs text-slate-500 mt-1">
-                                        👁️ {{ $item->views }} görüntülenme
+                                        👁 {{ $item->views }} görüntülenme
                                     </p>
                                 </div>
 
@@ -694,3 +694,7 @@
 
 </section>
 @endsection
+
+
+
+

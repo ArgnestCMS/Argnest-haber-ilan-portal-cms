@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -34,7 +34,7 @@
                     <div class="flex items-center gap-4">
 
                         <div class="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-3xl">
-                            ✉️
+                            ✉
                         </div>
 
                         <div>
@@ -128,3 +128,7 @@
 
 </body>
 </html>
+
+
+
+

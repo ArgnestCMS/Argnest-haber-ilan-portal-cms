@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @php
     $siteSetting = \App\Models\SiteSetting::first();
@@ -25,7 +25,7 @@
     <div class="mb-5 rounded-2xl bg-white p-5 shadow-sm md:mb-8 md:bg-transparent md:p-0 md:shadow-none">
 
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white md:text-3xl">
-            🖼️ Galeriler
+            🖼 Galeriler
         </h1>
 
         <p class="mt-2 text-gray-500">
@@ -56,7 +56,7 @@
                         @else
 
                             <div class="flex h-36 items-center justify-center bg-gray-200 text-4xl dark:bg-gray-800 md:h-64 md:text-5xl">
-                                🖼️
+                                🖼
                             </div>
 
                         @endif
@@ -104,7 +104,7 @@
         <div class="rounded-2xl bg-white p-10 text-center shadow dark:bg-gray-900">
 
             <div class="text-5xl">
-                🖼️
+                🖼
             </div>
 
             <h2 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
@@ -118,3 +118,7 @@
 </div>
 
 @endsection
+
+
+
+

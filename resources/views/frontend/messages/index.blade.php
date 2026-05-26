@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', 'Mesajlar')
 @section('meta_description', 'Ozel mesaj kutunuz, mesaj istekleri ve okunmamis konusmalar.')
@@ -120,3 +120,7 @@
     </div>
 </section>
 @endsection
+
+
+
+

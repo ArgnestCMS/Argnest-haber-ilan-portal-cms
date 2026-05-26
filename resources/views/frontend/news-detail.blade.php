@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', $news->title . ' | ' . ($siteSetting?->site_name ?? config('app.name')))
 
@@ -194,8 +194,8 @@
                             {{-- META --}}
                             <div class="mb-5 flex flex-wrap items-center gap-3 border-b border-slate-100 pb-5 text-xs font-bold text-slate-500 md:mb-6 md:gap-4 md:text-sm">
                                 <span>📅 {{ $news->created_at->format('d.m.Y H:i') }}</span>
-                                <span>👁️ {{ $news->views }} okunma</span>
-                                <span>✍️ Editör</span>
+                                <span>👁 {{ $news->views }} okunma</span>
+                                <span>✍ Editör</span>
                             </div>
 
                             {{-- SOSYAL --}}
@@ -570,7 +570,7 @@
                                         </h3>
 
                                         <div class="text-xs text-slate-400 mt-2">
-                                            👁️ {{ $trendNews->views }} okunma
+                                            👁 {{ $trendNews->views }} okunma
                                         </div>
                                     </div>
 
@@ -682,3 +682,7 @@
 </section>
 
 @endsection
+
+
+
+

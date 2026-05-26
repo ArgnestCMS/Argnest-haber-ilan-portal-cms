@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @section('title', $user->name . ' Sosyal Profili')
 
@@ -335,3 +335,7 @@ function profilePresence(config) {
 </script>
 
 @endsection
+
+
+
+

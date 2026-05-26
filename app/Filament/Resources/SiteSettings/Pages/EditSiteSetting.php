@@ -50,7 +50,7 @@ class EditSiteSetting extends EditRecord
 
     protected function afterSave(): void
     {
-        app(PortalCacheService::class)->clearContent();
+        app(PortalCacheService::class)->clearAll();
 
         $maintenanceMode = (bool) ($this->record->maintenance_mode ?? false);
 
@@ -62,6 +62,7 @@ class EditSiteSetting extends EditRecord
                 'site_name' => $this->record->site_name ?? null,
                 'seo_title' => $this->record->seo_title ?? null,
                 'maintenance_mode' => $maintenanceMode,
+                'maintenance_ends_at' => $this->record->maintenance_ends_at,
             ]
         );
 

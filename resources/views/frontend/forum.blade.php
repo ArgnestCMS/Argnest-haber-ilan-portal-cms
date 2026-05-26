@@ -1,4 +1,4 @@
-@extends('frontend.layout')
+﻿@extends('frontend.layout')
 
 @php
     $forumBaseTitle = $selectedCategory
@@ -611,3 +611,7 @@
 </section>
 
 @endsection
+
+
+
+

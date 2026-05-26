@@ -12,6 +12,6 @@ class CreateSiteSetting extends CreateRecord
 
     protected function afterCreate(): void
     {
-        app(PortalCacheService::class)->clearContent();
+        app(PortalCacheService::class)->clearAll();
     }
 }

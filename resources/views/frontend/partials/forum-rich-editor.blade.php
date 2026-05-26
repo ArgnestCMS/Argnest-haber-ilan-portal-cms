@@ -1,4 +1,4 @@
-@php
+﻿@php
     $editorId = $id ?? 'forum-editor-' . \Illuminate\Support\Str::random(8);
     $fieldName = $name ?? 'content';
     $initialValue = \App\Support\ForumContent::sanitize($value ?? '');
@@ -351,3 +351,7 @@
         }
     </script>
 @endonce
+
+
+
+
