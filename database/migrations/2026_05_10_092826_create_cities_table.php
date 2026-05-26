@@ -8,23 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('cities', function (Blueprint $table) {
+        Schema::create('cities', function (Blueprint $table) {
+            $table->id();
 
             $table->foreignId('parent_id')
                 ->nullable()
-                ->after('id')
                 ->constrained('cities')
                 ->nullOnDelete();
 
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::table('cities', function (Blueprint $table) {
-
-            $table->dropConstrainedForeignId('parent_id');
-
-        });
+        Schema::dropIfExists('cities');
     }
 };

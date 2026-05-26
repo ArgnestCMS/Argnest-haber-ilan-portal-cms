@@ -162,6 +162,20 @@
                                 <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                                     Sifreler loglanmaz. Demo icerik olusturulmaz. Kurulum tamamlandiktan sonra /install tekrar calismaz.
                                 </div>
+
+                                <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+                                    <label class="flex items-start gap-3 font-bold">
+                                        <input type="checkbox" name="reset_database" value="1" class="mt-1 rounded border-red-300">
+                                        <span>Veritabanini sifirla ve devam et</span>
+                                    </label>
+                                    <p class="mt-2 text-red-800">
+                                        Bu secenek hedef veritabanindaki tum tablolari siler. Yalnizca yarim kalan temiz kurulumlari toparlamak icin kullanin.
+                                    </p>
+                                    <label class="mt-3 block font-semibold">
+                                        Onay icin RESET yazin
+                                        <input name="reset_database_confirmation" value="{{ old('reset_database_confirmation') }}" class="{{ $input }}" placeholder="RESET">
+                                    </label>
+                                </div>
                             </div>
                         @endif
 

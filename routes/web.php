@@ -33,11 +33,11 @@ use App\Http\Middleware\EnsureAdminPanelAccess;
 */
 
 Route::get('/install', [InstallController::class, 'show'])
-    ->middleware('throttle:20,1')
+    ->middleware('throttle:120,1')
     ->name('install');
 
 Route::post('/install', [InstallController::class, 'store'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:120,1')
     ->name('install.store');
 
 Route::get('/', [FrontendController::class, 'home']);

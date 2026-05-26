@@ -11,15 +11,16 @@ use App\Models\ThemeSetting;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules\Password;
 use PDO;
 use PDOException;
+use RuntimeException;
 use Throwable;
 use Illuminate\View\View;
 
@@ -84,7 +85,10 @@ class InstallController extends Controller
 
     private function complete(Request $request): RedirectResponse
     {
+        $this->extendInstallRuntime();
+
         $data = array_replace($this->defaultData(), $request->session()->get('install.data', []));
+        $stage = 'baslatiliyor';
 
         validator($data, $this->completionRules())->validate();
 
@@ -94,8 +98,99 @@ class InstallController extends Controller
                 ->withErrors(['db_connection' => 'Kurulum oncesi veritabani baglantisi dogrulanamadi.']);
         }
 
-        $this->writeEnvironment($data);
+        try {
+            $this->logInstallStage($stage, 'basladi', $data);
+            $this->writeEnvironment($data);
+            $this->applyRuntimeConfig($data);
 
+            DB::purge('mysql');
+            DB::reconnect('mysql');
+
+            $existingTables = $this->databaseTables();
+
+            if ($existingTables !== []) {
+                if ($this->databaseResetRequested($request) && ! $this->databaseResetConfirmed($request)) {
+                    return redirect()
+                        ->route('install', ['step' => 7])
+                        ->withInput()
+                        ->withErrors([
+                            'database' => 'Veritabanini sifirlamak icin checkbox isaretlenmeli ve onay alanina tam olarak RESET yazilmalidir.',
+                        ]);
+                }
+
+                if (! $this->databaseResetConfirmed($request)) {
+                    return redirect()
+                        ->route('install', ['step' => 7])
+                        ->withInput()
+                        ->withErrors([
+                            'database' => 'Bu veritabaninda tablolar var. Temiz kurulum icin bos bir veritabani secin veya "Veritabanini sifirla ve devam et" secenegini acik onayla isaretleyin. Bulunan tablolar: ' . implode(', ', array_slice($existingTables, 0, 8)) . (count($existingTables) > 8 ? '...' : ''),
+                        ]);
+                }
+
+                $stage = 'db_reset';
+                $this->logInstallStage($stage, 'basladi', $data, ['tables' => $existingTables]);
+                $this->resetDatabase($existingTables);
+                $this->logInstallStage($stage, 'bitti', $data);
+            }
+
+            $stage = 'migrate';
+            $this->logInstallStage($stage, 'basladi', $data);
+            $this->runMigrations();
+            $this->logInstallStage($stage, 'bitti', $data);
+
+            $admin = DB::transaction(function () use ($data, &$stage): User {
+                $stage = 'roles_permissions';
+                $this->logInstallStage($stage, 'basladi', $data);
+                $adminRole = $this->createDefaultRolesAndPermissions();
+                $this->logInstallStage($stage, 'bitti', $data);
+
+                $stage = 'default_settings';
+                $this->logInstallStage($stage, 'basladi', $data);
+                $this->createDefaultSettings($data);
+                $this->assertDefaultSettingsCreated();
+                $this->logInstallStage($stage, 'bitti', $data);
+
+                $stage = 'admin_user';
+                $this->logInstallStage($stage, 'basladi', $data);
+                $admin = $this->createAdminUser($data, $adminRole);
+                $this->assertAdminUserCreated($admin);
+                $this->logInstallStage($stage, 'bitti', $data);
+
+                return $admin;
+            });
+
+            $stage = 'installed_lock';
+            $this->logInstallStage($stage, 'basladi', $data);
+            $this->createInstallLock();
+            $this->logInstallStage($stage, 'bitti', $data);
+
+            $request->session()->forget('install.data');
+            Auth::login($admin);
+            $request->session()->regenerate();
+
+            $stage = 'redirect';
+            $this->logInstallStage($stage, 'basladi', $data);
+
+            return redirect('/admin/welcome');
+        } catch (Throwable $exception) {
+            Log::error('Install failed.', [
+                'stage' => $stage,
+                'database' => $data['db_database'] ?? null,
+                'error' => $exception->getMessage(),
+                'exception' => $exception,
+            ]);
+
+            return redirect()
+                ->route('install', ['step' => 7])
+                ->withInput()
+                ->withErrors([
+                    'install' => $this->friendlyInstallError($exception, $stage),
+                ]);
+        }
+    }
+
+    private function applyRuntimeConfig(array $data): void
+    {
         config([
             'database.connections.mysql.host' => $data['db_host'],
             'database.connections.mysql.port' => $data['db_port'],
@@ -106,23 +201,139 @@ class InstallController extends Controller
             'app.url' => $data['site_url'],
             'app.locale' => $data['default_language'],
             'app.timezone' => $data['default_timezone'],
+            'session.driver' => config('session.driver') ?: 'file',
+            'cache.default' => config('cache.default') ?: 'file',
         ]);
+    }
 
-        DB::purge('mysql');
-        DB::reconnect('mysql');
+    private function extendInstallRuntime(): void
+    {
+        @ignore_user_abort(true);
+        @set_time_limit(0);
+        @ini_set('max_execution_time', '0');
+    }
 
-        Artisan::call('migrate', ['--force' => true]);
+    private function runMigrations(): void
+    {
+        $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(base_path('artisan')) . ' migrate --force --no-interaction';
+        $process = proc_open(
+            $command,
+            [
+                0 => ['pipe', 'r'],
+                1 => ['pipe', 'w'],
+                2 => ['pipe', 'w'],
+            ],
+            $pipes,
+            base_path(),
+        );
 
-        $adminRole = $this->createDefaultRolesAndPermissions();
-        $this->createDefaultSettings($data);
-        $admin = $this->createAdminUser($data, $adminRole);
-        $this->createInstallLock();
+        if (! is_resource($process)) {
+            throw new RuntimeException('Migration islemi baslatilamadi.');
+        }
 
-        $request->session()->forget('install.data');
-        Auth::login($admin);
-        $request->session()->regenerate();
+        fclose($pipes[0]);
+        $output = stream_get_contents($pipes[1]) ?: '';
+        $error = stream_get_contents($pipes[2]) ?: '';
+        fclose($pipes[1]);
+        fclose($pipes[2]);
 
-        return redirect('/admin/welcome');
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0) {
+            throw new RuntimeException($this->summarizeProcessOutput($error ?: $output) ?: 'Migration islemi basarisiz oldu.');
+        }
+    }
+
+    private function summarizeProcessOutput(string $output): string
+    {
+        return str($output)
+            ->squish()
+            ->limit(700)
+            ->toString();
+    }
+
+    private function databaseTables(): array
+    {
+        $rows = DB::select("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
+
+        return collect($rows)
+            ->map(function (object $row): ?string {
+                $values = array_values((array) $row);
+
+                return isset($values[0]) ? (string) $values[0] : null;
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function databaseResetConfirmed(Request $request): bool
+    {
+        return $request->boolean('reset_database')
+            && strtoupper(trim((string) $request->input('reset_database_confirmation'))) === 'RESET';
+    }
+
+    private function databaseResetRequested(Request $request): bool
+    {
+        return $request->boolean('reset_database')
+            || trim((string) $request->input('reset_database_confirmation')) !== '';
+    }
+
+    private function resetDatabase(array $tables): void
+    {
+        if ($tables === []) {
+            return;
+        }
+
+        $quotedTables = array_map(
+            fn (string $table): string => '`' . str_replace('`', '``', $table) . '`',
+            $tables,
+        );
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+        try {
+            DB::statement('DROP TABLE IF EXISTS ' . implode(', ', $quotedTables));
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+    }
+
+    private function friendlyInstallError(Throwable $exception, string $stage): string
+    {
+        $message = strtolower($exception->getMessage());
+        $stageLabel = $this->installStageLabel($stage);
+
+        if (str_contains($message, 'base table or view already exists')
+            || str_contains($message, 'already exists')
+            || str_contains($message, 'sqlstate[42s01]')
+        ) {
+            return $stageLabel . ' asamasinda kurulum durdu: Bu veritabaninda daha once olusturulmus tablolar var. Bos bir veritabani secin veya son adimda "Veritabanini sifirla ve devam et" onayini kullanin.';
+        }
+
+        return $stageLabel . ' asamasinda kurulum durdu. Veritabani ve dosya izinlerini kontrol edip tekrar deneyin. Detay: ' . $exception->getMessage();
+    }
+
+    private function installStageLabel(string $stage): string
+    {
+        return match ($stage) {
+            'db_reset' => 'Veritabani sifirlama',
+            'migrate' => 'Migration',
+            'default_settings' => 'Varsayilan ayarlar',
+            'roles_permissions' => 'Rol ve yetkiler',
+            'admin_user' => 'Admin kullanicisi',
+            'installed_lock' => 'Kurulum kilidi',
+            'redirect' => 'Yonlendirme',
+            default => 'Kurulum',
+        };
+    }
+
+    private function logInstallStage(string $stage, string $status, array $data, array $context = []): void
+    {
+        Log::info('Install stage ' . $status . ': ' . $stage, array_merge([
+            'stage' => $stage,
+            'database' => $data['db_database'] ?? null,
+        ], $context));
     }
 
     private function rulesForStep(int $step): array
@@ -313,7 +524,7 @@ class InstallController extends Controller
 
     private function createDefaultSettings(array $data): void
     {
-        SiteSetting::query()->updateOrCreate([], [
+        SiteSetting::query()->firstOrCreate([])->forceFill([
             'site_name' => $data['site_name'],
             'site_slogan' => $data['site_description'],
             'forum_enabled' => true,
@@ -333,9 +544,9 @@ class InstallController extends Controller
             'seo_title' => $data['site_name'],
             'seo_description' => $data['site_description'],
             'footer_copyright' => now()->year . ' ' . $data['site_name'],
-        ]);
+        ])->save();
 
-        SeoSetting::query()->updateOrCreate([], [
+        SeoSetting::query()->firstOrCreate([])->forceFill([
             'site_title' => $data['site_name'],
             'site_description' => $data['site_description'],
             'default_language' => $data['default_language'],
@@ -345,11 +556,11 @@ class InstallController extends Controller
             'robots_follow' => true,
             'robots_txt' => "User-agent: *\nAllow: /\nSitemap: " . rtrim($data['site_url'], '/') . '/sitemap.xml',
             'sitemap_cache_minutes' => 60,
-        ]);
+        ])->save();
 
-        ThemeSetting::query()->updateOrCreate([], ThemeSetting::DEFAULTS);
+        ThemeSetting::query()->firstOrCreate([])->forceFill(ThemeSetting::DEFAULTS)->save();
 
-        IntegrationSetting::query()->updateOrCreate([], [
+        IntegrationSetting::query()->firstOrCreate([])->forceFill([
             'mail_mailer' => 'smtp',
             'mail_host' => $data['mail_host'] ?: null,
             'mail_port' => $data['mail_port'] ?: null,
@@ -360,7 +571,23 @@ class InstallController extends Controller
             'mail_from_name' => $data['site_name'],
             'recaptcha_enabled' => false,
             'captcha_required' => false,
-        ]);
+        ])->save();
+    }
+
+    private function assertDefaultSettingsCreated(): void
+    {
+        $models = [
+            SiteSetting::class => 'SiteSetting',
+            SeoSetting::class => 'SeoSetting',
+            ThemeSetting::class => 'ThemeSetting',
+            IntegrationSetting::class => 'IntegrationSetting',
+        ];
+
+        foreach ($models as $model => $label) {
+            if (! $model::query()->exists()) {
+                throw new RuntimeException($label . ' default kaydi olusturulamadi.');
+            }
+        }
     }
 
     private function createAdminUser(array $data, Role $adminRole): User
@@ -381,6 +608,13 @@ class InstallController extends Controller
         }
 
         return User::query()->updateOrCreate(['email' => $data['admin_email']], $attributes);
+    }
+
+    private function assertAdminUserCreated(User $admin): void
+    {
+        if (! $admin->exists || blank($admin->id)) {
+            throw new RuntimeException('Admin kullanicisi olusturulamadi.');
+        }
     }
 
     private function writeEnvironment(array $data): void
@@ -445,21 +679,17 @@ class InstallController extends Controller
 
     private function isInstalled(): bool
     {
-        if (File::exists(storage_path(self::LOCK_PATH))) {
-            return true;
-        }
-
-        try {
-            return Schema::hasTable('users') && User::query()->exists();
-        } catch (Throwable) {
-            return false;
-        }
+        return File::exists(storage_path(self::LOCK_PATH));
     }
 
     private function createInstallLock(): void
     {
         File::ensureDirectoryExists(storage_path('app'));
         File::put(storage_path(self::LOCK_PATH), now()->toISOString());
+
+        if (! File::exists(storage_path(self::LOCK_PATH))) {
+            throw new RuntimeException('installed.lock dosyasi olusturulamadi.');
+        }
     }
 
     private function normalizeStep(int $step): int

@@ -19,7 +19,11 @@ use App\Models\SiteSetting;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\PortalCacheService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class FrontendController extends Controller
 {
@@ -41,9 +45,13 @@ class FrontendController extends Controller
             });
     }
 
-    public function home()
+    public function home(): RedirectResponse|\Illuminate\View\View
     {
-        $siteSetting = SiteSetting::first();
+        if (! $this->installationComplete()) {
+            return redirect()->route('install');
+        }
+
+        $siteSetting = $this->siteSetting();
         $homeModules = $this->homeModules($siteSetting);
         $homeFocus = $this->homeFocus($homeModules);
         $homeModuleSignature = md5($siteSetting?->homeModuleSignature() ?? implode('|', $homeModules));
@@ -206,6 +214,24 @@ class FrontendController extends Controller
             'communityData',
             'siteSetting',
         ));
+    }
+
+    private function installationComplete(): bool
+    {
+        return File::exists(storage_path('app/installed.lock'));
+    }
+
+    private function siteSetting(): ?SiteSetting
+    {
+        try {
+            if (! Schema::hasTable('site_settings')) {
+                return null;
+            }
+
+            return SiteSetting::query()->first();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function homeModules(?SiteSetting $siteSetting): array
