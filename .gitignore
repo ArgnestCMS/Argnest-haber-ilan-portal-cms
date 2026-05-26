@@ -16,6 +16,13 @@
 /public/build
 /public/hot
 /public/storage
+/storage/logs/*
+!/storage/logs/.gitignore
+/storage/app/backups/*
+!/storage/app/backups/.gitignore
+/storage/app/chrome-headless-profile*
+/storage/app/edge-headless-profile*
+/storage/app/reports/*
 /storage/*.key
 /storage/pail
 /vendor

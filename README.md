@@ -4,9 +4,12 @@
 
 Alt slogan: **Modern Haber, İlan ve Topluluk Yönetim Sistemi**
 
-## Proje Açıklaması
+## Sürüm
 
-Sistem; yerel haber portalları, kamu ilan platformları, kurumsal duyuru siteleri ve topluluk odaklı yayın projeleri için hazırlanmıştır. Filament admin paneli ile içerik operasyonları, moderasyon, raporlama, yedekleme ve site ayarları merkezi olarak yönetilir.
+- Ürün: Argnest Haber-İlan Portal CMS
+- Sürüm: v1.0.0
+- Kod adı: Genesis
+- Durum: Sunucuya yüklenmeye hazır release paketi
 
 ## Özellikler
 
@@ -25,11 +28,18 @@ Sistem; yerel haber portalları, kamu ilan platformları, kurumsal duyuru sitele
 - PHP 8.2+
 - Composer 2+
 - Node.js 18+ ve npm
-- MySQL veya MariaDB
-- PHP eklentileri: pdo, pdo_mysql, openssl, mbstring, tokenizer, xml, ctype, json, fileinfo
-- Yazılabilir `storage` ve `bootstrap/cache` dizinleri
+- MySQL 8+ veya MariaDB 10.6+
+- PHP eklentileri: `pdo`, `pdo_mysql`, `openssl`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`, `curl`, `zip`
+- Yazılabilir dizinler: `storage`, `bootstrap/cache`
+- Tavsiye edilen: SSL sertifikası, SSH erişimi, cron desteği, queue worker desteği
 
 ## Kurulum
+
+1. Dosyaları sunucuya yükleyin ve web root olarak `public` dizinini hedefleyin.
+2. `.env.example` dosyasını `.env` olarak kopyalayın.
+3. `.env` içinde `APP_URL`, veritabanı, mail, cache, queue ve backup ayarlarını canlı ortama göre düzenleyin.
+4. Bağımlılıkları ve frontend dosyalarını hazırlayın.
+5. Uygulama anahtarını, migrationları, storage linkini ve production cache dosyalarını oluşturun.
 
 ```bash
 composer install --no-dev --optimize-autoloader
@@ -44,11 +54,11 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-`.env` içinde `APP_URL`, veritabanı, mail, queue, cache ve backup ayarlarını canlı ortama göre düzenleyin.
+Shared hostingde SSH yoksa `vendor` ve `public/build` dizinleri yerelde hazırlanıp paketle birlikte yüklenebilir. Bu durumda `vendor` release arşivine opsiyonel olarak dahil edilir; Git deposunda tutulmaz.
 
 ## Install Wizard
 
-İlk kurulum için `/install` adresi kullanılabilir. Wizard; sistem gereksinimlerini kontrol eder, veritabanı bağlantısını test eder, site ayarlarını ve admin kullanıcısını oluşturur. Kurulum tamamlandığında `storage/app/installed.lock` yazılır ve kurulum ekranı tekrar açılmaz.
+İlk kurulum için `/install` adresi kullanılabilir. Wizard sistem gereksinimlerini kontrol eder, veritabanı bağlantısını test eder, site ayarlarını ve admin kullanıcısını oluşturur. Kurulum tamamlandığında `storage/app/installed.lock` yazılır ve kurulum ekranı tekrar açılmaz.
 
 ## Kullanılan Teknolojiler
 
@@ -68,21 +78,22 @@ php artisan view:cache
 - Rol, yetki, kullanıcı ve moderasyon ekranları
 - Site raporları ve aktivite kayıtları
 
-## SEO Sistemi
+## Operasyon Notları
 
-SEO sistemi; sayfa başlığı, açıklama, anahtar kelime, canonical URL, robots davranışı, sitemap, Open Graph, Twitter Card ve JSON-LD alanlarını destekler.
+- Cron: `* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1`
+- Queue: `php artisan queue:work database --queue=broadcasts,realtime,notifications,media,safety,default --tries=3 --backoff=5 --timeout=60 --sleep=1`
+- Sağlık kontrolleri: `/up` ve `/health`
+- Backup dizini: `storage/app/backups/database`
 
-## Backup Sistemi
+## Release Paketine Alınmayacaklar
 
-Veritabanı yedekleri `storage/app/backups/database` dizinine alınır. XAMPP için varsayılan `mysqldump.exe` yolu otomatik aranır; gerekirse `MYSQLDUMP_PATH` ile özel yol tanımlanabilir.
-
-## Cache Sistemi
-
-Portal cache sistemi içerik, liste, popüler içerik, sidebar, reklam ve layout parçaları için ayrı TTL değerleri kullanır. `PORTAL_CACHE_STORE=auto` Redis varsa Redis, yoksa Laravel cache fallback davranışı kullanır.
-
-## Forum/Community Sistemi
-
-Forum kategorileri, konular, cevaplar, etiketler, beğeni, yer imi, raporlama, itibar ve canlı topluluk özellikleri bulunur. Moderasyon ve güvenlik ekranları admin panelinden yönetilir.
+- `.env`
+- `node_modules`
+- `storage/logs/*`
+- `storage/app/backups/*`
+- `.phpunit.result.cache`, `.phpunit.cache`
+- Headless browser/test profilleri ve geçici raporlar
+- `vendor` varsayılan olarak alınmaz; SSH olmayan hosting için opsiyonel dahil edilebilir.
 
 ## Lisans
 
@@ -90,12 +101,8 @@ Bu proje MIT lisansı ile yayınlanmıştır. Detaylar için `LICENSE` dosyasın
 
 ## Güvenlik
 
-- Üretimde `APP_DEBUG=false` kullanılmalıdır.
+- Üretimde `APP_ENV=production` ve `APP_DEBUG=false` kullanılmalıdır.
 - `/install` kurulumdan sonra kilitlenir.
 - Admin paneli yetki middleware ile korunur.
 - Dosya izinleri minimum gerekli erişimle sınırlandırılmalıdır.
 - Güvenlik açıkları `PORTAL_SUPPORT_EMAIL` değerinde belirtilen destek adresine bildirilmelidir.
-
-## Katkı
-
-Katkılar için önce issue açılması, değişikliğin kapsamının netleştirilmesi ve ardından küçük, test edilebilir pull request gönderilmesi önerilir.

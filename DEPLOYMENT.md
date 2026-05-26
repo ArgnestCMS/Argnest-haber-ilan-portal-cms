@@ -1,14 +1,54 @@
 # Production Deployment Guide
 
-Bu rehber Argnest Haber-İlan Portal CMS için canlı ortam hazırlığını özetler.
+Bu rehber Argnest Haber-İlan Portal CMS v1.0.0 Genesis için canlı ortam kurulumunu özetler.
 
-## Shared Hosting Kurulum
+## Ortak Ön Hazırlık
 
-1. Dosyaları hosting hesabına yükleyin.
-2. Web root olarak `public` dizinini hedefleyin. Hosting paneli izin vermiyorsa ana domaini `public/index.php` çalışacak şekilde yönlendirin.
-3. `.env` dosyasını oluşturup `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://domain.com` ayarlarını girin.
-4. Veritabanını oluşturun ve DB bilgilerini `.env` içine yazın.
-5. SSH varsa şu komutları çalıştırın:
+1. Sunucuda PHP 8.2+, MySQL/MariaDB, Composer 2 ve gerekli PHP eklentilerini kontrol edin.
+2. Domain/SSL hazır olsun ve web root `public` dizinine baksın.
+3. `.env.example` dosyasını `.env` olarak kopyalayın.
+4. `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://domain.com` değerlerini girin.
+5. Veritabanı, mail, cache, queue, `MYSQLDUMP_PATH` ve portal ayarlarını canlı ortama göre doldurun.
+
+## cPanel / Shared Hosting
+
+### SSH Varsa
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm install
+npm run build
+php artisan key:generate
+php artisan migrate --force
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### SSH Yoksa
+
+1. Yerelde production bağımlılıklarını hazırlayın: `composer install --no-dev --optimize-autoloader`.
+2. Yerelde frontend build alın: `npm install && npm run build`.
+3. Proje dosyalarını, `vendor` dizinini ve `public/build` dizinini hosting hesabına yükleyin.
+4. Hosting panelinden veritabanı oluşturun ve `.env` bilgilerini girin.
+5. Panel izin veriyorsa `public` dizinini domain root yapın. İzin vermiyorsa dosya yapısını hosting sağlayıcısının Laravel yönlendirme dokümanına göre ayarlayın.
+6. `storage` ve `bootstrap/cache` yazma izinlerini verin.
+7. `php artisan storage:link` çalıştırılamıyorsa panelden `public/storage` için symlink oluşturun veya hosting desteğinden isteyin.
+
+Shared hostingde uzun süre çalışan queue worker desteklenmiyorsa `QUEUE_CONNECTION=database` kalabilir; cron ile Laravel scheduler çalıştırılır. Kritik kuyruk işleri için VPS önerilir.
+
+## VPS
+
+1. Nginx veya Apache virtual host root değerini proje içindeki `public` dizinine bağlayın.
+2. PHP-FPM, MySQL/MariaDB, Redis opsiyonel, Composer, Node.js ve Supervisor/systemd kurulumunu tamamlayın.
+3. Deploy kullanıcısının proje dizinine, web sunucusu kullanıcısının `storage` ve `bootstrap/cache` dizinlerine gerekli izinleri olduğundan emin olun.
+4. Production bağımlılıklarını ve build dosyalarını oluşturun.
+5. Migration, storage link ve cache komutlarını çalıştırın.
+6. Queue worker için Supervisor/systemd servisi ekleyin.
+7. Cron'a Laravel scheduler satırını ekleyin.
+
+## Production Komutları
 
 ```bash
 composer install --no-dev --optimize-autoloader
@@ -21,26 +61,18 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-SSH yoksa bağımlılıkları yerelde hazırlayıp `vendor`, `public/build` ve proje dosyalarını birlikte yükleyin.
-
-## VPS Kurulum
-
-1. Nginx veya Apache virtual host root değerini `public` dizinine bağlayın.
-2. PHP-FPM, MySQL/MariaDB, Redis ve Supervisor kurulumunu tamamlayın.
-3. Deploy kullanıcısına proje dizininde gerekli izinleri verin.
-4. Composer, npm build, migrate ve cache komutlarını çalıştırın.
-
-## Storage Link
+Kod veya ayar değişikliğinden sonra:
 
 ```bash
-php artisan storage:link
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
-
-Shared hosting symlink desteklemiyorsa `public/storage` için panel üzerinden symlink oluşturun veya hosting sağlayıcısının desteklediği dosya bağlantı yöntemini kullanın.
 
 ## Queue
 
-Varsayılan üretim ayarı:
+Varsayılan güvenli ayar:
 
 ```env
 QUEUE_CONNECTION=database
@@ -52,28 +84,7 @@ Worker:
 php artisan queue:work database --queue=broadcasts,realtime,notifications,media,safety,default --tries=3 --backoff=5 --timeout=60 --sleep=1
 ```
 
-VPS üzerinde Supervisor/systemd ile sürekli çalıştırın.
-
-## Cache
-
-Canlı ortamda:
-
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Değişikliklerden sonra:
-
-```bash
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-```
-
-Redis kullanılıyorsa `CACHE_STORE=redis`, aksi halde `CACHE_STORE=database` güvenli varsayılandır.
+VPS üzerinde bu komut Supervisor veya systemd ile sürekli çalıştırılmalıdır. Redis kullanılıyorsa `.env` içinde `QUEUE_CONNECTION=redis` ve ilgili Redis ayarları yapılır.
 
 ## Cron
 
@@ -83,18 +94,16 @@ Sunucu cron tablosuna ekleyin:
 * * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-## Permissions
-
-Linux örneği:
+## Storage ve İzinler
 
 ```bash
 chmod -R ug+rw storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 ```
 
-Windows/XAMPP için `storage` ve `bootstrap/cache` dizinlerinin PHP kullanıcısı tarafından yazılabilir olduğundan emin olun.
+Windows/XAMPP veya cPanel ortamlarında aynı dizinlerin PHP tarafından yazılabilir olduğunu panel üzerinden kontrol edin.
 
-## Production Env Ayarları
+## Örnek Production Env
 
 ```env
 APP_NAME="Argnest Haber-İlan Portal CMS"
@@ -121,10 +130,13 @@ MYSQLDUMP_PATH=/usr/bin/mysqldump
 
 ## Son Kontrol
 
-- `/health` readiness kontrolü
 - `/up` liveness kontrolü
+- `/health` readiness kontrolü
+- `/install` wizard veya manuel admin oluşturma akışı
 - Admin login testi
 - Haber/ilan oluşturma testi
-- Dosya yükleme testi
+- Dosya yükleme ve `public/storage` testi
+- Mail gönderim testi
 - Backup alma ve indirme testi
-- Queue worker ve cron kontrolü
+- Queue worker kontrolü
+- Cron/scheduler kontrolü
