@@ -20,8 +20,10 @@ use App\Models\User;
 use App\Models\Video;
 use App\Services\PortalCacheService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
@@ -174,25 +176,7 @@ class FrontendController extends Controller
             }
         });
 
-        $weather = $this->cache()->remember('portal:external:weather', 'external', function () {
-            try {
-                $data = Http::timeout(5)
-                    ->get('https://api.open-meteo.com/v1/forecast?latitude=41.0082&longitude=28.9784&current_weather=true')
-                    ->json();
-
-                return [
-                    'city' => 'İstanbul',
-                    'temp' => round($data['current_weather']['temperature'] ?? 19),
-                    'status' => 'Açık',
-                ];
-            } catch (\Exception $e) {
-                return [
-                    'city' => 'İstanbul',
-                    'temp' => 19,
-                    'status' => 'Açık',
-                ];
-            }
-        });
+        $weather = $this->currentWeather($siteSetting);
 
         return view('frontend.home', compact(
             'headlineNews',
@@ -673,6 +657,254 @@ class FrontendController extends Controller
                     ->get(),
             ];
         });
+    }
+
+    private function currentWeather(?SiteSetting $siteSetting = null): array
+    {
+        if (! (bool) ($siteSetting?->weather_enabled ?? true)) {
+            return ['enabled' => false];
+        }
+
+        $ttl = $this->weatherCacheSeconds($siteSetting);
+        $location = $this->weatherGeoLocation($siteSetting, $ttl);
+
+        if (! $location) {
+            return $this->weatherUnavailable('weather_geo_unavailable');
+        }
+
+        $lat = $this->weatherCoordinateKey($location['lat']);
+        $lon = $this->weatherCoordinateKey($location['lon']);
+
+        return Cache::remember("weather:current:{$lat}:{$lon}", $ttl, fn () => $this->fetchCurrentWeather($location));
+    }
+
+    private function weatherGeoLocation(?SiteSetting $siteSetting, int $ttl): ?array
+    {
+        $ip = $this->weatherClientIp();
+
+        if (! $ip) {
+            return null;
+        }
+
+        if ($this->isLocalWeatherIp($ip)) {
+            return [
+                'ip' => $ip,
+                'city' => filled($siteSetting?->weather_local_fallback_city) ? $siteSetting->weather_local_fallback_city : 'İstanbul',
+                'lat' => 41.0082,
+                'lon' => 28.9784,
+                'timezone' => 'Europe/Istanbul',
+                'source' => 'local_fallback',
+            ];
+        }
+
+        return Cache::remember("weather:geo:{$ip}", $ttl, function () use ($ip) {
+            try {
+                $response = Http::timeout(4)
+                    ->acceptJson()
+                    ->get('https://ipwho.is/' . rawurlencode($ip), [
+                        'fields' => 'success,message,city,latitude,longitude,timezone,ip',
+                    ]);
+
+                if (! $response->successful()) {
+                    Log::warning('Weather GeoIP lookup failed.', [
+                        'ip' => $ip,
+                        'status' => $response->status(),
+                    ]);
+
+                    return null;
+                }
+
+                $data = $response->json();
+
+                if (! ($data['success'] ?? false) || blank($data['city'] ?? null) || ! isset($data['latitude'], $data['longitude'])) {
+                    Log::warning('Weather GeoIP lookup returned incomplete data.', [
+                        'ip' => $ip,
+                        'message' => $data['message'] ?? null,
+                    ]);
+
+                    return null;
+                }
+
+                return [
+                    'ip' => $ip,
+                    'city' => $data['city'],
+                    'lat' => (float) $data['latitude'],
+                    'lon' => (float) $data['longitude'],
+                    'timezone' => filled($data['timezone'] ?? null) ? $data['timezone'] : 'auto',
+                    'source' => 'geoip',
+                ];
+            } catch (Throwable $exception) {
+                Log::warning('Weather GeoIP lookup exception.', [
+                    'ip' => $ip,
+                    'message' => $exception->getMessage(),
+                ]);
+
+                return null;
+            }
+        });
+    }
+
+    private function fetchCurrentWeather(array $location): array
+    {
+        $lat = $this->weatherCoordinateKey($location['lat']);
+        $lon = $this->weatherCoordinateKey($location['lon']);
+        $staleKey = "weather:current:{$lat}:{$lon}:stale";
+
+        try {
+            $response = Http::timeout(5)
+                ->acceptJson()
+                ->get('https://api.open-meteo.com/v1/forecast', [
+                    'latitude' => $location['lat'],
+                    'longitude' => $location['lon'],
+                    'current_weather' => true,
+                    'timezone' => $location['timezone'] ?? 'auto',
+                ]);
+
+            if (! $response->successful()) {
+                return $this->staleWeather($staleKey, 'weather_api_unsuccessful', [
+                    'status' => $response->status(),
+                    'rate_limited' => $response->status() === 429,
+                    'city' => $location['city'] ?? null,
+                ]);
+            }
+
+            $data = $response->json();
+            $current = $data['current_weather'] ?? [];
+            $temperature = $current['temperature'] ?? null;
+            $observedAt = $current['time'] ?? null;
+            $weatherCode = $current['weathercode'] ?? null;
+
+            if ($temperature === null || $observedAt === null) {
+                return $this->staleWeather($staleKey, 'weather_api_missing_current_data', [
+                    'has_temperature' => $temperature !== null,
+                    'has_observed_at' => $observedAt !== null,
+                    'city' => $location['city'] ?? null,
+                ]);
+            }
+
+            $weather = [
+                'enabled' => true,
+                'city' => $location['city'] ?? 'Konum',
+                'temp' => round((float) $temperature),
+                'status' => $this->weatherConditionLabel($weatherCode),
+                'display_temp' => round((float) $temperature) . '°',
+                'observed_at' => $observedAt,
+                'updated_label' => $this->weatherUpdatedLabel($observedAt),
+                'fetched_at' => now()->toIso8601String(),
+                'stale' => false,
+                'source' => 'api',
+            ];
+
+            Cache::put($staleKey, $weather, now()->addHours(6));
+
+            return $weather;
+        } catch (Throwable $exception) {
+            return $this->staleWeather($staleKey, 'weather_api_exception', [
+                'message' => $exception->getMessage(),
+                'city' => $location['city'] ?? null,
+            ]);
+        }
+    }
+
+    private function staleWeather(string $staleKey, string $reason, array $context = []): array
+    {
+        $stale = Cache::get($staleKey);
+
+        Log::warning('Weather API stale fallback used.', [
+            'reason' => $reason,
+            'has_stale_cache' => (bool) $stale,
+            ...$context,
+        ]);
+
+        if (is_array($stale)) {
+            return [
+                ...$stale,
+                'stale' => true,
+                'source' => 'stale_cache',
+            ];
+        }
+
+        return $this->weatherUnavailable($reason);
+    }
+
+    private function weatherUnavailable(string $reason): array
+    {
+        return [
+            'enabled' => true,
+            'city' => 'Konum alınamadı',
+            'temp' => null,
+            'status' => null,
+            'display_temp' => '--°',
+            'observed_at' => null,
+            'updated_label' => null,
+            'fetched_at' => now()->toIso8601String(),
+            'stale' => true,
+            'source' => $reason,
+        ];
+    }
+
+    private function weatherCacheSeconds(?SiteSetting $siteSetting): int
+    {
+        $minutes = (int) ($siteSetting?->weather_cache_minutes ?: 10);
+
+        return max(10, min($minutes, 15)) * 60;
+    }
+
+    private function weatherClientIp(): ?string
+    {
+        $headers = [
+            request()->header('CF-Connecting-IP'),
+            request()->header('X-Forwarded-For'),
+            request()->header('X-Real-IP'),
+            request()->ip(),
+        ];
+
+        foreach ($headers as $header) {
+            $ip = trim(explode(',', (string) $header)[0] ?? '');
+
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+
+        return null;
+    }
+
+    private function isLocalWeatherIp(string $ip): bool
+    {
+        return in_array($ip, ['127.0.0.1', '::1'], true)
+            || (app()->environment('local') && ! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE));
+    }
+
+    private function weatherCoordinateKey(float|int|string $coordinate): string
+    {
+        return str_replace('.', '_', number_format((float) $coordinate, 3, '.', ''));
+    }
+
+    private function weatherUpdatedLabel(?string $observedAt): ?string
+    {
+        if (! $observedAt) {
+            return null;
+        }
+
+        return str_replace('T', ' ', $observedAt);
+    }
+
+    private function weatherConditionLabel(mixed $weatherCode): string
+    {
+        return match ((int) $weatherCode) {
+            0 => 'Açık',
+            1, 2 => 'Parçalı bulutlu',
+            3 => 'Bulutlu',
+            45, 48 => 'Sisli',
+            51, 53, 55, 56, 57 => 'Çisenti',
+            61, 63, 65, 66, 67 => 'Yağmurlu',
+            71, 73, 75, 77 => 'Karlı',
+            80, 81, 82 => 'Sağanak',
+            85, 86 => 'Kar sağanağı',
+            95, 96, 99 => 'Fırtına',
+            default => 'Güncel',
+        };
     }
 
     private function newsListCategories()

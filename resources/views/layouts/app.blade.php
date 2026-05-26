@@ -116,12 +116,16 @@
                 <span><b>BTC:</b> {{ $market['btc'] ?? '81256' }} <span class="text-green-600">%0.48 ↑</span></span>
             </div>
 
-            <div class="hidden md:block whitespace-nowrap">
-                {{ $weather['city'] ?? 'İstanbul' }},
-                {{ $weather['status'] ?? 'Açık' }}
-                •
-                <b>{{ $weather['temp'] ?? 19 }}°</b>
-            </div>
+            @if(($weather['enabled'] ?? true) !== false)
+                <div class="hidden md:block whitespace-nowrap">
+                    {{ $weather['city'] ?? 'Konum alınamadı' }}@if(! empty($weather['status'])), {{ $weather['status'] }}@endif
+                    •
+                    <b>{{ $weather['display_temp'] ?? '--°' }}</b>
+                    @if(! empty($weather['updated_label']))
+                        <span class="text-xs text-slate-500">({{ $weather['updated_label'] }})</span>
+                    @endif
+                </div>
+            @endif
 
         </div>
     </div>

@@ -127,6 +127,12 @@ class SiteSetting extends Model
         'home_polls_enabled',
         'home_breaking_news_enabled',
         'home_announcement_bar_enabled',
+        'weather_city',
+        'weather_temperature_fallback',
+        'weather_status_fallback',
+        'weather_enabled',
+        'weather_local_fallback_city',
+        'weather_cache_minutes',
 
     ];
 
@@ -152,6 +158,8 @@ class SiteSetting extends Model
         'home_polls_enabled' => 'boolean',
         'home_breaking_news_enabled' => 'boolean',
         'home_announcement_bar_enabled' => 'boolean',
+        'weather_enabled' => 'boolean',
+        'weather_cache_minutes' => 'integer',
 
         /*
         |--------------------------------------------------------------------------

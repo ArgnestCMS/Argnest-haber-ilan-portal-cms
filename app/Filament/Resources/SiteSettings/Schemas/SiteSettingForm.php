@@ -243,6 +243,31 @@ class SiteSettingForm
 
     ])
     ->columns(2),
+    Tabs\Tab::make('Hava Durumu')
+    ->schema([
+
+        Toggle::make('weather_enabled')
+            ->label('Hava durumu aktif')
+            ->default(true)
+            ->helperText('Kapaliysa frontend hava durumu alani gosterilmez.'),
+
+        TextInput::make('weather_local_fallback_city')
+            ->label('Local fallback sehri')
+            ->placeholder('Istanbul')
+            ->maxLength(255)
+            ->helperText('Localhost/127.0.0.1 gelistirme ortaminda kullanilir.'),
+
+        TextInput::make('weather_cache_minutes')
+            ->label('Cache suresi')
+            ->numeric()
+            ->minValue(10)
+            ->maxValue(15)
+            ->default(10)
+            ->suffix('dk')
+            ->helperText('IP konum ve hava durumu cache suresi.'),
+
+    ])
+    ->columns(3),
     Tabs\Tab::make('Topluluk & Canlı Sistem')
     ->schema([
 

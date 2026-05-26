@@ -1404,12 +1404,15 @@
                 <span><b>BTC:</b> {{ $market['btc'] ?? '81256' }} <span class="text-green-600">%0.48 ↑</span></span>
             </div>
 
-            <div class="hidden md:block whitespace-nowrap">
-                {{ $weather['city'] ?? 'İstanbul' }},
-                {{ $weather['status'] ?? 'Açık' }}
-                •
-                <b>{{ $weather['temp'] ?? 19 }}°</b>
-            </div>
+            @if(($weather['enabled'] ?? true) !== false)
+                <div class="hidden md:block whitespace-nowrap" data-weather-widget>
+                    <span id="weather-city">{{ $weather['city'] ?? 'Konum alınamadı' }}</span>,
+                    <span id="weather-icon"></span>
+                    <span id="weather-status">{{ $weather['status'] ?? 'Hava durumu alınamadı' }}</span>
+                    •
+                    <b id="weather-temp">{{ $weather['display_temp'] ?? '--°' }}</b>
+                </div>
+            @endif
 
         </div>
     </div>
@@ -2345,6 +2348,146 @@ document.addEventListener('DOMContentLoaded', () => {
             close();
         }
     });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const cityEl = document.getElementById('weather-city');
+    const tempEl = document.getElementById('weather-temp');
+    const statusEl = document.getElementById('weather-status');
+    const iconEl = document.getElementById('weather-icon');
+
+    if (!cityEl || !tempEl || !statusEl || !iconEl) {
+        return;
+    }
+
+    const cacheKey = 'argnest_weather_cache';
+    const cacheTtl = 10 * 60 * 1000;
+    const fallback = {
+        city: 'İstanbul',
+        temp: '--°',
+        status: 'Hava durumu alınamadı',
+        icon: '',
+    };
+
+    const weatherCodes = {
+        0: ['Açık / Güneşli', '☀️'],
+        1: ['Çoğunlukla Açık', '🌤️'],
+        2: ['Parçalı Bulutlu', '⛅'],
+        3: ['Bulutlu / Kapalı', '☁️'],
+        45: ['Sisli', '🌫️'],
+        48: ['Kırağı Sisi', '🌫️'],
+        51: ['Hafif Çisenti', '🌧️'],
+        53: ['Çisenti Yağmurlu', '🌧️'],
+        55: ['Yoğun Çisenti', '🌧️'],
+        61: ['Hafif Yağmurlu', '🌧️'],
+        63: ['Yağmurlu', '🌧️'],
+        65: ['Şiddetli Yağmurlu', '🌧️'],
+        71: ['Hafif Kar Yağışlı', '🌨️'],
+        73: ['Kar Yağışlı', '🌨️'],
+        75: ['Yoğun Kar Yağışlı', '❄️'],
+        77: ['Taneli Kar', '🌨️'],
+        80: ['Hafif Sağanak', '🌦️'],
+        81: ['Sağanak Yağışlı', '🌧️'],
+        82: ['Şiddetli Sağanak', '⛈️'],
+        85: ['Hafif Kar Sağanağı', '🌨️'],
+        86: ['Yoğun Kar Sağanağı', '❄️'],
+        95: ['Gökgürültülü Fırtına', '⛈️'],
+        96: ['Dolu Yağışlı Fırtına', '⛈️'],
+        99: ['Şiddetli Dolu ve Fırtına', '🚨'],
+    };
+
+    const renderWeather = (weather) => {
+        cityEl.textContent = weather.city || fallback.city;
+        iconEl.textContent = weather.icon ? weather.icon + ' ' : '';
+        statusEl.textContent = weather.status || fallback.status;
+        tempEl.textContent = weather.temp || fallback.temp;
+    };
+
+    const readCache = () => {
+        try {
+            const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+
+            if (cached && cached.expiresAt > Date.now() && cached.weather) {
+                renderWeather(cached.weather);
+
+                return true;
+            }
+        } catch (error) {
+            localStorage.removeItem(cacheKey);
+        }
+
+        return false;
+    };
+
+    const writeCache = (weather) => {
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({
+                weather,
+                expiresAt: Date.now() + cacheTtl,
+            }));
+        } catch (error) {
+            // Local storage may be unavailable in private contexts.
+        }
+    };
+
+    const fetchWeather = async () => {
+        const geoResponse = await fetch('https://ipapi.co/json/', {
+            headers: { Accept: 'application/json' },
+        });
+
+        if (!geoResponse.ok) {
+            throw new Error('GeoIP request failed');
+        }
+
+        const geo = await geoResponse.json();
+        const lat = Number(geo.latitude);
+        const lon = Number(geo.longitude);
+
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            throw new Error('GeoIP coordinates missing');
+        }
+
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+        const weatherResponse = await fetch(weatherUrl, {
+            headers: { Accept: 'application/json' },
+        });
+
+        if (!weatherResponse.ok) {
+            throw new Error('Weather request failed');
+        }
+
+        const data = await weatherResponse.json();
+        const current = data.current_weather || {};
+        const temperature = Number(current.temperature);
+        const code = Number(current.weathercode);
+
+        if (!Number.isFinite(temperature)) {
+            throw new Error('Weather temperature missing');
+        }
+
+        const [status, icon] = weatherCodes[code] || ['Güncel', ''];
+
+        return {
+            city: geo.city || fallback.city,
+            temp: Math.round(temperature) + '°',
+            status,
+            icon,
+        };
+    };
+
+    readCache();
+
+    fetchWeather()
+        .then((weather) => {
+            renderWeather(weather);
+            writeCache(weather);
+        })
+        .catch(() => {
+            if (!readCache()) {
+                renderWeather(fallback);
+            }
+        });
 });
 </script>
 </body>
