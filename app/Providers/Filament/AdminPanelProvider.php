@@ -91,6 +91,40 @@ class AdminPanelProvider extends PanelProvider
     fn (): string => Blade::render('@include("filament.notification-bell")')
 )
 ->renderHook(
+    PanelsRenderHook::STYLES_AFTER,
+    fn (): string => <<<'HTML'
+<style>
+    @media (max-width: 768px) {
+        .fi-main,
+        .fi-page,
+        .fi-section,
+        .fi-ta,
+        .fi-ta-ctn {
+            max-width: 100vw;
+            min-width: 0;
+        }
+
+        .fi-ta-content,
+        .fi-ta-table-ctn {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .fi-ta table {
+            min-width: 640px;
+        }
+
+        .fi-header,
+        .fi-header-heading,
+        .fi-page-header-main-ctn {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+    }
+</style>
+HTML
+)
+->renderHook(
     PanelsRenderHook::FOOTER,
     fn (): string => Blade::render(
         '<div class="py-4 text-center text-xs font-semibold text-gray-500 dark:text-gray-400">Powered by {{ config("portal.name") }} {{ config("portal.version") }}</div>'
