@@ -34,8 +34,8 @@
 @section('content')
 
 @php
-    $featuredNews = $news->first();
-    $listNews = $news->skip(1);
+    $listNews = $news;
+    $activeCategorySlug = isset($category) ? $category->slug : null;
 @endphp
 
 <section class="max-w-7xl mx-auto px-3 mt-4 md:px-4 md:mt-6">
@@ -74,125 +74,59 @@
     <div class="flex items-center gap-2 overflow-x-auto pb-1 md:flex-wrap md:gap-3 md:overflow-visible md:pb-0">
 
         <a href="/haberler"
-           class="premium-chip premium-chip-active">
+           class="premium-chip {{ $activeCategorySlug ? '' : 'premium-chip-active' }}">
             Tümü
         </a>
 
-        <a href="/kategori/gundem"
-           class="premium-chip">
-            Gündem
-        </a>
-
-        <a href="/kategori/ekonomi"
-           class="premium-chip">
-            Ekonomi
-        </a>
-
-        <a href="/kategori/teknoloji"
-           class="premium-chip">
-            Teknoloji
-        </a>
-
-        <a href="/kategori/spor"
-           class="premium-chip">
-            Spor
-        </a>
-
-        <a href="/kategori/dunya"
-           class="premium-chip">
-            Dünya
-        </a>
-
-        <a href="/kategori/kamu"
-           class="premium-chip">
-            Kamu
-        </a>
-
-        <a href="/kategori/son-dakika"
-           class="premium-chip border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700 hover:text-white">
-            Son Dakika
-        </a>
+        @foreach(($newsCategories ?? collect()) as $newsCategory)
+            <a href="/kategori/{{ $newsCategory->slug }}"
+               class="premium-chip {{ $activeCategorySlug === $newsCategory->slug ? 'premium-chip-active' : '' }}">
+                {{ $newsCategory->name }}
+            </a>
+        @endforeach
 
     </div>
 
 </div>
-{{-- FLASH HABERLER --}}
-<div class="mb-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-white shadow-sm md:mb-6 md:rounded-none">
-
-    <div class="flex items-center h-12">
-
-        <div class="bg-red-600 h-full px-5 flex items-center font-black text-sm whitespace-nowrap">
-            SON DAKİKA
-        </div>
-
-        <marquee
-            behavior="scroll"
-            direction="left"
-            scrollamount="5"
-            class="text-sm font-semibold px-4"
-        >
-            @foreach($news->take(8) as $flash)
-                🔥 {{ $flash->title }} —
-            @endforeach
-        </marquee>
-
-    </div>
-
-</div>
-            {{-- MANŞET --}}
-            @if($featuredNews)
-
-                @php
-                    $featuredImage = $featuredNews->image
-                        ? (str_contains($featuredNews->image, '/') ? $featuredNews->image : 'news/' . $featuredNews->image)
-                        : null;
-                @endphp
-
-                <a href="/haber/{{ $featuredNews->slug }}"
-                   class="theme-card premium-card premium-card-hover mb-6 block overflow-hidden md:mb-8">
-
-                    <div class="grid lg:grid-cols-2">
-
-                        <div class="premium-media relative h-56 md:h-72">
-                            @if($featuredImage)
-                                <img src="{{ asset('storage/' . $featuredImage) }}"
-                                     class="w-full h-full object-cover hover:scale-105 transition duration-700">
-                            @endif
-
-                            <div class="theme-primary-bg absolute top-4 left-4 rounded-full bg-red-600 px-4 py-2 text-xs font-black text-white shadow-lg">
-                                MANŞET
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col justify-center p-5 md:p-7">
-
-                            <div class="text-sm text-slate-500 flex gap-4 mb-4">
-                                <span>📅 {{ $featuredNews->created_at->format('d.m.Y') }}</span>
-                                <span>👁 {{ $featuredNews->views }} okunma</span>
-                            </div>
-
-                            <h2 class="text-2xl font-black leading-tight text-slate-950 transition hover:text-blue-700 md:text-3xl">
-                                {{ $featuredNews->title }}
-                            </h2>
-
-                            @if($featuredNews->summary ?? false)
-                                <p class="text-slate-600 mt-4 leading-7">
-                                    {{ Str::limit($featuredNews->summary, 180) }}
-                                </p>
-                            @endif
-
-                            <div class="mt-6">
-                                <span class="theme-primary-bg inline-block bg-blue-700 text-white px-5 py-2 font-bold text-sm rounded">
-                                    Haberi Oku →
-                                </span>
-                            </div>
-
-                        </div>
-
+            {{-- HABER MANŞET --}}
+            @if(($headlineNews ?? collect())->isNotEmpty())
+                <div class="theme-card premium-card mb-6 overflow-hidden md:mb-8">
+                    <div class="border-b border-slate-100 px-5 py-4">
+                        <h2 class="premium-section-heading">Haber Manşet</h2>
                     </div>
 
-                </a>
+                    <div class="grid gap-4 p-3 md:grid-cols-2 md:p-5">
+                        @foreach($headlineNews as $headlineItem)
+                            @php
+                                $headlineImage = $headlineItem->image
+                                    ? (str_contains($headlineItem->image, '/') ? $headlineItem->image : 'news/' . $headlineItem->image)
+                                    : null;
+                            @endphp
 
+                            <a href="/haber/{{ $headlineItem->slug }}" class="group flex min-w-0 gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-blue-200 hover:bg-blue-50/60">
+                                <div class="h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100 md:h-24 md:w-32">
+                                    @if($headlineImage)
+                                        <img
+                                            src="{{ asset('storage/' . $headlineImage) }}"
+                                            alt="{{ $headlineItem->title }}"
+                                            class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                                        >
+                                    @endif
+                                </div>
+
+                                <div class="min-w-0">
+                                    <div class="text-[11px] font-black uppercase text-blue-700">Manşet</div>
+                                    <h3 class="mt-1 line-clamp-2 text-base font-black leading-6 text-slate-950 group-hover:text-blue-700">
+                                        {{ $headlineItem->title }}
+                                    </h3>
+                                    <p class="mt-2 text-xs font-bold text-slate-400">
+                                        {{ $headlineItem->created_at->format('d.m.Y') }}
+                                    </p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             @endif
 
             {{-- ÜST/ARA REKLAM --}}

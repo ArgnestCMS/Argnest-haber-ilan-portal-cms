@@ -288,8 +288,10 @@ class FrontendController extends Controller
     {
         $page = request()->integer('page', 1);
         $news = $this->cache()->remember("portal:news:list:page:{$page}", 'lists', fn () => News::published()->latest()->paginate(12));
+        $newsCategories = $this->newsListCategories();
+        $headlineNews = $this->newsListHeadlines();
 
-        return view('frontend.news', compact('news'));
+        return view('frontend.news', compact('news', 'newsCategories', 'headlineNews'));
     }
 
     public function announcements()
@@ -616,8 +618,10 @@ class FrontendController extends Controller
                 'lists',
                 fn () => News::where('category_id', $category->id)->published()->latest()->paginate(12),
             );
+            $newsCategories = $this->newsListCategories();
+            $headlineNews = $this->newsListHeadlines();
 
-            return view('frontend.news', compact('news', 'category'));
+            return view('frontend.news', compact('news', 'category', 'newsCategories', 'headlineNews'));
         }
 
         $page = request()->integer('page', 1);
@@ -671,6 +675,26 @@ class FrontendController extends Controller
         });
     }
 
+    private function newsListCategories()
+    {
+        return $this->cache()->remember('portal:news:list:categories', 'categories', fn () => Category::newsType()
+            ->active()
+            ->whereHas('news', fn ($query) => $query->published())
+            ->withCount(['news' => fn ($query) => $query->published()])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get());
+    }
+
+    private function newsListHeadlines()
+    {
+        return $this->cache()->remember('portal:news:list:headlines', 'lists', fn () => News::published()
+            ->where('is_headline', true)
+            ->latest()
+            ->take(6)
+            ->get());
+    }
+
     public function search()
     {
         $query = request('q');
@@ -706,7 +730,10 @@ class FrontendController extends Controller
 
     public function newsDetail($slug)
     {
-        $news = News::published()->where('slug', $slug)->firstOrFail();
+        $news = News::published()
+            ->with('category')
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         $news->recordView();
 
@@ -721,7 +748,8 @@ class FrontendController extends Controller
             'leftAd',
             'rightAd',
             'sidebarAd',
-            'latestComments'
+            'latestComments',
+            'headlineNews'
         ));
     }
 
@@ -751,6 +779,12 @@ class FrontendController extends Controller
             return [
                 'relatedNews' => News::published()->where('id', '!=', $newsId)->latest()->take(6)->get(),
                 'sidebarNews' => News::published()->where('id', '!=', $newsId)->latest()->take(8)->get(),
+                'headlineNews' => News::published()
+                    ->where('id', '!=', $newsId)
+                    ->where('is_headline', true)
+                    ->latest()
+                    ->take(6)
+                    ->get(),
                 'latestComments' => $this->latestComments(),
                 ...$this->sidebarAds(),
             ];

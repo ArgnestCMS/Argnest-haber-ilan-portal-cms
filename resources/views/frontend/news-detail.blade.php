@@ -146,6 +146,56 @@
                         </div>
                     @endif
 
+                    @if($news->category || ($headlineNews ?? collect())->isNotEmpty())
+                        <div class="theme-card premium-card mb-4 overflow-hidden md:mb-6">
+                            @if($news->category)
+                                <div class="border-b border-slate-100 p-4 md:p-5">
+                                    <div class="flex flex-wrap gap-2">
+                                        <a
+                                            href="{{ url('/kategori/' . $news->category->slug) }}"
+                                            class="inline-flex max-w-full items-center rounded-full bg-blue-700 px-4 py-2 text-sm font-black text-white transition hover:bg-blue-800"
+                                        >
+                                            <span class="truncate">{{ $news->category->name }}</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(($headlineNews ?? collect())->isNotEmpty())
+                                <div class="p-4 md:p-5">
+                                    <div class="mb-3 text-sm font-black uppercase tracking-wide text-slate-500">
+                                        Haber Manşet
+                                    </div>
+
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        @foreach($headlineNews as $headlineItem)
+                                            <a href="/haber/{{ $headlineItem->slug }}" class="group flex min-w-0 gap-3 rounded-2xl border border-slate-100 bg-white p-3 transition hover:border-blue-200 hover:bg-blue-50/60">
+                                                <div class="h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                                    @if($headlineItem->image)
+                                                        <img
+                                                            src="{{ asset('storage/' . (str_contains($headlineItem->image, '/') ? $headlineItem->image : 'news/' . $headlineItem->image)) }}"
+                                                            alt="{{ $headlineItem->title }}"
+                                                            class="h-full w-full object-cover transition group-hover:scale-105"
+                                                        >
+                                                    @endif
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <h2 class="line-clamp-2 text-sm font-black leading-5 text-slate-900 group-hover:text-blue-700">
+                                                        {{ $headlineItem->title }}
+                                                    </h2>
+                                                    <p class="mt-1 text-xs font-bold text-slate-400">
+                                                        {{ $headlineItem->created_at->format('d.m.Y') }}
+                                                    </p>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     {{-- HABER --}}
                     <article class="theme-card premium-article">
 
