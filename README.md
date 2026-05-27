@@ -106,3 +106,9 @@ Bu proje MIT lisansı ile yayınlanmıştır. Detaylar için `LICENSE` dosyasın
 - Admin paneli yetki middleware ile korunur.
 - Dosya izinleri minimum gerekli erişimle sınırlandırılmalıdır.
 - Güvenlik açıkları `PORTAL_SUPPORT_EMAIL` değerinde belirtilen destek adresine bildirilmelidir.
+
+- ## 🎬 Tanıtım Videosu
+
+📺 YouTube:
+https://www.youtube.com/watch?v=wgMmliALmUw
+
