@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withMiddleware(function (Middleware $middleware): void {
 
+        $middleware->validateCsrfTokens(except: [
+            'install',
+        ]);
+
         $middleware->web(append: [
 
             \App\Http\Middleware\SecurityHeaders::class,

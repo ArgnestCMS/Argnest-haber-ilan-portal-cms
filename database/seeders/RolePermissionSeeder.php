@@ -100,11 +100,11 @@ class RolePermissionSeeder extends Seeder
             ]
         );
 
-        $admin->permissions()->sync(
+        $admin->permissions()->syncWithoutDetaching(
             Permission::pluck('id')
         );
 
-        $editor->permissions()->sync(
+        $editor->permissions()->syncWithoutDetaching(
             Permission::whereIn('slug', [
                 'panel_giris',
 
@@ -124,7 +124,7 @@ class RolePermissionSeeder extends Seeder
             ])->pluck('id')
         );
 
-        $moderator->permissions()->sync(
+        $moderator->permissions()->syncWithoutDetaching(
             Permission::whereIn('slug', [
                 'panel_giris',
                 'yorum_moderasyonu',
@@ -145,9 +145,9 @@ class RolePermissionSeeder extends Seeder
                 default => $userRole->id,
             };
 
-            $user->update([
-                'role_id' => $user->role_id ?: $roleId,
-            ]);
+            if (! $user->role_id) {
+                $user->forceFill(['role_id' => $roleId])->save();
+            }
         });
     }
 }

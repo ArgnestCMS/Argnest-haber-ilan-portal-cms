@@ -11,12 +11,14 @@ use App\Models\ThemeSetting;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use PDO;
 use PDOException;
@@ -46,10 +48,13 @@ class InstallController extends Controller
 
         $step = $this->normalizeStep((int) $request->query('step', 1));
 
+        $data = $request->session()->get('install.data', $this->defaultData());
+
         return view('install.wizard', [
             'step' => $step,
             'steps' => self::STEPS,
-            'data' => $request->session()->get('install.data', $this->defaultData()),
+            'data' => $data,
+            'databaseTables' => $step === 7 ? $this->inspectDatabaseTables($data) : null,
             'requirements' => $this->requirements(),
             'version' => config('portal.version', 'v1.0.0') . ' - ' . config('portal.codename', 'Genesis'),
         ]);
@@ -100,7 +105,7 @@ class InstallController extends Controller
 
         try {
             $this->logInstallStage($stage, 'basladi', $data);
-            $this->writeEnvironment($data);
+            $this->stabilizeRuntimeSessionCookie($data);
             $this->applyRuntimeConfig($data);
 
             DB::purge('mysql');
@@ -109,21 +114,12 @@ class InstallController extends Controller
             $existingTables = $this->databaseTables();
 
             if ($existingTables !== []) {
-                if ($this->databaseResetRequested($request) && ! $this->databaseResetConfirmed($request)) {
-                    return redirect()
-                        ->route('install', ['step' => 7])
-                        ->withInput()
-                        ->withErrors([
-                            'database' => 'Veritabanini sifirlamak icin checkbox isaretlenmeli ve onay alanina tam olarak RESET yazilmalidir.',
-                        ]);
-                }
-
                 if (! $this->databaseResetConfirmed($request)) {
                     return redirect()
                         ->route('install', ['step' => 7])
                         ->withInput()
                         ->withErrors([
-                            'database' => 'Bu veritabaninda tablolar var. Temiz kurulum icin bos bir veritabani secin veya "Veritabanini sifirla ve devam et" secenegini acik onayla isaretleyin. Bulunan tablolar: ' . implode(', ', array_slice($existingTables, 0, 8)) . (count($existingTables) > 8 ? '...' : ''),
+                            'database' => 'Bu veritabaninda mevcut tablolar var. Sifirlama icin checkbox isaretlenmeli ve onay metni birebir "VERITABANINI SIFIRLA" olmalidir. Sifirlanacak veritabani: ' . $data['db_database'],
                         ]);
                 }
 
@@ -163,6 +159,10 @@ class InstallController extends Controller
             $this->logInstallStage($stage, 'basladi', $data);
             $this->createInstallLock();
             $this->logInstallStage($stage, 'bitti', $data);
+
+            $stage = 'environment';
+            $this->writeEnvironmentSafely($data);
+            $this->clearCachedConfiguration();
 
             $request->session()->forget('install.data');
             Auth::login($admin);
@@ -215,32 +215,15 @@ class InstallController extends Controller
 
     private function runMigrations(): void
     {
-        $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(base_path('artisan')) . ' migrate --force --no-interaction';
-        $process = proc_open(
-            $command,
-            [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ],
-            $pipes,
-            base_path(),
-        );
-
-        if (! is_resource($process)) {
-            throw new RuntimeException('Migration islemi baslatilamadi.');
-        }
-
-        fclose($pipes[0]);
-        $output = stream_get_contents($pipes[1]) ?: '';
-        $error = stream_get_contents($pipes[2]) ?: '';
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        $exitCode = proc_close($process);
+        $exitCode = Artisan::call('migrate', [
+            '--force' => true,
+            '--no-interaction' => true,
+        ]);
 
         if ($exitCode !== 0) {
-            throw new RuntimeException($this->summarizeProcessOutput($error ?: $output) ?: 'Migration islemi basarisiz oldu.');
+            $output = trim(Artisan::output());
+
+            throw new RuntimeException($output !== '' ? $this->summarizeProcessOutput($output) : 'Migration islemi basarisiz oldu.');
         }
     }
 
@@ -267,35 +250,48 @@ class InstallController extends Controller
             ->all();
     }
 
-    private function databaseResetConfirmed(Request $request): bool
+    private function inspectDatabaseTables(array $data): ?array
     {
-        return $request->boolean('reset_database')
-            && strtoupper(trim((string) $request->input('reset_database_confirmation'))) === 'RESET';
+        if (blank($data['db_database'] ?? null)) {
+            return null;
+        }
+
+        if (! $this->testDatabaseConnection($data)) {
+            return null;
+        }
+
+        $this->applyRuntimeConfig($data);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
+
+        try {
+            return $this->databaseTables();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
-    private function databaseResetRequested(Request $request): bool
+    private function databaseResetConfirmed(Request $request): bool
     {
-        return $request->boolean('reset_database')
-            || trim((string) $request->input('reset_database_confirmation')) !== '';
+        return ! $this->isInstalled()
+            && $request->boolean('reset_database')
+            && trim((string) $request->input('confirm_reset_text')) === 'VERITABANINI SIFIRLA';
     }
 
     private function resetDatabase(array $tables): void
     {
-        if ($tables === []) {
-            return;
+        if ($this->isInstalled()) {
+            throw new RuntimeException('Kurulum kilidi varken veritabani sifirlama yapilamaz.');
         }
 
-        $quotedTables = array_map(
-            fn (string $table): string => '`' . str_replace('`', '``', $table) . '`',
-            $tables,
-        );
-
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        Schema::disableForeignKeyConstraints();
 
         try {
-            DB::statement('DROP TABLE IF EXISTS ' . implode(', ', $quotedTables));
+            foreach ($tables as $table) {
+                Schema::drop($table);
+            }
         } finally {
-            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            Schema::enableForeignKeyConstraints();
         }
     }
 
@@ -308,7 +304,7 @@ class InstallController extends Controller
             || str_contains($message, 'already exists')
             || str_contains($message, 'sqlstate[42s01]')
         ) {
-            return $stageLabel . ' asamasinda kurulum durdu: Bu veritabaninda daha once olusturulmus tablolar var. Bos bir veritabani secin veya son adimda "Veritabanini sifirla ve devam et" onayini kullanin.';
+            return $stageLabel . ' asamasinda kurulum durdu: Bu veritabaninda daha once olusturulmus tablolar var. Production guvenligi icin installer veritabani sifirlama yapmaz. Bos bir veritabani secin.';
         }
 
         return $stageLabel . ' asamasinda kurulum durdu. Veritabani ve dosya izinlerini kontrol edip tekrar deneyin. Detay: ' . $exception->getMessage();
@@ -487,20 +483,20 @@ class InstallController extends Controller
         ];
 
         foreach ($permissions as $permission) {
-            Permission::query()->updateOrCreate(['slug' => $permission['slug']], $permission);
+            Permission::query()->firstOrCreate(['slug' => $permission['slug']], $permission);
         }
 
-        $admin = Role::query()->updateOrCreate(
+        $admin = Role::query()->firstOrCreate(
             ['slug' => 'admin'],
             ['name' => 'Admin', 'color' => 'danger', 'is_system' => true, 'description' => 'Tam yetkili sistem yoneticisi.'],
         );
 
-        $editor = Role::query()->updateOrCreate(['slug' => 'editor'], ['name' => 'Editor', 'color' => 'warning', 'is_system' => true]);
-        $moderator = Role::query()->updateOrCreate(['slug' => 'moderator'], ['name' => 'Moderator', 'color' => 'success', 'is_system' => true]);
-        Role::query()->updateOrCreate(['slug' => 'user'], ['name' => 'Kullanici', 'color' => 'gray', 'is_system' => true]);
+        $editor = Role::query()->firstOrCreate(['slug' => 'editor'], ['name' => 'Editor', 'color' => 'warning', 'is_system' => true]);
+        $moderator = Role::query()->firstOrCreate(['slug' => 'moderator'], ['name' => 'Moderator', 'color' => 'success', 'is_system' => true]);
+        Role::query()->firstOrCreate(['slug' => 'user'], ['name' => 'Kullanici', 'color' => 'gray', 'is_system' => true]);
 
-        $admin->permissions()->sync(Permission::query()->pluck('id'));
-        $editor->permissions()->sync(Permission::query()
+        $admin->permissions()->syncWithoutDetaching(Permission::query()->pluck('id'));
+        $editor->permissions()->syncWithoutDetaching(Permission::query()
             ->whereIn('slug', [
                 'panel_giris',
                 'haber_gor',
@@ -515,7 +511,7 @@ class InstallController extends Controller
                 'galeri_duzenle',
             ])
             ->pluck('id'));
-        $moderator->permissions()->sync(Permission::query()
+        $moderator->permissions()->syncWithoutDetaching(Permission::query()
             ->whereIn('slug', ['panel_giris', 'yorum_moderasyonu', 'forum_moderasyonu'])
             ->pluck('id'));
 
@@ -628,6 +624,7 @@ class InstallController extends Controller
             return;
         }
 
+        $content = File::get($path);
         $values = [
             'APP_NAME' => $data['site_name'],
             'APP_URL' => rtrim($data['site_url'], '/'),
@@ -638,16 +635,11 @@ class InstallController extends Controller
             'DB_DATABASE' => $data['db_database'],
             'DB_USERNAME' => $data['db_username'],
             'DB_PASSWORD' => $data['db_password'] ?? '',
-            'MAIL_MAILER' => 'smtp',
-            'MAIL_HOST' => $data['mail_host'] ?? '',
-            'MAIL_PORT' => $data['mail_port'] ?? '',
-            'MAIL_USERNAME' => $data['mail_username'] ?? '',
-            'MAIL_PASSWORD' => $data['mail_password'] ?? '',
-            'MAIL_SCHEME' => $data['mail_encryption'] ?? '',
-            'MAIL_FROM_ADDRESS' => $data['mail_from_address'] ?? '',
         ];
 
-        $content = File::get($path);
+        foreach ($this->mailEnvironmentValues($data, $content) as $key => $value) {
+            $values[$key] = $value;
+        }
 
         foreach ($values as $key => $value) {
             $content = $this->replaceEnvironmentValue($content, $key, (string) $value);
@@ -656,8 +648,48 @@ class InstallController extends Controller
         File::put($path, $content);
     }
 
+    private function writeEnvironmentSafely(array $data): void
+    {
+        try {
+            $this->writeEnvironment($data);
+        } catch (Throwable $exception) {
+            Log::warning('Install completed but .env could not be updated.', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function mailEnvironmentValues(array $data, string $content): array
+    {
+        $hasMailInput = filled($data['mail_host'] ?? null)
+            || filled($data['mail_port'] ?? null)
+            || filled($data['mail_username'] ?? null)
+            || filled($data['mail_password'] ?? null)
+            || filled($data['mail_encryption'] ?? null)
+            || filled($data['mail_from_address'] ?? null);
+
+        $mailValues = [
+            'MAIL_MAILER' => $hasMailInput ? 'smtp' : null,
+            'MAIL_HOST' => $data['mail_host'] ?? '',
+            'MAIL_PORT' => $data['mail_port'] ?? '',
+            'MAIL_USERNAME' => $data['mail_username'] ?? '',
+            'MAIL_PASSWORD' => $data['mail_password'] ?? '',
+            'MAIL_SCHEME' => $data['mail_encryption'] ?? '',
+            'MAIL_FROM_ADDRESS' => $data['mail_from_address'] ?? '',
+        ];
+
+        return collect($mailValues)
+            ->filter(fn (?string $value, string $key): bool => $this->envKeyExists($content, $key) || filled($value))
+            ->map(fn (?string $value, string $key): string => $value ?? $this->environmentValue($content, $key))
+            ->all();
+    }
+
     private function replaceEnvironmentValue(string $content, string $key, string $value): string
     {
+        if ($this->envKeyExists($content, $key) && $this->environmentValue($content, $key) === $value) {
+            return $content;
+        }
+
         $line = $key . '=' . $this->quoteEnvironmentValue($value);
 
         if (preg_match('/^' . preg_quote($key, '/') . '=.*/m', $content)) {
@@ -678,6 +710,44 @@ class InstallController extends Controller
         }
 
         return $value;
+    }
+
+    private function envKeyExists(string $content, string $key): bool
+    {
+        return preg_match('/^' . preg_quote($key, '/') . '=/m', $content) === 1;
+    }
+
+    private function environmentValue(string $content, string $key, string $default = ''): string
+    {
+        if (! preg_match('/^' . preg_quote($key, '/') . '=(.*)$/m', $content, $matches)) {
+            return $default;
+        }
+
+        return trim(trim((string) $matches[1]), "\"'");
+    }
+
+    private function clearCachedConfiguration(): void
+    {
+        try {
+            Artisan::call('config:clear');
+        } catch (Throwable $exception) {
+            Log::warning('Install completed but config cache could not be cleared.', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    private function stabilizeRuntimeSessionCookie(array $data): void
+    {
+        $path = base_path('.env');
+
+        if (File::exists($path) && $this->envKeyExists(File::get($path), 'SESSION_COOKIE')) {
+            return;
+        }
+
+        config([
+            'session.cookie' => Str::slug((string) $data['site_name']) . '-session',
+        ]);
     }
 
     private function isInstalled(): bool
