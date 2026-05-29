@@ -12,6 +12,10 @@ class CheckPanelMaintenanceMode
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('install*')) {
+            return $next($request);
+        }
+
         if ($this->shouldPassThrough($request) || $this->userCanBypass($request)) {
             return $next($request);
         }
@@ -36,8 +40,6 @@ class CheckPanelMaintenanceMode
             'admin/*',
             'login',
             'logout',
-            'install',
-            'install/*',
             'storage/*',
             'build/*',
             'css/*',

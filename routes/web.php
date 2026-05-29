@@ -24,7 +24,11 @@ use App\Http\Controllers\PollController;
 use App\Http\Controllers\AdminDatabaseBackupDownloadController;
 use App\Http\Controllers\AdminSiteReportExportController;
 use App\Http\Controllers\InstallController;
+use App\Http\Middleware\CheckInstalled;
 use App\Http\Middleware\EnsureAdminPanelAccess;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,13 +36,34 @@ use App\Http\Middleware\EnsureAdminPanelAccess;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/install', [InstallController::class, 'show'])
-    ->middleware('throttle:120,1')
-    ->name('install');
+Route::middleware([CheckInstalled::class])
+    ->withoutMiddleware([
+        \App\Http\Middleware\TrackOnlineStatus::class,
+        \App\Http\Middleware\CheckPanelMaintenanceMode::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+    ])
+    ->group(function () {
+        Route::get('/install', [InstallController::class, 'welcome'])
+            ->name('install');
 
-Route::post('/install', [InstallController::class, 'store'])
-    ->middleware('throttle:120,1')
-    ->name('install.store');
+        Route::get('/install/database', [InstallController::class, 'database'])
+            ->name('install.database');
+
+        Route::post('/install/database', [InstallController::class, 'install'])
+            ->name('install.run');
+    });
+
+Route::get('/install/complete', [InstallController::class, 'complete'])
+    ->withoutMiddleware([
+        \App\Http\Middleware\TrackOnlineStatus::class,
+        \App\Http\Middleware\CheckPanelMaintenanceMode::class,
+        StartSession::class,
+        ShareErrorsFromSession::class,
+        ValidateCsrfToken::class,
+    ])
+    ->name('install.complete');
 
 Route::get('/', [FrontendController::class, 'home']);
 

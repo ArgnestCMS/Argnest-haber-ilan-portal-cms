@@ -85,6 +85,10 @@ class AppServiceProvider extends ServiceProvider
 
     private function applyDatabaseBackedSettings(): void
     {
+        if (! $this->app->runningInConsole() && request()->is('install*')) {
+            return;
+        }
+
         try {
             if (! Schema::hasTable('integration_settings')) {
                 return;

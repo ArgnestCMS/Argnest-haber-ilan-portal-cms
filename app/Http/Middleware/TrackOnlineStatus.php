@@ -10,6 +10,10 @@ class TrackOnlineStatus
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('install*')) {
+            return $next($request);
+        }
+
         if (auth()->check()) {
 
             $user = auth()->user();
