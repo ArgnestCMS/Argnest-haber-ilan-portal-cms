@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Models;
-
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use App\Notifications\VerifyEmailTurkish;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
@@ -146,7 +147,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->roleModel?->slug === 'user';
     }
-
+ public function canAccessPanel(Panel $panel): bool
+ {
+    return $this->is_active
+        && $this->status === 'active'
+        && $this->isAdmin();
+ }
     /*
     |--------------------------------------------------------------------------
     | NOTIFICATIONS
