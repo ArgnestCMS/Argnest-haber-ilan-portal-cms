@@ -669,7 +669,7 @@ class FrontendController extends Controller
         $location = $this->weatherGeoLocation($siteSetting, $ttl);
 
         if (! $location) {
-            return $this->weatherUnavailable('weather_geo_unavailable');
+            $location = $this->weatherFallbackLocation($siteSetting, null, 'geo_fallback');
         }
 
         $lat = $this->weatherCoordinateKey($location['lat']);
@@ -678,26 +678,19 @@ class FrontendController extends Controller
         return Cache::remember("weather:current:{$lat}:{$lon}", $ttl, fn () => $this->fetchCurrentWeather($location));
     }
 
-    private function weatherGeoLocation(?SiteSetting $siteSetting, int $ttl): ?array
+    private function weatherGeoLocation(?SiteSetting $siteSetting, int $ttl): array
     {
         $ip = $this->weatherClientIp();
 
         if (! $ip) {
-            return null;
+            return $this->weatherFallbackLocation($siteSetting, null, 'local_fallback');
         }
 
         if ($this->isLocalWeatherIp($ip)) {
-            return [
-                'ip' => $ip,
-                'city' => filled($siteSetting?->weather_local_fallback_city) ? $siteSetting->weather_local_fallback_city : 'İstanbul',
-                'lat' => 41.0082,
-                'lon' => 28.9784,
-                'timezone' => 'Europe/Istanbul',
-                'source' => 'local_fallback',
-            ];
+            return $this->weatherFallbackLocation($siteSetting, $ip, 'local_fallback');
         }
 
-        return Cache::remember("weather:geo:{$ip}", $ttl, function () use ($ip) {
+        return Cache::remember("weather:geo:{$ip}", $ttl, function () use ($ip, $siteSetting) {
             try {
                 $response = Http::timeout(4)
                     ->acceptJson()
@@ -711,7 +704,7 @@ class FrontendController extends Controller
                         'status' => $response->status(),
                     ]);
 
-                    return null;
+                    return $this->weatherFallbackLocation($siteSetting, $ip, 'geo_fallback');
                 }
 
                 $data = $response->json();
@@ -722,7 +715,7 @@ class FrontendController extends Controller
                         'message' => $data['message'] ?? null,
                     ]);
 
-                    return null;
+                    return $this->weatherFallbackLocation($siteSetting, $ip, 'geo_fallback');
                 }
 
                 return [
@@ -739,9 +732,21 @@ class FrontendController extends Controller
                     'message' => $exception->getMessage(),
                 ]);
 
-                return null;
+                return $this->weatherFallbackLocation($siteSetting, $ip, 'geo_fallback');
             }
         });
+    }
+
+    private function weatherFallbackLocation(?SiteSetting $siteSetting, ?string $ip = null, string $source = 'local_fallback'): array
+    {
+        return [
+            'ip' => $ip,
+            'city' => filled($siteSetting?->weather_local_fallback_city) ? $siteSetting->weather_local_fallback_city : 'İstanbul',
+            'lat' => 41.0082,
+            'lon' => 28.9784,
+            'timezone' => 'Europe/Istanbul',
+            'source' => $source,
+        ];
     }
 
     private function fetchCurrentWeather(array $location): array
@@ -873,7 +878,7 @@ class FrontendController extends Controller
     private function isLocalWeatherIp(string $ip): bool
     {
         return in_array($ip, ['127.0.0.1', '::1'], true)
-            || (app()->environment('local') && ! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE));
+            || ! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
     }
 
     private function weatherCoordinateKey(float|int|string $coordinate): string
